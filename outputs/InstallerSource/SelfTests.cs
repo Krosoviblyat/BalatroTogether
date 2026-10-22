@@ -128,12 +128,12 @@ namespace TogetherSetup {
                 });
                 test("absolute and traversal extraction targets are refused",()=>{Reject(()=>Paths.Within(Path.Combine(parent,"..","outside"),parent),"Unsafe destination");Reject(()=>Paths.Within(Path.GetPathRoot(parent),parent),"Unsafe destination");});
                 test("current user folders validate before elevation context is accepted",()=>{var current=UserPaths.Current(); current.Validate(); current.Roaming=Path.GetPathRoot(current.Roaming); Reject(()=>current.Validate(),"could not be verified");});
-                test("quiet desktop shortcut uses the owned game without launching it",()=>{
+                test("desktop shortcut installs the updating launcher without launching the game",()=>{
                     var f=new Fixture(parent); string desktop=Path.Combine(f.Root,"Desktop"), backup=Path.Combine(f.Root,"Backup"); Directory.CreateDirectory(desktop); Directory.CreateDirectory(backup);
-                    var user=new UserPaths {Desktop=desktop}; Detection.Shortcut(user,f.Game,backup);
+                    var user=new UserPaths {Desktop=desktop,Local=Path.Combine(f.Root,"Local")}; Detection.Shortcut(user,f.Game,backup);
                     string path=Path.Combine(desktop,"Play Balatro Together.lnk"); Check(File.Exists(path),"Shortcut missing");
                     dynamic shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")); dynamic shortcut=shell.CreateShortcut(path);
-                    Check(Paths.Equal((string)shortcut.TargetPath,Path.Combine(f.Game,"Balatro.exe")),"Wrong shortcut target"); Check((string)shortcut.Arguments=="--disable-console","Console not disabled");
+                    Check(Paths.Equal((string)shortcut.TargetPath,Path.Combine(user.Local,"BalatroTogether","Launcher","Play Balatro Together.exe")),"Wrong shortcut target"); Check((string)shortcut.Arguments=="--play","Updater bypassed");
                     Detection.Shortcut(user,f.Game,backup); Check(File.Exists(Path.Combine(backup,"PreviousShortcut.lnk")),"Shortcut backup missing"); f.AssertOriginals();
                 });
                 File.WriteAllText(Path.Combine(parent,"results.json"),new JavaScriptSerializer().Serialize(new{passed=passed.Count,tests=passed,failed=0}),Encoding.UTF8);

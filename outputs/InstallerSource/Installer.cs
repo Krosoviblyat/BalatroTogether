@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Balatro Together contributors")]
-[assembly: AssemblyVersion("0.6.1.0")]
-[assembly: AssemblyFileVersion("0.6.1.0")]
+[assembly: AssemblyVersion("0.6.2.0")]
+[assembly: AssemblyFileVersion("0.6.2.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -253,12 +253,13 @@ namespace TogetherSetup {
             return "";
         }
         public static void Shortcut(UserPaths user,string game,string backup) {
+            string launcher=UpdateStorage.InstallLauncher(user,game);
             Paths.NoLinks(user.Desktop); if (!Directory.Exists(user.Desktop)) return;
             string path=Path.Combine(user.Desktop,"Play Balatro Together.lnk");
             Type type=Type.GetTypeFromProgID("WScript.Shell"); dynamic shell=Activator.CreateInstance(type);
             Paths.NoLinks(path);
-            if (File.Exists(path)) { dynamic old=shell.CreateShortcut(path); if (!Paths.Equal((string)old.TargetPath,Path.Combine(game,"Balatro.exe"))) { path=Path.Combine(user.Desktop,"Play Balatro Together (Co-op).lnk"); if(File.Exists(path)) return; } else File.Copy(path,Path.Combine(backup,"PreviousShortcut.lnk"),false); }
-            dynamic shortcut=shell.CreateShortcut(path); shortcut.TargetPath=Path.Combine(game,"Balatro.exe"); shortcut.Arguments="--disable-console"; shortcut.WorkingDirectory=game; shortcut.Description="Balatro Together - press F8"; shortcut.Save();
+            if (File.Exists(path)) { dynamic old=shell.CreateShortcut(path); if (!Paths.Equal((string)old.TargetPath,Path.Combine(game,"Balatro.exe"))&&!Paths.Equal((string)old.TargetPath,launcher)) { path=Path.Combine(user.Desktop,"Play Balatro Together (Co-op).lnk"); if(File.Exists(path)) return; } else File.Copy(path,Path.Combine(backup,"PreviousShortcut.lnk"),false); }
+            dynamic shortcut=shell.CreateShortcut(path); shortcut.TargetPath=launcher; shortcut.Arguments="--play"; shortcut.WorkingDirectory=Path.GetDirectoryName(launcher); shortcut.Description="Check updates and play Balatro Together"; shortcut.Save();
         }
     }
     internal sealed class SetupForm : Form {
@@ -271,7 +272,7 @@ namespace TogetherSetup {
             user=context; Text="Install Balatro Together"; ClientSize=new Size(620,405); FormBorderStyle=FormBorderStyle.FixedDialog; MaximizeBox=false; StartPosition=FormStartPosition.CenterScreen;
             BackColor=Color.FromArgb(17,27,35); ForeColor=Color.FromArgb(239,238,216); Font=new Font("Segoe UI",10);
             var title=new Label {Text="Balatro Together",Font=new Font("Segoe UI",25,FontStyle.Bold),Location=new Point(28,24),AutoSize=true}; Controls.Add(title);
-            Controls.Add(new Label {Text="Polished Cryptid co-op / bets, rewards and endless  |  "+Build.Version+"  |  Setup 5",Location=new Point(30,78),Size=new Size(560,24),ForeColor=Color.FromArgb(52,214,180)});
+            Controls.Add(new Label {Text="Cryptid co-op / signed automatic updates  |  "+Build.Version+"  |  Setup 6",Location=new Point(30,78),Size=new Size(560,24),ForeColor=Color.FromArgb(52,214,180)});
             Controls.Add(new Label {Text="1. Close Balatro.   2. Click Install.   3. Play.",Location=new Point(30,122),Size=new Size(555,25)});
             path.SetBounds(30,167,450,27); path.Text=selected; path.ReadOnly=true; Controls.Add(path);
             browse.Text="Find game..."; browse.SetBounds(490,165,100,31); browse.Click+=(s,e)=>{using(var f=new OpenFileDialog {Filter="Balatro|Balatro.exe",Title="Choose Balatro.exe in your Steam library"}) if(f.ShowDialog()==DialogResult.OK) path.Text=Path.GetDirectoryName(f.FileName);}; Controls.Add(browse);
@@ -279,7 +280,7 @@ namespace TogetherSetup {
             status.SetBounds(30,276,560,24); status.Text=String.IsNullOrEmpty(selected)?"Game not found automatically - click Find game.":"Balatro found. Ready to install."; Controls.Add(status);
             bar.SetBounds(30,307,560,8); Controls.Add(bar);
             install.Text="Install"; install.SetBounds(380,341,210,42); install.BackColor=Color.FromArgb(52,214,180); install.ForeColor=Color.FromArgb(17,27,35); install.FlatStyle=FlatStyle.Flat; install.Font=new Font("Segoe UI",12,FontStyle.Bold); install.Click+=(s,e)=>Start(); Controls.Add(install);
-            play.Text="Play Balatro Together"; play.SetBounds(30,341,240,42); play.Enabled=false; play.Click+=(s,e)=>{if(Detection.Running()) { MessageBox.Show("Balatro is already open."); return; } Process.Start(new ProcessStartInfo(Path.Combine(path.Text,"Balatro.exe"),"--disable-console") {WorkingDirectory=path.Text});}; Controls.Add(play);
+            play.Text="Play Balatro Together"; play.SetBounds(30,341,240,42); play.Enabled=false; play.Click+=(s,e)=>{if(Detection.Running()) { MessageBox.Show("Balatro is already open."); return; } if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)){MessageBox.Show(this,"Installation is complete. Close this window and use the Play Balatro Together shortcut on your desktop under your normal Windows account.");return;} string launcher=Path.Combine(UpdateStorage.Root(user),"Launcher","Play Balatro Together.exe"); Process.Start(new ProcessStartInfo(launcher,"--play") {WorkingDirectory=Path.GetDirectoryName(launcher)});Close();}; Controls.Add(play);
             FormClosing+=(s,e)=>{if(busy)e.Cancel=true;}; if(auto)Shown+=(s,e)=>Start();
         }
         void Report(string text) { if(InvokeRequired) { BeginInvoke(new Action<string>(Report),text); return; } status.Text=text; }
@@ -296,8 +297,8 @@ namespace TogetherSetup {
             var engine=new Installer(path.Text,Path.Combine(user.Roaming,"Balatro"),Path.Combine(user.Roaming,@"BalatroTogether\Backups"),Path.Combine(user.Local,@"BalatroTogether\InstallerStaging"),Build.GameHash,Detection.Running,Report);
             try {
                 await Task.Run(()=>engine.Install());
-                try { Detection.Shortcut(user,path.Text,engine.Backup); } catch { }
-                result.Text="Installed and verified. Press F8 in the game.\nBackup: "+engine.Backup; play.Enabled=true; done=true; install.Text="Done"; install.Enabled=true;
+                Detection.Shortcut(user,path.Text,engine.Backup);
+                result.Text="Installed and verified. Use Play Balatro Together for automatic updates.\nBackup: "+engine.Backup; play.Enabled=true; done=true; install.Text="Done"; install.Enabled=true;
             } catch(UnauthorizedAccessException) {
                 if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)) MessageBox.Show(this,"Windows denied access. Use the manual guide for this folder.","Installation stopped");
                 else { elevate=true; install.Text="Continue"; result.Text="Windows needs administrator access to the game folder. Continue opens the normal Windows permission prompt and keeps your original user profile."; }
@@ -311,7 +312,25 @@ namespace TogetherSetup {
             Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
             try {
                 if(args.Length>0 && args[0]=="--self-test") return SelfTests.Run(args[1]);
+                if(args.Length==2 && args[0]=="--updater-self-test")return UpdaterTests.Run(args[1]);
+                if(args.Length==2 && args[0]=="--verify-update")return UpdaterTests.VerifyRelease(args[1]);
                 UserPaths user=UserPaths.Current(); string game=Detection.Find(); bool auto=false;
+                System.Net.ServicePointManager.SecurityProtocol=System.Net.SecurityProtocolType.Tls12;
+                if(args.Length==2&&args[0]=="--launcher-preview") {
+                    LauncherForm.PreviewMode=true;
+                    var preview=new LauncherForm(new UserPaths {Local=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(args[1])),"PreviewProfile")},game);
+                    preview.ShowInTaskbar=false;preview.StartPosition=FormStartPosition.Manual;preview.Location=new Point(-32000,-32000);preview.Show();Application.DoEvents();
+                    using(var bitmap=new Bitmap(preview.Width,preview.Height)){preview.DrawToBitmap(bitmap,new Rectangle(0,0,preview.Width,preview.Height));bitmap.Save(args[1]);}preview.Close();preview.Dispose();return 0;
+                }
+                if(args.Length==1&&args[0]=="--play") {
+                    if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))throw new Exception("Open Play Balatro Together normally from your desktop, without Run as administrator. Only installation needs elevation.");
+                    var settings=UpdateStorage.Load(user);if(!String.IsNullOrEmpty(settings.game))game=settings.game;
+                    using(var mutex=new System.Threading.Mutex(false,"Local\\BalatroTogether.Launcher."+user.Sid)) {
+                        bool owned=false;try{try{owned=mutex.WaitOne(0);}catch(System.Threading.AbandonedMutexException){owned=true;}if(!owned)return 0;Application.Run(new LauncherForm(user,game));}finally{if(owned)mutex.ReleaseMutex();}
+                    }
+                    return 0;
+                }
+                if(args.Length==2&&args[0]=="--update"){game=args[1];auto=true;}
                 if(args.Length==3 && args[0]=="--continue") { user=new JavaScriptSerializer().Deserialize<UserPaths>(Encoding.UTF8.GetString(Convert.FromBase64String(args[2]))); user.Validate(); game=args[1]; auto=true; }
                 SetupForm.PreviewMode=args.Length==2 && args[0]=="--preview";
                 var form=new SetupForm(user,game,auto);
