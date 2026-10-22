@@ -19,9 +19,9 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
-[assembly: AssemblyCompany("Balatro Together contributors")]
-[assembly: AssemblyVersion("0.6.3.0")]
-[assembly: AssemblyFileVersion("0.6.3.0")]
+[assembly: AssemblyCompany("Zero Crew")]
+[assembly: AssemblyVersion("0.6.4.0")]
+[assembly: AssemblyFileVersion("0.6.4.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -269,16 +269,16 @@ namespace TogetherSetup {
         readonly Button install, browse, play; readonly StudioProgress bar;
         bool busy, elevate, done;
         public SetupForm(UserPaths context,string selected,bool auto) : base(PreviewMode) {
-            user=context; Text="Install Balatro Together";
-            SetHeading("THE COMPLETE WINDOWS INSTALLER", "Take a seat.", "Install the full co-op bundle and your updating launcher.\nOne download. No folders to figure out.");
-            var location=new StudioPanel();location.SetBounds(350,244,520,92);Controls.Add(location);
-            location.Controls.Add(Studio.Label("YOUR STEAM GAME",16,12,450,19,8,Studio.Teal,true));
+            user=context; Text="Zero Crew | Install Balatro Together";
+            SetHeading("by Mind_the_assassin", "come join the retard fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
+            var location=new StudioPanel();location.SetBounds(350,266,520,92);Controls.Add(location);
+            location.Controls.Add(Studio.Label("YOUR STEAM GAME",16,12,450,19,8,Studio.Red,true));
             path.SetBounds(16,40,366,31);path.Text=selected;path.ReadOnly=true;path.BorderStyle=BorderStyle.None;path.BackColor=Studio.Panel;path.ForeColor=Studio.Cream;path.Font=new Font("Segoe UI",9);path.AccessibleName="Balatro game folder";location.Controls.Add(path);
             browse=new StudioButton {Text="Browse"};browse.SetBounds(394,29,109,47);browse.Click+=(sender,e)=>{using(var f=new OpenFileDialog {Filter="Balatro|Balatro.exe",Title="Choose Balatro.exe in your Steam library"})if(f.ShowDialog()==DialogResult.OK)path.Text=Path.GetDirectoryName(f.FileName);};location.Controls.Add(browse);
-            var activity=new StudioPanel();activity.SetBounds(350,350,520,126);Controls.Add(activity);
-            activity.Controls.Add(Studio.Label("INSTALLATION",16,12,450,18,8,Studio.Teal,true));
+            var activity=new StudioPanel();activity.SetBounds(350,374,520,102);Controls.Add(activity);
+            activity.Controls.Add(Studio.Label("INSTALLATION",16,12,450,18,8,Studio.Red,true));
             status.SetBounds(16,36,484,43);status.Font=new Font("Segoe UI",10,FontStyle.Bold);status.ForeColor=Studio.Cream;status.BackColor=Studio.Panel;status.Text=String.IsNullOrEmpty(selected)?"Find Balatro to get started.":"Balatro found. Ready when you are.";activity.Controls.Add(status);
-            bar=Progress;bar.SetBounds(16,97,486,9);activity.Controls.Add(bar);
+            bar=Progress;bar.SetBounds(16,82,486,9);activity.Controls.Add(bar);
             result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Close Balatro first. Saves and replaced mods are backed up.";Controls.Add(result);
             play=AddButton("Play Together",350,516,251,false,()=>{
                 if(Detection.Running()){MessageBox.Show(this,"Balatro is already open.");return;}
@@ -286,7 +286,7 @@ namespace TogetherSetup {
                 string launcher=Path.Combine(UpdateStorage.Root(user),"Launcher","Play Balatro Together.exe");Process.Start(new ProcessStartInfo(launcher,"--play"){WorkingDirectory=Path.GetDirectoryName(launcher)});Close();
             });play.Enabled=!PreviewMode&&File.Exists(Path.Combine(UpdateStorage.Root(user),"Launcher","Play Balatro Together.exe"));
             install=AddButton("Install / update",613,516,257,true,()=>Start());AcceptButton=install;
-            var manual=new LinkLabel {Text="Manual install, licenses & source",Location=new Point(350,48),Size=new Size(385,22),LinkColor=Studio.Muted,ActiveLinkColor=Studio.Teal,VisitedLinkColor=Studio.Muted,Font=new Font("Segoe UI",8)};manual.LinkClicked+=(sender,e)=>Studio.ExportManual(this);Controls.Add(manual);
+            var manual=new LinkLabel {Text="Manual install, licenses & source",Location=new Point(350,48),Size=new Size(385,22),LinkColor=Studio.Muted,ActiveLinkColor=Studio.Red,VisitedLinkColor=Studio.Muted,Font=new Font("Segoe UI",8)};manual.LinkClicked+=(sender,e)=>Studio.ExportManual(this);Controls.Add(manual);
             try{ReducedMotion=UpdateStorage.Load(user).reduced_motion;}catch{}
             MotionChanged+=value=>{try{var settings=UpdateStorage.Load(user);settings.reduced_motion=value;UpdateStorage.Save(user,settings);}catch{}};
             FormClosing+=(sender,e)=>{if(busy)e.Cancel=true;};if(auto)Shown+=(sender,e)=>Start();

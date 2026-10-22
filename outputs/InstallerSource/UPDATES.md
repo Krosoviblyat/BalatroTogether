@@ -1,4 +1,4 @@
-# Automatic updates (launcher/setup 0.6.3-dev)
+# Automatic updates (launcher/setup 0.6.4-dev)
 
 Run the standalone setup EXE once, with Balatro closed. No extraction is needed. Then use **Play Balatro Together** on your desktop. The shortcut opens the launcher, checks for a newer signed release, downloads and verifies it, and starts installation automatically. After installation, click Play (or use the desktop shortcut if Windows requested administrator access). The launcher never opens the game during a failed update.
 
@@ -41,13 +41,13 @@ The first init generates a signing key encrypted with current-user DPAPI under `
 For a release, bump `Build.Version`, assembly/manifest versions and changelog, set the correct embedded payload hash, and rebuild/test the installer with Build.cmd. Keep `UpdateKey.cs` unchanged. Package as `BalatroTogether-<version>-Easy-Installer.zip`, including its source, dependency licenses and exact upstream sources. Then run:
 
 ```bat
-SignUpdate.exe --sign BalatroTogether-0.6.3-dev-Easy-Installer.zip 0.6.3-dev release-assets
+SignUpdate.exe --sign BalatroTogether-0.6.4-dev-Easy-Installer.zip 0.6.4-dev release-assets
 ```
 
 For the native EXE path also run:
 
 ```bat
-SignUpdate.exe --sign BalatroTogether-Setup-0.6.3-dev.exe 0.6.3-dev release-assets
+SignUpdate.exe --sign BalatroTogether-Setup-0.6.4-dev.exe 0.6.4-dev release-assets
 ```
 
 This produces Update-v2.json and Update-v2.sig. Publish the EXE and both v2 assets. Keep the legacy ZIP, Update.json and Update.sig on this transition release for 0.6.2 launchers. Never sign different EXE bytes from those packaged inside that ZIP.
