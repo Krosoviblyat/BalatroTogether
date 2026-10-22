@@ -1,0 +1,10 @@
+work/
+*.zip
+*.exe
+*.dll
+*.lnk
+**/__pycache__/
+**/test-output/
+.env*
+*.pem
+*.key
