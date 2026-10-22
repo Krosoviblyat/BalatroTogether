@@ -1,0 +1,27 @@
+{
+  "id": "BalatroTogether",
+  "name": "Balatro Together",
+  "display_name": "Together - Co-op",
+  "author": [
+    "Balatro Together contributors (AI-assisted development)"
+  ],
+  "description": "Endless Cryptid co-op with tactile UI, Space challenge jackpots, personal and team Bet Pots, native bots, donations and Steam invites.",
+  "prefix": "btogether",
+  "main_file": "main.lua",
+  "priority": 1000,
+  "version": "0.6.1-dev",
+  "badge_colour": "34D6B4",
+  "dependencies": [
+    "Steamodded (>=26.1002.0)",
+    "Lovely (>=0.10.0)",
+    "Balatro (>=1.0.1o)",
+    "Cryptid (>=0.5.17c)",
+    "Amulet (>=3.6.1)"
+  ],
+  "conflicts": [
+    "Multiplayer",
+    "MultiplayerAPI",
+    "BalatroCoop",
+    "Talisman (<=2.7)"
+  ]
+}

@@ -1,0 +1,33 @@
+[manifest]
+version = "1.0.0"
+dump_lua = false
+priority = 1000
+
+# Only the win predicate changes. Individual chips remain individual; native
+# end-of-round joker evaluations and rewards still execute exactly once.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if G.GAME.chips - G.GAME.blind.chips >= 0 then"
+position = "at"
+payload = "if G.GAME.chips - G.GAME.blind.chips >= 0 or (BT and BT.round_won()) then"
+match_indent = true
+
+# Companion bots use the original native game in a hidden window and their own
+# save identity. Normal human clients do not enter this branch.
+[[patches]]
+[patches.pattern]
+target = "conf.lua"
+pattern = "t.console = not _RELEASE_MODE"
+position = "after"
+match_indent = true
+payload = """
+if os.getenv('BT_BOT_ID') then
+    t.identity = os.getenv('BT_BOT_ID')
+    t.console = false
+    t.window.visible = false
+    t.window.width = 960
+    t.window.height = 600
+    t.window.vsync = 1
+end
+"""
