@@ -1,0 +1,96 @@
+local M=dofile(ROOT..'/core/session.lua'); local D=dofile(ROOT..'/core/donations.lua'); M.Donations=D
+local motion=dofile(ROOT..'/ui/motion.lua')
+local count=0
+local function test(name,fn) fn(); count=count+1; print('PASS '..name) end
+local function room()
+    local m=M.new{intended=4}; for i=2,4 do assert(m:join('Player '..i,'token'..i)) end
+    for _,p in pairs(m.players) do p.ready=true end
+    assert(m:start('DONATE01'))
+    for _,p in pairs(m.players) do p.activity='blind_select' end
+    return m
+end
+local function apply(m,id,kind,data)
+    return m:apply(id,{seq=m.players[id].ack+1,run=m.run_id,kind=kind,data=data})
+end
+local function card(kind)
+    return {center=kind=='Joker' and 'j_juggler' or 'c_fool',kind=kind or 'Joker',name='Juggler',edition='foil',
+        ability={name='Juggler',set=kind or 'Joker',h_size=1,mult=9,extra={chips=57}},effect='Hand size +1'}
+end
+local function offer(m,id,n,c,target)
+    return apply(m,id,'donation_offer',{request=m.run_id..':'..id..':'..n,card=c or card('Joker'),target=target or 0})
+end
+test('deposit preserves native state and duplicate actions cannot duplicate an item',function()
+    local m=room(); assert(offer(m,1,1)); local item=m.donation_data.items[1]
+    assert(item.card.ability.mult==9 and item.card.ability.extra.chips==57 and item.card.edition=='foil')
+    assert(m:apply(1,{seq=1,run=1,kind='donation_offer',data={}})); assert(m.donation_data.counter==1)
+    assert(not offer(m,1,1)); assert(m.donation_data.counter==1)
+end)
+test('only one teammate can reserve a simultaneous claim',function()
+    local m=room(); assert(offer(m,1,1)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    assert(not apply(m,3,'donation_claim',{request='1:3:1',item=1})); assert(m.donation_data.items[1].claimer==2)
+    assert(m.players[2].transferring and not m.players[3].transferring)
+end)
+test('delivery data is sent only to the reserved recipient',function()
+    local m=room(); assert(offer(m,1,1)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    assert(m:snapshot(2).donations.items[1].payload.ability.mult==9)
+    assert(not m:snapshot(1).donations.items[1].payload and not m:snapshot(3).donations.items[1].payload)
+    assert(not m:snapshot(2).donation_data)
+end)
+test('claim commit is idempotent across retries and new acknowledgement sequences',function()
+    local m=room(); assert(offer(m,1,1)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    assert(apply(m,2,'donation_commit',{request='1:2:1',item=1})); assert(not next(m.donation_data.items))
+    local events=#m.events; assert(apply(m,2,'donation_commit',{request='1:2:1',item=1})); assert(#m.events==events)
+    assert(m.players[2].donation_receipt.status=='claimed' and not m.players[2].transferring)
+end)
+test('a transient disconnect retains a reservation until the same seat reconnects',function()
+    local m=room(); assert(offer(m,1,1)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    m:disconnect(2); assert(m.donation_data.items[1].status=='reserved')
+    assert(not apply(m,3,'donation_claim',{request='1:3:1',item=1})); assert(m:reconnect('token2')==2)
+    assert(apply(m,2,'donation_commit',{request='1:2:1',item=1}))
+end)
+test('full inventory delivery can cancel without consuming the gift',function()
+    local m=room(); assert(offer(m,1,1)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    assert(apply(m,2,'donation_cancel',{request='1:2:1',item=1})); assert(m.donation_data.items[1].status=='available')
+    assert(apply(m,3,'donation_claim',{request='1:3:1',item=1}))
+end)
+test('addressed gifts exclude other recipients but allow donor recovery',function()
+    local m=room(); assert(offer(m,1,1,nil,2))
+    assert(not apply(m,3,'donation_claim',{request='1:3:1',item=1}))
+    assert(apply(m,1,'donation_claim',{request='1:1:2',item=1})); assert(apply(m,1,'donation_cancel',{request='1:1:2',item=1}))
+    assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+end)
+test('retiring an absent receiver releases its gift for the active team',function()
+    local m=room(); assert(offer(m,1,1,nil,2)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    m:disconnect(2); assert(m:drop(2)); assert(m.donation_data.items[1].status=='available' and m.donation_data.items[1].target==0)
+end)
+test('eternal, malformed, oversized, cyclic and executable card state is rejected',function()
+    local m=room(); local c=card('Joker'); c.ability.eternal=true; assert(not offer(m,1,1,c))
+    c=card('Joker'); c.ability.extra=function() end; assert(not offer(m,1,2,c))
+    c=card('Joker'); c.ability.self=c.ability; assert(not offer(m,1,3,c))
+    c=card('Joker'); c.edition='unsupported'; assert(not offer(m,1,4,c))
+    c=card('Joker'); for i=1,40 do c.ability['text'..i]=string.rep('X',150) end; assert(not offer(m,1,5,c))
+    assert(not next(m.donation_data.items))
+end)
+test('box capacity, scoring phases and ready state are enforced',function()
+    local m=room(); for i=1,8 do assert(offer(m,1,i)) end; assert(not offer(m,1,9))
+    m=room(); m.players[1].ready=true; assert(not offer(m,1,1))
+    m.players[1].ready=false; m.phase='blind'; assert(not offer(m,1,2))
+end)
+test('pending receipt locks ready and restart removes escrow from the old run',function()
+    local m=room(); assert(offer(m,1,1)); assert(apply(m,2,'donation_claim',{request='1:2:1',item=1}))
+    assert(not apply(m,2,'ready',{ready=true})); assert(m:restart('DONATE02'))
+    assert(not next(m.donation_data.items) and not m.players[2].transferring)
+    assert(not m:apply(2,{seq=m.players[2].ack+1,run=1,kind='donation_commit',data={request='1:2:1',item=1}}))
+end)
+test('spring motion bounces, settles and obeys reduced motion without instability',function()
+    local s={x=0,v=0}; local peak=0
+    for _=1,240 do peak=math.max(peak,motion.spring(s,1,1/120,false,1)) end
+    assert(peak>1.02 and math.abs(s.x-1)<0.001)
+    motion.spring(s,0,10,false,1.5); assert(s.x==s.x and math.abs(s.x)<3)
+    motion.spring(s,1,1/60,true,1); assert(s.x==1 and s.v==0)
+    assert(motion.reveal(0,0,false)==0 and motion.reveal(0.1,0.2,false)==0)
+    assert(motion.reveal(0,1,true)==1 and math.abs(motion.reveal(2,0,false)-1)<0.0001)
+    for i=0,240 do local p=motion.reveal(i/120,0.05,false);assert(p>=0 and p<1.2) end
+end)
+print('TOTAL '..count..' DONATION/MOTION TESTS PASSED')
+return count
