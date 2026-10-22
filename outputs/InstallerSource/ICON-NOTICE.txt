@@ -1,0 +1,7 @@
+AppIcon.jpg was supplied by the user for the application icon. Together.ico
+contains resized copies for Windows. The image's copyright and other rights
+remain with its original rights holder. The MIT license for the original
+installer/source code does not grant rights in this third-party artwork.
+
+BrandIcon.cs converts that supplied image to 16, 24, 32, 48, 64, 128 and
+256-pixel icon entries; it does not generate or replace the artwork.
