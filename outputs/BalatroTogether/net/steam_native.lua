@@ -11,10 +11,15 @@ typedef struct { int result; BTSteamID lobby; } BTSteamLobbyCreated;
 typedef struct { BTSteamID lobby; unsigned int permissions; bool locked; unsigned int response; } BTSteamLobbyEntered;
 typedef struct { BTSteamID lobby; BTSteamID friend_id; } BTSteamJoinRequested;
 typedef struct { BTSteamID friend_id; char connect[256]; } BTSteamPresenceRequested;
+typedef struct { char unused; } BTSteamNewUrl;
 typedef struct { void **vtable; unsigned char flags; int callback; } BTSteamCallback;
 void *SteamAPI_SteamUser_v022(void);
 void *SteamAPI_SteamFriends_v017(void);
 void *SteamAPI_SteamUtils_v010(void);
+void *SteamAPI_SteamApps_v008(void);
+int SteamAPI_ISteamApps_GetLaunchCommandLine(void *, char *, int);
+bool SteamAPI_ISteamFriends_InviteUserToGame(void *, BTSteamID, const char *);
+const unsigned short *GetCommandLineW(void);
 void *SteamAPI_SteamMatchmaking_v009(void);
 void *SteamAPI_SteamNetworkingMessages_SteamAPI_v002(void);
 void *SteamAPI_SteamNetworkingUtils_SteamAPI_v004(void);
@@ -82,11 +87,14 @@ end
 local function register_invites()
     local queue={}; callbacks={queue=queue}
     callbacks.lobby=register(333,'BTSteamJoinRequested',queue,function(v) return decimal(v.lobby) end)
-    callbacks.presence=register(337,'BTSteamPresenceRequested',queue,function(v) return ffi.string(v.connect,256):match('^%+connect_lobby (%d+)%z') end)
+    callbacks.presence=register(337,'BTSteamPresenceRequested',queue,function(v) return ffi.string(v.connect,256):match('^[^%z]*') end)
+    -- Empty C++ payloads occupy one byte. Read only when the callback fires.
+    callbacks.url=register(1014,'BTSteamNewUrl',queue,function() return N.launch_command() end)
 end
 function N.init()
     if interfaces then return interfaces end
-    if N.failure then return nil,N.failure end
+    local now=love and love.timer and love.timer.getTime() or os.clock()
+    if N.retry_at and now<N.retry_at then return nil,N.failure end
     if not (G and G.STEAM) then return nil,'Open Balatro through Steam while signed in.' end
     local success,err=pcall(function()
         api=ffi.load('steam_api64')
@@ -111,12 +119,39 @@ function N.init()
             'SteamAPI_ISteamNetworkingMessages_AcceptSessionWithUser','SteamAPI_ISteamNetworkingMessages_CloseChannelWithUser',
             'SteamAPI_SteamNetworkingMessage_t_Release','SteamAPI_RegisterCallback','SteamAPI_UnregisterCallback'}
         for _,symbol in ipairs(required) do assert(api[symbol]) end
+        -- Older Steam DLLs can still use OS arguments and ordinary lobby invites.
+        pcall(function() assert(api.SteamAPI_ISteamApps_GetLaunchCommandLine); v.apps=api.SteamAPI_SteamApps_v008() end)
+        pcall(function() N.game_invite=api.SteamAPI_ISteamFriends_InviteUserToGame end)
         v.id=decimal(api.SteamAPI_ISteamUser_GetSteamID(v.user)); assert(id(v.id),'Invalid local Steam ID')
         api.SteamAPI_ISteamNetworkingUtils_InitRelayNetworkAccess(v.networking)
         register_invites(); interfaces=v
     end)
-    if not success then N.failure='Steam networking unavailable: '..tostring(err); return nil,N.failure end
+    if not success then N.retry_at=now+2; N.failure='Steam networking unavailable: '..tostring(err); return nil,N.failure end
+    N.failure=nil; N.retry_at=nil
     return interfaces
+end
+function N.launch_command()
+    if not (interfaces and interfaces.apps~=nil) then return end
+    local buffer=ffi.new('char[32768]')
+    local size=api.SteamAPI_ISteamApps_GetLaunchCommandLine(interfaces.apps,buffer,32768)
+    if size>0 and size<32768 then return ffi.string(buffer) end
+end
+function N.launch_args()
+    local out={}
+    if not N.checked_os then
+        N.checked_os=true
+        local success,line=pcall(function()
+            local wide=ffi.C.GetCommandLineW(); local chars={}
+            for i=0,32767 do
+                local c=tonumber(wide[i]); if c==0 then return table.concat(chars) end
+                chars[#chars+1]=c<128 and string.char(c) or '?'
+            end
+        end)
+        if success and line then out[#out+1]=line end
+    end
+    local line=N.launch_command()
+    if line and line~=N.last_launch then N.last_launch=line; out[#out+1]=line end
+    return out
 end
 function N.create() return api.SteamAPI_ISteamMatchmaking_CreateLobby(interfaces.matchmaking,1,4) end
 function N.join(lobby) return api.SteamAPI_ISteamMatchmaking_JoinLobby(interfaces.matchmaking,assert(id(lobby))) end
@@ -170,7 +205,11 @@ end
 function N.invite_friend(lobby,friend)
     local friendid=id(friend); if not friendid then return nil,'Choose a Steam friend from the list.' end
     if api.SteamAPI_ISteamFriends_GetFriendRelationship(interfaces.friends,friendid)~=3 then return nil,'That account is no longer on your Steam friends list.' end
-    if not api.SteamAPI_ISteamMatchmaking_InviteUserToLobby(interfaces.matchmaking,assert(id(lobby)),friendid) then return nil,'Steam could not send the lobby invite. Try again or copy the table link.' end
+    local lobbyid=assert(id(lobby))
+    -- Explicit game invites carry the connect string through cold launch as well
+    -- as GameRichPresenceJoinRequested while Balatro is already running.
+    if N.game_invite and N.game_invite(interfaces.friends,friendid,'+connect_lobby '..lobby) then return true end
+    if not api.SteamAPI_ISteamMatchmaking_InviteUserToLobby(interfaces.matchmaking,lobbyid,friendid) then return nil,'Steam could not send the game invite. Try again or copy the table link.' end
     return true
 end
 function N.presence(lobby)
@@ -183,7 +222,7 @@ end
 function N.pump() if interfaces then api.SteamAPI_RunCallbacks() end end
 function N.shutdown()
     if callbacks then
-        api.SteamAPI_UnregisterCallback(callbacks.lobby.object); api.SteamAPI_UnregisterCallback(callbacks.presence.object)
+        api.SteamAPI_UnregisterCallback(callbacks.lobby.object); api.SteamAPI_UnregisterCallback(callbacks.presence.object); api.SteamAPI_UnregisterCallback(callbacks.url.object)
     end
 end
 -- Steam invokes registered callbacks from the game's existing RunCallbacks.

@@ -2,7 +2,7 @@
 
 - The build is not a production release.
 - No standalone public room-code service. Steam mode uses Valve lobbies and reliable Steam networking; Direct IP uses TCP.
-- Steam invites/networking are experimental and Windows x64 only. User screenshots show a connected remote Steam player and shared score contributions. The new direct lobby-invite receipt/acceptance and broader internet/relay behavior still need testing. Avatars are not implemented. Steam must be online; the in-game friend picker does not use the overlay invite menu.
+- Steam invites/networking are experimental and Windows x64 only. User screenshots show a connected remote Steam player and shared score contributions. Version 0.6.5 adds explicit game invites, startup/URL handoff recovery and direct menu joining. Real cross-account invite acceptance, Steam launching a closed game on another PC and broader internet/relay behavior still need party verification. Avatars are not implemented. Steam must be online; the in-game friend picker does not use the overlay invite menu.
 - Host trusts native score results from friends; it does not replay or validate all joker triggers, purchases or card legality remotely.
 - No host migration or process restart recovery; transient reconnect requires keeping the original game open.
 - No late join after run start.

@@ -5,7 +5,7 @@ root=pathlib.Path(__file__).resolve().parents[1]
 meta=json.loads((root/'BalatroTogether.json').read_text(encoding='utf-8'))
 version=meta['version']
 assert re.fullmatch(r'[A-Za-z0-9.-]+',version)
-required=['BalatroTogether.json',meta['main_file'],'config.lua','lovely.toml',
+required=['BalatroTogether.json',meta['main_file'],'config.lua','lovely.toml','net/steam_invites.lua','tests/steam_invites_spec.lua',
     'core/numbers.lua','game/compat.lua','CRYPTID.md','tests/cryptid_spec.lua','core/session.lua','core/wire.lua','net/client.lua','net/thread.lua','net/steam.lua','net/steam_native.lua',
     'core/admin.lua','game/admin.lua','ui/admin.lua','ADMIN.md',
     'core/wheel_qte.lua','tests/expansion_spec.lua','core/boss_wheel.lua','core/boss_rewards.lua','core/dice.lua','core/dice_physics.lua','game/dice.lua','ui/dice.lua','ui/dice_renderer.lua','DICE.md',

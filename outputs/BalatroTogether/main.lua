@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.6.1-dev'
+BT.version='0.6.5-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
@@ -36,6 +36,8 @@ BT.donation.install()
 BT.pot.install()
 BT.dice.install()
 BT.ui.install()
+-- Install invite callbacks before vanilla's first Steam callback pump.
+if not (BT.bots and BT.bots.config) then BT.steam.available() end
 local update=love.update
 function love.update(dt)
     update(dt)

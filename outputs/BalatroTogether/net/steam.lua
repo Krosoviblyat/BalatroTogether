@@ -1,5 +1,6 @@
 local S={clock=0,peers={},pending_leaves={},sent_invites={},friend_list={}}
 local native=assert(SMODS.load_file('net/steam_native.lua',BT.id))()
+local invites=assert(SMODS.load_file('net/steam_invites.lua',BT.id))()
 local function queue()
     return {items={},push=function(self,v) if #self.items<256 then self.items[#self.items+1]=v end end,
         pop=function(self) return table.remove(self.items,1) end}
@@ -47,9 +48,24 @@ function S.invite_friend(friend)
     S.sent_invites[friend]=S.clock; BT.notice('Steam accepted the lobby invite. Your friend can accept it in Steam.'); return true
 end
 function S.valid_lobby(value)
-    if type(value)~='string' then return end
-    local lobby=value:match('^%s*(%d+)%s*$') or value:match('^steam://joinlobby/2379780/(%d+)/%d+/?$')
+    local lobby=invites.lobby(value)
     if lobby and native.valid_id and native.valid_id(lobby) then return lobby end
+end
+local function receive_invite(value)
+    local lobby=S.valid_lobby(value) or S.valid_lobby(invites.command(value))
+    if not lobby or lobby==S.lobby or (S.call and lobby==S.requested) or lobby==S.invited then return end
+    S.invited=lobby; S.pending_invite=true
+end
+local function deliver_invite()
+    if not S.pending_invite then return end
+    local client=BT.client
+    if not (client and BT.ui) then return end
+    local in_run=G and G.STAGES and G.STAGE==G.STAGES.RUN
+    local occupied=S.active or BT.state~=nil or client.connecting or client.connected or client.model~=nil or in_run
+    -- During boot wait for the menu. Never replace a party or solo run silently.
+    if not occupied and G and G.STAGES and G.STAGE~=G.STAGES.MAIN_MENU then return end
+    S.pending_invite=nil; BT.ui.focus=nil; BT.ui.closing=false
+    if occupied then BT.ui.screen='steam_invite' else client.join_steam(S.invited) end
 end
 local function begin(hosting,lobby)
     S.hosting=hosting; S.output=queue(); S.peers={}; S.blocked={}; S.lobby=nil; S.owner=nil; S.failed=false; S.friend_list={}; S.sent_invites={}
@@ -125,13 +141,17 @@ function S.update(dt)
         local p=S.pending_leaves[i]; local lobby=native.poll(p.call,p.hosting)
         if lobby~=nil then if lobby then native.leave(lobby) end; table.remove(S.pending_leaves,i) end
     end
-    for _,lobby in ipairs(native.invites()) do
-        if S.valid_lobby(lobby) and lobby~=S.lobby then S.invited=lobby; BT.ui.screen='steam_invite'; BT.ui.focus=nil end
-    end
     if not S.checked_args then
         S.checked_args=true
-        for i,value in ipairs(arg or {}) do if value=='+connect_lobby' and S.valid_lobby((arg or {})[i+1]) then S.invited=arg[i+1]; BT.ui.screen='steam_invite' end end
+        receive_invite(invites.command(arg or {}))
     end
+    if native.launch_args and (not S.next_launch_check or S.clock>=S.next_launch_check) then
+        S.next_launch_check=S.clock+1
+        for _,value in ipairs(native.launch_args()) do receive_invite(value) end
+    end
+    -- A fresh accepted invite wins over an older cold-launch argument.
+    for _,lobby in ipairs(native.invites()) do receive_invite(lobby) end
+    deliver_invite()
     if not S.active or S.failed then return end
     if S.call then
         local lobby,err=native.poll(S.call,S.hosting)

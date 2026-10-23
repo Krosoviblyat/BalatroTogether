@@ -1,4 +1,4 @@
-BALATRO TOGETHER + CRYPTID 0.6.1-dev — WINDOWS x64
+BALATRO TOGETHER + CRYPTID 0.6.5-dev — WINDOWS x64
 
 EASY INSTALL
 1. Everyone closes Balatro.
@@ -11,7 +11,7 @@ EASY INSTALL
    Everyone Ready Up; the host clicks Start Run.
 
 The installer includes Lovely 0.10.0, Steamodded 26.1002.0, Amulet 3.6.1,
-Cryptid 0.5.17c and Together 0.6.1-dev. No extra downloads are needed.
+Cryptid 0.5.17c and Together 0.6.5-dev. No extra downloads are needed.
 You need your own Steam copy of Balatro 1.0.1o-FULL on Windows x64.
 If the game is not found, click Find game and select Balatro.exe.
 Install the SAME bundle on every player's computer. Keep Steam online.

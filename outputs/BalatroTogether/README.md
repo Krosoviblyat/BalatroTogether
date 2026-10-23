@@ -1,6 +1,6 @@
 # Balatro Together — four-player cooperative testing build
 
-**0.6.1-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
+**0.6.5-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
 
 This build bundles Cryptid 0.5.17c with Amulet 3.6.1. Large native scores, Cryptid decks and card donations use the pinned compatibility layer. Read [CRYPTID.md](CRYPTID.md) for co-op rule adaptations and limits.
 

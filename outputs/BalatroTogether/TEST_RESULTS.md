@@ -1,5 +1,12 @@
 # Test results
 
+## 0.6.5-dev — Steam invite handoff — 2026-10-22
+
+166 Lua checks pass, including 15 new invite/native-bridge checks, with syntax for 53 Lua files. New cases cover quoted/sparse startup arguments, Steam launch API with empty LÖVE args, offline startup recovery, menu readiness, running-game invites, existing party/solo protection, duplicate suppression, stale startup precedence, bounded native initialization retry, explicit game invite/fallback and later launch parameters.
+
+An isolated copy of the owned Windows game loaded the exact pinned Cryptid stack. Seven native checks passed: Windows command-line recovery with LÖVE args deliberately cleared, SteamApps and game-invite exports, all three callback registrations, lobby/rich-presence delivery through real FFI callback bridges (10,000 repeat callback invocations), and exactly three expected fixture joins. Join transport was intercepted; no real friends were invited. Live game files were fingerprinted and remained unchanged. This does not prove real cross-account delivery, relay behavior or Steam launching a closed game on another PC; those need a second account/device.
+
+
 ## 0.6.1-dev — native menu overlap hotfix — 2026-10-22
 
 151 Lua checks and syntax for all 51 files pass. The added regression forbids any HUD/toast/inspector graphics calls under a native overlay, clears cached hit rectangles and verifies native mouse, release and wheel callbacks bypass stale Together controls. Controls work again after the overlay closes.

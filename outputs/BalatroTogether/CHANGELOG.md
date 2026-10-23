@@ -1,3 +1,11 @@
+# 0.6.5-dev — Steam invite handoff
+
+- Send explicit Steam game invites with the lobby connect string; retain ordinary lobby invites as a fallback.
+- Recover invites from SteamApps launch parameters, Windows command line and LÖVE arguments, including quoted IDs.
+- Handle NewUrlLaunchParameters and both running-game invite callbacks. Register before the first vanilla callback pump and retry temporary Steam startup/offline failures.
+- Join accepted invites directly from the menu; confirm before replacing a party or solo run. Suppress duplicate in-flight joins and prefer fresh accepted invites over stale startup arguments.
+- All party members must update. Real cross-account acceptance and Steam's closed-game launch still require party verification.
+
 # 0.6.1-dev — native menu overlap fix
 
 - Hide the Together HUD, feed, inspector and toast while a native deck/run-info/options menu owns the screen.
