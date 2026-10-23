@@ -32,7 +32,7 @@ function D.space(isrepeat)
     return true
 end
 function D.reset()
-    D.run=nil; D.pending=nil; D.counter=0; D.applied=0; D.animations={}; D.ack_at=-10; D.finish_at=-10
+    D.run=nil; D.pending=nil; D.counter=0; D.applied=0; D.silent_applied=0; D.animations={}; D.ack_at=-10; D.finish_at=-10
     D.effect_applied=0; D.effect_steps={}; D.round_steps={}; D.effect_ack_at=-10
     D.space_down=false;D.qte_id=nil;D.qte_press=0
 end
@@ -116,7 +116,11 @@ function D.update(dt)
     local total=p.dice_credit or 0
     if total>D.applied and BT.pot.settled() then
         local amount=total-D.applied
-        if BT.pot.change_money(amount) then D.applied=total; BT.notice('Reward dice awarded $'..amount..'.') end
+        if BT.pot.change_money(amount) then
+            local silent=math.max(0,(p.dice_silent_credit or 0)-(D.silent_applied or 0))
+            D.applied=total;D.silent_applied=p.dice_silent_credit or 0
+            if amount>silent then BT.notice('Reward dice awarded $'..(amount-silent)..'.') end
+        end
     end
     if D.applied==total and total>(p.dice_received or 0) and BT.client.connected and D.clock-D.ack_at>0.5 then
         D.ack_at=D.clock; BT.client.action('dice_received',{total=total})

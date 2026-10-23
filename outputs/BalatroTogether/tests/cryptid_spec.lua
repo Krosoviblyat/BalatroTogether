@@ -15,6 +15,13 @@ test('real Amulet cdata scores roundtrip through bounded JSON beyond native infi
     end
     assert(J.decode(J.encode({v=big(25)})).v==25)
 end)
+test('native save codec retains small and huge Amulet cdata instead of reducing its type',function()
+    local codec=dofile(ROOT..'/core/save_codec.lua');local raw=dofile(ROOT..'/vendor/json.lua')
+    for _,value in ipairs({'0','1','4','-4','1e1000','ee100'}) do
+        local x=big(value);local y=codec.decode(codec.encode({value=x},raw,N),raw,N).value
+        assert(N.big(y) and x==y,'Native Big type/value changed: '..value)
+    end
+end)
 test('hostile big-number envelopes are rejected before invoking the arithmetic backend',function()
     for _,payload in ipairs({
         {__bt_omega=2,sign=1,values={'100','2'}},

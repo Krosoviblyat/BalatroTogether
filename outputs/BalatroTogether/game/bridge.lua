@@ -8,8 +8,13 @@ function B.finish_round(...)
 end
 local function me() return BT.state and BT.state.players[tostring(BT.client.id)] end
 local function stable()
-    return G and not G.SETTINGS.paused and not G.OVERLAY_MENU and not G.CONTROLLER.lock_input
+    return G and not G.SETTINGS.paused and not G.OVERLAY_MENU and not G.OVERLAY_TUTORIAL and not G.CONTROLLER.lock_input
         and G.E_MANAGER and not G.CONTROLLER.locks.use
+end
+function B.can_start_native()
+    -- Starting clears native event queues. Let tutorials (including Cryptid's
+    -- delayed Jimbo creation) and menu wipes finish before touching those queues.
+    return stable() and not G.screenwipe and not G.CONTROLLER.locks.use
 end
 function B.reset()
     if BT.donation then BT.donation.reset() end
@@ -20,6 +25,7 @@ function B.reset()
     B.finished=0; B.shopready=nil; B.laststatus=nil; B.lastphase=nil; B.started_round=0
     B.evaluated_round=nil; B.entry_sent=nil; B.shop_sent_at=-10; B.cashout_requested=nil; B.mismatch=nil
     B.entry_pending=nil; B.entry_sent_at=-10; B.shop_pending=nil
+    B.skip_applied=nil;B.skip_pending=nil;B.skip_ack=nil;B.skip_sent_at=-10
 end
 local labels={'Small','Big','Boss'}
 local function settled()
@@ -78,7 +84,9 @@ local function status()
     elseif G.booster_pack then activity='pack' end
     local deck={Spades=0,Hearts=0,Clubs=0,Diamonds=0}
     for _,c in ipairs(G.playing_cards or {}) do if c.base and deck[c.base.suit] then deck[c.base.suit]=deck[c.base.suit]+1 end end
-    return {activity=activity,hands=G.GAME.current_round.hands_left,discards=G.GAME.current_round.discards_left,
+    local position=B.position()
+    return {activity=activity,native_safe=G.STATE==G.STATES.BLIND_SELECT and G.blind_select~=nil and settled() and not G.shop and not G.booster_pack and not G.CONTROLLER.locks.skip_blind,
+        native_ante=position.ante,native_index=position.index,hands=G.GAME.current_round.hands_left,discards=G.GAME.current_round.discards_left,
         money=G.GAME.dollars,jokers=cards(G.jokers),consumables=cards(G.consumeables),deck=deck,
         reveal=BT.config.reveal_hand,inspect=BT.config.inspect,board=BT.config.reveal_hand and cards(G.hand,true) or {},
         played=cards(G.play),shop=cards(G.shop_jokers)}
@@ -91,6 +99,12 @@ function B.ready()
     if BT.state.phase=='shop' then
         if not B.finish_shop(true) then BT.notice('Waiting for native shop completion at the matching next blind.'); end
     else BT.client.ready() end
+end
+function B.vote_skip(choice)
+    if not active() or G.STATE~=G.STATES.BLIND_SELECT or not G.blind_select or not settled() then BT.notice('Reach blind selection before voting.');return end
+    local position=B.position();position.choice=choice or 'yes'
+    BT.client.action('status',status())
+    BT.client.action('skip_vote',position)
 end
 function B.finish_shop(explicit)
     local s=BT.state; local p=me()
@@ -208,7 +222,11 @@ function B.install()
         end
         return cash(e,...)
     end end
-    for _,name in ipairs({'skip_blind','reroll_boss','can_reroll_boss'}) do
+    B.refs.skip_blind=G.FUNCS.skip_blind
+    if B.refs.skip_blind then G.FUNCS.skip_blind=function(e,...)
+        if active() then return B.vote_skip('yes') end;return B.refs.skip_blind(e,...)
+    end end
+    for _,name in ipairs({'reroll_boss','can_reroll_boss'}) do
         local ref=G.FUNCS[name]
         if ref then G.FUNCS[name]=function(e,...)
             if active() then if e and e.config then e.config.button=nil end; BT.notice('Co-op uses shared blinds; skips and boss rerolls are disabled.'); return end
@@ -233,12 +251,14 @@ function B.install()
         end
         return buy(e,...)
     end
-    local go=G.FUNCS.go_to_menu
+    local go=G.FUNCS.go_to_menu;B.refs.go_to_menu=go
     G.FUNCS.go_to_menu=function(...) if BT.state then BT.client.stop() end; return go(...) end
 end
 function B.update(dt)
     if not BT.state or BT.state.phase=='lobby' then return end
+    if BT.state.phase=='resuming' and BT.save then BT.save.restore_native();return end
     if not B.started or B.run_id~=BT.state.run_id then
+        if not B.can_start_native() then return end
         B.reset(); B.run_id=BT.state.run_id
         B.started=true; BT.ui.screen=nil
         local deck=BT.state.deck or 'b_red'
@@ -250,6 +270,21 @@ function B.update(dt)
         return
     end
     if not G.GAME or not G.GAME.current_round or G.STAGE~=G.STAGES.RUN then return end
+    if BT.state.phase=='skipping' then
+        local order=BT.state.skip_order;local position=B.position()
+        if order and G.STATE==G.STATES.BLIND_SELECT and settled() then
+            if position.ante==order.ante and position.index==order.index and B.skip_applied~=order.id then
+                local option=G.blind_select_opts and G.blind_select_opts[order.index==1 and 'small' or 'big']
+                if option and option:get_UIE_by_ID('tag_container') then
+                    B.skip_applied=order.id;B.refs.skip_blind({UIBox=option,config={}})
+                end
+            elseif position.ante==order.ante and position.index==order.index+1 and not G.CONTROLLER.locks.skip_blind and not B.skip_pending and B.skip_ack~=order.id and BT.client.clock-B.skip_sent_at>0.5 then
+                B.skip_pending=true;local data={order=order.id,ante=position.ante,index=position.index}
+                B.skip_sent_at=BT.client.clock
+                if not BT.client.action('skip_done',data,function(ok) B.skip_pending=nil;if ok then B.skip_ack=order.id end end) then B.skip_pending=nil end
+            end
+        end
+    end
     -- The host explicitly selects each blind identity; seed agreement alone is not authority.
     if BT.state.phase=='prepare' and G.STATE==G.STATES.BLIND_SELECT and G.blind_select then
         if settled() and G.GAME.round_resets.ante~=BT.state.ante and B.mismatch~=BT.state.round then
@@ -272,7 +307,7 @@ function B.update(dt)
         local label=({'Small','Big','Boss'})[proposal.index]
         -- Steamodded uses blind_on_deck and Current states to classify a blind.
         -- Canonicalize the slot before native queued construction can rebuild UI.
-        for i,name in ipairs(labels) do G.GAME.round_resets.blind_states[name]=i<proposal.index and 'Defeated' or i==proposal.index and 'Select' or 'Upcoming' end
+        for i,name in ipairs(labels) do G.GAME.round_resets.blind_states[name]=i<proposal.index and (G.GAME.round_resets.blind_states[name]=='Skipped' and 'Skipped' or 'Defeated') or i==proposal.index and 'Select' or 'Upcoming' end
         G.GAME.round_resets.blind_choices[label]=proposal.key; G.GAME.blind_on_deck=label
         B.refs.select_blind({config={ref_table=G.P_BLINDS[proposal.key]},UIBox=G.blind_select})
     end

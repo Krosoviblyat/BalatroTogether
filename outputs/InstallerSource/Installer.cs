@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Zero Crew")]
-[assembly: AssemblyVersion("0.6.5.0")]
-[assembly: AssemblyFileVersion("0.6.5.0")]
+[assembly: AssemblyVersion("0.7.0.0")]
+[assembly: AssemblyFileVersion("0.7.0.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {

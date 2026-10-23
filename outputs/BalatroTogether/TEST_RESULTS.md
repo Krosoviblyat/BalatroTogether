@@ -1,5 +1,16 @@
 # Test results
 
+## 0.7.0-dev — party features and Cryptid transition repair — 2026-10-23
+
+193 Lua checks pass with syntax for 64 Lua files. New coverage includes native tutorial/menu-wipe start guards, local held-key repeat and UTF-8 editing, majority vote ties/expiry/bots/stale positions, native skip acknowledgements, data-only checkpoint/chunk validation, large escaped-string parsing, stopped native GC, original saved seats and authorized absent-seat retirement. Existing account authorization, Steam invite dispatch, pots, rewards, Cryptid and Amulet regressions also pass.
+
+Seven real two-client checks passed in private Windows game copies: initial automatic checkpoint, quiet admin cash, held Backspace, majority skip with native tags and no earned round, Save & Leave, exact native build/wallet/pot restoration at the menu, and the same restoration after closing both processes. Each seat kept two native Jokers; host/guest dollars remained $84/$115, the team wager $10 and guest personal wager $4, without repeated credits. The test deliberately reproduced Cryptid onboarding and confirmed that native transitions wait for its tutorial. Native inspector and skip-vote layouts were inspected at 960x600 and 1920x1080.
+
+Three live Steam backend checks passed: publish/resolve an exact six-digit code, rotate and reject the old code, resolve the new code to the same lobby. No real friend invites were sent. A hidden native bot uploaded its checkpoint, closed on Save & Leave and respawned into its original restored seat. Live game files were fingerprinted and remained unchanged; all tests use separate profiles.
+
+These checks do not prove cross-account Steam invitation receipt, Steam launching a closed game on another PC, four-PC relay quality, every Cryptid interaction or an ordinary eight-ante victory. Signed installer/update tests are recorded separately in the setup package. Large saves have bounded data-only validation, not a guarantee of compatibility with arbitrary extra mods.
+
+
 ## 0.6.5-dev — Steam invite handoff — 2026-10-22
 
 166 Lua checks pass, including 15 new invite/native-bridge checks, with syntax for 53 Lua files. New cases cover quoted/sparse startup arguments, Steam launch API with empty LÖVE args, offline startup recovery, menu readiness, running-game invites, existing party/solo protection, duplicate suppression, stale startup precedence, bounded native initialization retry, explicit game invite/fallback and later launch parameters.

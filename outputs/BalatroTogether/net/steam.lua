@@ -21,7 +21,7 @@ function S.name()
     if ok and type(name)=='string' and name~='' and name~='[unknown]' then return name:sub(1,40) end
 end
 function S.friends()
-    if not (S.lobby and S.hosting and BT.client and BT.client.model and BT.client.model.phase=='lobby') then BT.notice('Open a Steam table before inviting friends.'); return end
+    if not (S.lobby and S.hosting and BT.client and BT.client.model and (BT.client.model.phase=='lobby' or BT.client.model.phase=='resuming')) then BT.notice('Open a Steam table before inviting friends.'); return end
     S.refresh_friends(); BT.ui.screen='steam_friends'; BT.ui.focus=nil; return true
 end
 function S.refresh_friends()
@@ -38,10 +38,14 @@ function S.refresh_friends()
     end)
 end
 function S.invite_friend(friend)
-    if not (S.active and S.hosting and S.lobby and BT.client and BT.client.model and BT.client.model.phase=='lobby') then BT.notice('Invites are available in the host Steam lobby before the run starts.'); return end
+    if not (S.active and S.hosting and S.lobby and BT.client and BT.client.model and (BT.client.model.phase=='lobby' or BT.client.model.phase=='resuming')) then BT.notice('Invites are available before the run or while restoring your party.'); return end
     local found=false; for _,entry in ipairs(S.friend_list or {}) do if entry.id==friend then found=true; break end end
     if not found or S.peers[friend] then BT.notice('Choose a friend who has not joined this table.'); return end
-    if BT.client.model:count()>=BT.client.model.intended then BT.notice('Every intended seat is filled. Remove a bot or open a larger table first.'); return end
+    if BT.client.model.phase=='lobby' and BT.client.model:count()>=BT.client.model.intended then BT.notice('Every intended seat is filled. Remove a bot or open a larger table first.'); return end
+    if BT.client.model.phase=='resuming' then
+        local reserved=false;for _,p in pairs(BT.client.model.players) do if p.steam_id==friend and not p.withdrawn and not p.connected then reserved=true end end
+        if not reserved then BT.notice('This saved party reserves its original players\' seats.');return end
+    end
     if S.sent_invites[friend] and S.clock-S.sent_invites[friend]<10 then BT.notice('Invite already sent. Give your friend a moment to accept it.'); return end
     local ok,err=native.invite_friend(S.lobby,friend)
     if not ok then BT.notice(err or 'Steam could not send the lobby invite.'); return end
@@ -70,7 +74,8 @@ end
 local function begin(hosting,lobby)
     S.hosting=hosting; S.output=queue(); S.peers={}; S.blocked={}; S.lobby=nil; S.owner=nil; S.failed=false; S.friend_list={}; S.sent_invites={}
     S.active=true; S.started=S.clock; S.last_members=-1
-    S.call=hosting and native.create() or native.join(lobby); S.requested=lobby
+    S.code=nil; S.code_ready=nil; S.code_call=nil; S.lookup_call=nil; S.lookup_code=nil; S.code_tries=0;S.joinable_state=nil
+    S.call=hosting and native.create() or (lobby and native.join(lobby)); S.requested=lobby
     S.input={push=function(_,cmd)
         if cmd.type=='send' then S.send(cmd.id,cmd.line)
         elseif cmd.type=='close' then S.close(cmd.id)
@@ -80,11 +85,19 @@ local function begin(hosting,lobby)
 end
 function S.host() return begin(true) end
 function S.join(lobby) return begin(false,lobby) end
+function S.valid_code(value) return type(value)=='string' and value:match('^%d%d%d%d%d%d$') and value or nil end
+function S.join_code(code)
+    assert(S.valid_code(code),'Use a six-digit table code.')
+    local input,output=begin(false);S.lookup_code=code;S.lookup_call=native.search(code)
+    return input,output
+end
 function S.stop()
     if S.lobby then native.presence(nil); native.leave(S.lobby) end
     if S.call then S.pending_leaves[#S.pending_leaves+1]={call=S.call,hosting=S.hosting} end
     for remote in pairs(S.peers) do native.close(remote) end
     S.active=false; S.call=nil; S.lobby=nil; S.owner=nil; S.peers={}; S.output=nil; S.input=nil
+    S.code=nil; S.code_ready=nil; S.code_call=nil; S.lookup_call=nil; S.lookup_code=nil
+    S.invited=nil; S.pending_invite=nil
 end
 function S.is_peer(peer) return type(peer)=='string' and peer:match('^steam:%d+$')~=nil and S.peers[peer:sub(7)]~=nil end
 function S.send(peer,line)
@@ -108,10 +121,16 @@ function S.reconnect()
     S.last_members=-1; S.started=S.clock
 end
 local function fail(message) emit{type='error',error=message}; S.failed=true end
+local function choose_code()
+    S.code_tries=S.code_tries+1;S.code=string.format('%06d',love.math.random(100000,999999))
+    if native.search then S.code_call=native.search(S.code) else S.code_ready=true end
+end
 local function metadata()
     if S.hosting then
         if not native.set(S.lobby,'bt_mod','BalatroTogether') or not native.set(S.lobby,'bt_version',BT.version) or not native.set(S.lobby,'bt_host',S.local_id) then fail('Steam could not publish this table. Try hosting again.'); return end
-        S.owner=S.local_id; native.presence(S.lobby); BT.notice('Steam table ready. Use INVITE FRIENDS; no IP or port forwarding needed.')
+        S.owner=S.local_id; native.presence(S.lobby)
+        if native.joinable then native.joinable(S.lobby,false) end
+        choose_code();BT.notice('Opening a fresh six-digit table code...')
     else
         if native.get(S.lobby,'bt_mod')~='BalatroTogether' or native.get(S.lobby,'bt_version')~=BT.version then fail('All players need Balatro Together '..BT.version..'.'); return end
         S.owner=native.get(S.lobby,'bt_host')
@@ -153,6 +172,18 @@ function S.update(dt)
     for _,lobby in ipairs(native.invites()) do receive_invite(lobby) end
     deliver_invite()
     if not S.active or S.failed then return end
+    if S.lookup_call then
+        local matches,err=native.poll_search(S.lookup_call)
+        if matches==nil then if S.clock-S.started>22 then fail('Code lookup timed out. Check Steam and try again.') end;return end
+        S.lookup_call=nil
+        if not matches then fail(err);return end
+        local valid={}
+        for _,lobby in ipairs(matches) do if S.valid_lobby(lobby) and native.get(lobby,'bt_mod')=='BalatroTogether' and native.get(lobby,'bt_code')==S.lookup_code then valid[#valid+1]=lobby end end
+        if #valid==0 then fail('No open table has that code. Ask the host for their current six digits.');return end
+        if #valid~=1 then fail('That code matched more than one table. Ask your host to make a fresh code.');return end
+        if native.get(valid[1],'bt_version')~=BT.version then fail('That table uses another build. Everyone must update to '..BT.version..'.');return end
+        S.requested=valid[1];S.call=native.join(valid[1]);S.started=S.clock
+    end
     if S.call then
         local lobby,err=native.poll(S.call,S.hosting)
         if lobby==nil then if S.clock-S.started>20 then fail('Steam lobby request timed out. Check that Steam is online.') end; return end
@@ -161,6 +192,26 @@ function S.update(dt)
         S.lobby=lobby; metadata(); if S.failed then return end
     end
     if not S.lobby then return end
+    if S.hosting and S.code_call then
+        local matches,err=native.poll_search(S.code_call)
+        if matches==nil then if S.clock-S.started>22 then fail('Steam could not register a table code. Try hosting again.') end;return end
+        S.code_call=nil
+        if not matches then fail(err);return end
+        local collision=false;for _,lobby in ipairs(matches) do if lobby~=S.lobby then collision=true end end
+        if collision then
+            if S.code_tries>=8 then fail('Steam codes are busy. Try hosting again.');return end
+            choose_code();return
+        end
+        if not native.set(S.lobby,'bt_code',S.code) then fail('Steam could not publish the table code.');return end
+        S.code_ready=true
+        if BT.client and BT.client.model then BT.client.model.room_code=S.code;BT.client.model:changed() end
+        BT.notice('Your Steam table is open. Share code '..S.code..'.')
+    end
+    if S.hosting and S.code_ready and native.joinable then
+        local phase=BT.client and BT.client.model and BT.client.model.phase
+        local joinable=phase=='lobby' or phase=='resuming'
+        if joinable~=S.joinable_state then native.joinable(S.lobby,joinable);S.joinable_state=joinable end
+    end
     if S.clock-S.last_members>0.25 then S.last_members=S.clock; refresh(); if S.failed then return end end
     for _=1,4 do
         local packets=native.receive(); if #packets==0 then break end
@@ -181,6 +232,13 @@ function S.update(dt)
         if S.clock-peer.last>20 then native.close(remote); S.peers[remote]=nil; emit{type='closed',id=key(remote),error='Steam connection timed out.'} end
     end
     if not S.hosting and S.clock-S.started>25 and not (BT.client and BT.client.connected) then fail('Steam connection timed out. Ask the host to reopen the table and invite again.') end
+end
+function S.rotate_code()
+    if not (S.hosting and S.lobby and S.code_ready and BT.client.model and (BT.client.model.phase=='lobby' or BT.client.model.phase=='resuming')) then return end
+    S.code_ready=nil;S.started=S.clock;S.code_tries=0;S.joinable_state=nil
+    if native.joinable then native.joinable(S.lobby,false) end
+    BT.client.model.room_code=nil;BT.client.model:changed()
+    choose_code()
 end
 function S.shutdown() S.stop(); if native.shutdown then native.shutdown() end end
 return S

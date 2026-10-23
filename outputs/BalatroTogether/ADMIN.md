@@ -12,7 +12,7 @@ Select a player at the top, then grant one of:
 - Three banked free shop refreshes for this run.
 - +2 hands, +2 discards, +100 chips per hand or +20 Mult per hand for the next blind.
 
-The recipient must be connected, unready and between blinds, with no unfinished transfer or reward. Grants use the same native delivery receipts as normal rewards, so repeated network messages do not duplicate them. Pending native deliveries hold ready/restart controls. The party feed identifies admin actions.
+The recipient must be connected, unready and between blinds, with no unfinished transfer or reward. Grants use the same native delivery receipts as normal rewards, so repeated network messages do not duplicate them. Pending native deliveries hold ready/restart controls. Grants and sync retries have no public admin feed announcement; admin cash also avoids a reward toast. The recipient can still see their changed native wallet/build. A deliberate party restart remains visible as a normal restart.
 
 ## Run recovery
 

@@ -6,7 +6,7 @@ meta=json.loads((root/'BalatroTogether.json').read_text(encoding='utf-8'))
 version=meta['version']
 assert re.fullmatch(r'[A-Za-z0-9.-]+',version)
 required=['BalatroTogether.json',meta['main_file'],'config.lua','lovely.toml','net/steam_invites.lua','tests/steam_invites_spec.lua',
-    'core/numbers.lua','game/compat.lua','CRYPTID.md','tests/cryptid_spec.lua','core/session.lua','core/wire.lua','net/client.lua','net/thread.lua','net/steam.lua','net/steam_native.lua',
+    'core/checkpoint.lua','core/save_codec.lua','core/save_json.lua','core/skip_vote.lua','core/text_input.lua','game/checkpoint.lua','ui/inspect.lua','ui/vote.lua','ui/saving.lua','tests/party_spec.lua','tests/steam_code_spec.lua','SAVES.md','core/numbers.lua','game/compat.lua','CRYPTID.md','tests/cryptid_spec.lua','core/session.lua','core/wire.lua','net/client.lua','net/thread.lua','net/steam.lua','net/steam_native.lua',
     'core/admin.lua','game/admin.lua','ui/admin.lua','ADMIN.md',
     'core/wheel_qte.lua','tests/expansion_spec.lua','core/boss_wheel.lua','core/boss_rewards.lua','core/dice.lua','core/dice_physics.lua','game/dice.lua','ui/dice.lua','ui/dice_renderer.lua','DICE.md',
     'core/pot.lua','game/pot.lua','ui/pot.lua','BET_POT.md',

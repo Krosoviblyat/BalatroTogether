@@ -17,7 +17,10 @@ M.copy = copy
 local function finite(x) return type(x) == 'number' and x == x and x >= 0 and x < 1e300 end
 local function score_number(x) return M.Numbers and M.Numbers.score(x) or (finite(x) and x<=1e100) end
 local function integer(x, lo, hi) return finite(x) and x % 1 == 0 and x >= lo and x <= hi end
-local function clean(x, n) return tostring(x or ''):gsub('[%z\1-\31\127]', ''):sub(1, n or 40) end
+local function clean(x, n)
+    local value=tostring(x or ''):gsub('[%z\1-\31\127]', '')
+    return M.limit_text and M.limit_text(value,n or 40) or value:sub(1,n or 40)
+end
 function M.limit_text(value,limit)
     local n=math.max(0,math.min(#value,limit))
     while n>0 do local b=value:byte(n+1); if not b or b<128 or b>191 then break end; n=n-1 end
@@ -40,7 +43,7 @@ end
 function M.new(opts)
     opts=opts or {}
     local self=setmetatable({phase='lobby', revision=0, round=0, ante=1, blind_index=1,
-        intended=opts.intended or 4, scaling=opts.scaling or 1, players={}, events={},
+        intended=opts.intended or 4, scaling=opts.scaling or 1, players={}, events={},party_id=opts.party_id,save_autos=opts.save_autos==true,
         seed='', target=0, score=0, lifetime_score=0, winner=nil, proposal=nil,
         completed_antes=0, protocol=M.PROTOCOL,run_id=0,restarts=0,
         deck=opts.deck or 'b_red',custom_seed=opts.seed or '',endless=opts.endless~=false,donation_data={items={},seen={},history={},history_order={},counter=0}},M)
@@ -109,6 +112,7 @@ function M:start(seed)
 end
 function M:restart(seed)
     if self.phase=='lobby' then return nil,'Start the party run first.' end
+    if self.phase=='saving' or self.phase=='resuming' or self.phase=='skipping' then return nil,'Finish the party checkpoint or skip before restarting.' end
     if not self:all(function(p) return p.connected end) then return nil,'Reconnect or retire absent players before restarting.' end
     if not self:all(function(p) return (not M.Pot or not M.Pot.pending(p)) and (not M.Dice or not M.Dice.pending(p)) end) then return nil,'Wait for payouts and dice before restarting.' end
     seed=self.custom_seed~='' and self.custom_seed or clean(seed,8):upper()
@@ -126,6 +130,8 @@ function M:restart(seed)
         self.players[id]=fresh
     end
     self.admin_recovery=0; self.admin_effect_counter=0
+    self.skip_vote=nil;self.skip_order=nil;self.skip_counter=0;self.last_skip=nil
+    self.checkpoint=nil;self.checkpoint_position=nil;self.saved_leave=nil;self.manual_save_requested=nil;self.save_leave_requested=nil
     self:event(1,'milestone','FRESH TABLE - PARTY RESTARTED'); self:changed(); return true
 end
 function M:set_proposal(id, data)
@@ -137,6 +143,8 @@ function M:set_proposal(id, data)
     self.proposal=copy(data); self:changed(); return true
 end
 function M:begin_blind()
+    if self.skip_vote or self.checkpoint and self.checkpoint.status=='saving' then return end
+    if M.Save and self.save_autos and self.checkpoint_position~=M.Save.position(self) then return end
     if not self.proposal or not self:all(function(p) return p.connected and p.ready and not p.transferring and (not M.Pot or not M.Pot.pending(p)) and (not M.Dice or not M.Dice.pending(p)) end) then return end
     self.round=self.round+1; self.phase='starting'; self.score=0; self.winner=nil
     local target=self.proposal.base * self:count()^1.08 * self.scaling
@@ -150,6 +158,8 @@ function M:begin_blind()
     self:event(1,'milestone','waiting for every native blind to load'); self:changed()
 end
 function M:advance()
+    if self.phase=='resuming' and M.Save then M.Save.advance(self);return end
+    if self.phase=='skipping' and M.Vote then M.Vote.advance(self);return end
     if self.phase=='prepare' then self:begin_blind(); return end
     if self.phase=='starting' then
         if self:all(function(p) return p.connected and p.entered end) then
@@ -206,7 +216,12 @@ function M:apply(id, action)
     end
     local kind=action.kind; local d=action.data or {}; local ok,err=true,nil
     if type(d)~='table' then return nil,'Invalid action payload.' end
-    if kind=='rename' then
+    if (self.phase=='saving' or self.phase=='resuming') and kind~='status' and kind~='restore_ready'
+        and not (self.phase=='resuming' and kind=='admin_retire') then
+        ok,err=nil,'Waiting for the party checkpoint. Your run is protected.'
+    elseif kind=='save_begin' or kind=='save_request' or kind=='restore_ready' then
+        if M.Save then ok,err=M.Save.apply(self,id,kind,d) else ok,err=nil,'Party saves unavailable.' end
+    elseif kind=='rename' then
         local name=M.player_name(d.name)
         if name=='' then ok,err=nil,'Enter a display name.'
         else p.name=name; self:event(id,'activity','updated their display name') end
@@ -217,6 +232,8 @@ function M:apply(id, action)
         elseif d.ready==true and self.phase=='shop' and p.shop_done~=self.round then ok,err=nil,'Cash out and leave your native shop first.'
         else p.ready=d.ready==true; p.activity=p.ready and 'ready' or 'waiting'
             self:event(id,'activity',p.ready and 'is ready for the next blind' or 'is waiting') end
+    elseif kind=='skip_vote' or kind=='skip_done' then
+        if M.Vote then ok,err=M.Vote.apply(self,id,kind,d) else ok,err=nil,'Skip voting unavailable.' end
     elseif kind=='entered' then
         if self.phase~='starting' or d.round~=self.round or d.ante~=self.ante or d.index~=self.blind_index or not self.proposal or d.key~=self.proposal.key then ok,err=nil,'Native blind entry does not match the party.'
         else p.entered=true; p.activity='waiting' end
@@ -249,6 +266,9 @@ function M:apply(id, action)
     elseif type(kind)=='string' and kind:match('^admin_') then
         if M.Admin then ok,err=M.Admin.apply(self,id,kind,d) else ok,err=nil,'Admin controls unavailable.' end
     elseif kind=='status' then
+        p.native_safe=d.native_safe==true
+        if integer(d.native_ante,1,2147483647) then p.native_ante=d.native_ante end
+        if integer(d.native_index,1,3) then p.native_index=d.native_index end
         if activities[d.activity] and not p.transferring then p.activity=d.activity end
         for _,field in ipairs({'hands','discards','money'}) do
             if M.Numbers and M.Numbers.finite(d[field]) then

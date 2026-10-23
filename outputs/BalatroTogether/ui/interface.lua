@@ -5,6 +5,8 @@ local alt={{0.35,0.77,1},{1,0.78,0.30},{0.85,0.58,1},{0.40,0.90,0.59}}
 local bg={0.085,0.135,0.125}; local panel={0.18,0.235,0.22}; local ink={1,0.97,0.89}; local muted={0.63,0.72,0.67}
 local g=love.graphics
 local motion=assert(SMODS.load_file('ui/motion.lua',BT.id))()
+local TextInput=assert(SMODS.load_file('core/text_input.lua',BT.id))()
+local pot_view
 U.widgets={}; U.opening={x=0,v=0}
 local function sync_screen()
     if U.last_screen==U.screen then return end
@@ -82,13 +84,49 @@ local function group(delay,draw)
     g.push();g.translate(0,(1-p)*22);draw();g.pop();U.opacity=opacity
 end
 U.group=group
-function U.navigate(screen) U.screen=screen;U.focus=nil;U.closing=false end
+function U.navigate(screen)
+    if screen=='join' and U.screen~='join' then BT.config.room_code='';BT.config.steam_lobby='';BT.config.pin='' end
+    U.screen=screen;U.focus=nil;U.editor=nil;U.closing=false
+end
+function U.ensure_editor(select_all)
+    local key=U.focus;if not key then U.editor=nil;U.editor_key=nil;return end
+    local pot=key=='pot_amount' and pot_view
+    local value=pot and pot.get_entry() or BT.config[key] or ''
+    if U.editor_key~=key or not U.editor then
+        local digits=key=='room_code' or key=='pin' or key=='host_pin' or key=='port' or pot
+        U.editor=TextInput.new{value=value,select_all=select_all,limit=pot and 5 or (key=='room_code' or key=='pin' or key=='host_pin') and 6 or key=='seed' and 8 or key=='port' and 5 or (key=='username' or key=='friend_search') and 24 or 100,
+            filter=function(text)
+                if pot then text=text:gsub('[%s,$]','');if text:find('[^0-9]') then return end;return text end
+                if digits then return text:gsub('[^0-9]','') end
+                if key=='seed' then return text:upper():gsub('[^A-Z0-9]','') end
+                return text
+            end,
+            changed=function(text) if pot then pot.edit_entry(text) else BT.config[key]=text end end,
+            clipboard=function(mode,text) if mode=='read' then return love.system.getClipboardText() end;love.system.setClipboardText(text) end}
+        U.editor_key=key
+    elseif U.editor.value~=value then U.editor.value=value;U.editor.cursor=#value;U.editor.anchor=#value end
+    return U.editor
+end
+local function field_text(value,x,y,w,h,size)
+    local e=U.ensure_editor();local f=font(size);local scroll=0
+    if e then scroll=math.max(0,f:getWidth(value:sub(1,e.cursor))-w+4) end
+    local ax,ay=g.transformPoint(x,y);local bx,by=g.transformPoint(x+w,y+h)
+    local sx,sy,sw,sh=g.getScissor();g.setScissor(ax,ay,math.max(1,bx-ax),math.max(1,by-ay))
+    if e then
+        local lo,hi=e:selection()
+        if hi>lo then col(colors[3],0.38);g.rectangle('fill',x+f:getWidth(value:sub(1,lo))-scroll,y+2,f:getWidth(value:sub(lo+1,hi)),h-5,2,2) end
+    end
+    txt(value,x-scroll,y,size,ink,w+scroll+1000)
+    if e and e.blink%1<0.58 then col(ink);g.setLineWidth(2);local at=x+f:getWidth(value:sub(1,e.cursor))-scroll;g.line(at,y+3,at,y+h-4) end
+    if sx then g.setScissor(sx,sy,sw,sh) else g.setScissor() end
+end
 local function input(label,key,x,y,w,h)
     txt(label,x,y-24,21,muted,w)
     rect(x,y,w,h,U.focus==key and {0.13,0.23,0.28} or panel,7)
-    txt((BT.config[key] or '')..(U.focus==key and math.floor(love.timer.getTime()*2)%2==0 and '_' or ''),x+12,y+8,28,ink,w-24)
+    if U.focus==key then field_text(BT.config[key] or '',x+12,y+8,w-24,h-13,28)
+    else txt(BT.config[key] or '',x+12,y+8,28,ink,w-24) end
     U.fields[#U.fields+1]=key
-    hit(x,y,w,h,function() U.focus=key end,label)
+    hit(x,y,w,h,function() U.focus=key;U.editor=nil;U.ensure_editor(true) end,label)
 end
 local function fmt(n)
     if BT.numbers then return BT.numbers.format(n) end
@@ -120,7 +158,8 @@ local function backdrop(w,h,title,sub)
     if BT.state and BT.state.phase~='lobby' then
         local nav={{'TABLE','lobby'},{'GIFTS','donations'},{'BET POTS','pot'},{'REWARDS','dice'}}
         local challenge=BT.dice.challenge and BT.dice.challenge()
-        for i,v in ipairs(nav) do button(v[1],720+(i-1)*126,27,118,30,function() U.navigate(v[2]) end,(U.screen==v[2] or U.screen=='boss_rewards' and v[2]=='dice') and colors[1] or muted,not challenge or v[2]=='dice') end
+        local locked=BT.state.phase=='saving' or BT.state.phase=='resuming'
+        for i,v in ipairs(nav) do button(v[1],720+(i-1)*126,27,118,30,function() U.navigate(v[2]) end,(U.screen==v[2] or U.screen=='boss_rewards' and v[2]=='dice') and colors[1] or muted,not locked and (not challenge or v[2]=='dice')) end
     end
 end
 local function close()
@@ -131,13 +170,19 @@ end
 U.close=close
 local donation_view=assert(SMODS.load_file('ui/donations.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,diamond=diamond,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
-local pot_view=assert(SMODS.load_file('ui/pot.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,hit=hit,
+pot_view=assert(SMODS.load_file('ui/pot.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,hit=hit,field_text=field_text,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
 local dice_view=assert(SMODS.load_file('ui/dice.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
 local admin_view=assert(SMODS.load_file('ui/admin.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
-function U.menu() U.screen='home'; U.focus=nil end
+local inspect_view=assert(SMODS.load_file('ui/inspect.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,hit=hit,diamond=diamond,
+    ink=ink,muted=muted,panel=panel,bg=bg,colors=colors,palette=palette,fmt=fmt})
+local vote_view=assert(SMODS.load_file('ui/vote.lua',BT.id))()(U,{txt=txt,rect=rect,button=button,backdrop=backdrop,
+    ink=ink,muted=muted,panel=panel,colors=colors})
+local saving_view=assert(SMODS.load_file('ui/saving.lua',BT.id))()(U,{txt=txt,rect=rect,backdrop=backdrop,
+    ink=ink,muted=muted,panel=panel,colors=colors})
+function U.menu() U.navigate('home') end
 local function home(w,h)
     backdrop(w,h,'TOGETHER','SIMULTANEOUS CO-OP FOR 1–4 PLAYERS')
     group(0.03,function()
@@ -153,14 +198,21 @@ local function home(w,h)
         txt('FOUR SEATS / ONE TABLE',67,659,21,colors[1],535)
     end)
     group(0.09,function()
-        rect(690,212,526,432,panel)
+        local saved=BT.save and BT.save.summary
+        rect(690,212,526,saved and 498 or 432,panel)
         txt('TAKE YOUR SEAT',721,235,30,ink,464)
         input('DISPLAY NAME','username',722,316,462,48)
         button('HOST A TABLE',722,393,462,54,function() U.navigate('host') end)
         button('JOIN FRIENDS',722,461,462,49,function() U.navigate('join') end,muted)
-        button('SETTINGS',722,544,224,39,function() U.return_to='home';U.navigate('settings') end,muted)
-        button('BACK',960,544,224,39,close,muted)
-        txt('STEAM INVITES / NO ROUTER SETUP',722,607,19,muted,462,'center')
+        if saved then
+            button('CONTINUE SAVED PARTY',722,528,462,46,BT.save.resume,colors[2],saved.compatible)
+            txt('ANTE '..saved.ante..' / '..saved.players..' BUILDS / '..os.date('%b %d %H:%M',saved.at),722,583,18,muted,462,'center')
+            if not saved.compatible then txt('Save needs its original Cryptid pack/settings.',722,583,17,colors[4],462,'center') end
+        end
+        local sy=saved and 620 or 544
+        button('SETTINGS',722,sy,224,39,function() U.return_to='home';U.navigate('settings') end,muted)
+        button('BACK',960,sy,224,39,close,muted)
+        txt('RUNNING '..BT.version..' / SIX-DIGIT CODES',722,sy+63,19,colors[1],462,'center')
     end)
 end
 local function connect_screen(w,h,is_host)
@@ -194,8 +246,9 @@ local function connect_screen(w,h,is_host)
         button(steam and 'STEAM - SELECTED' or 'USE STEAM',x,y,292,40,function() BT.config.transport='steam'; U.focus=nil; BT.persist() end,steam and colors[1] or muted)
         button(not steam and 'DIRECT IP - SELECTED' or 'USE DIRECT IP',x+308,y,292,40,function() BT.config.transport='tcp'; U.focus=nil; BT.persist() end,not steam and colors[2] or muted)
         if steam then
-            txt('Accept your friend\'s Steam invite to join their table.\nKeep Balatro open with Steam signed in.\nOr paste their Steam table link below.',x,y+70,26,ink,600)
-            input('STEAM TABLE LINK OR LOBBY ID','steam_lobby',x,y+214,600,48)
+            txt('Ask the host for their six-digit table code.\nEnter it below and take your seat.\nSteam invites work here too.',x,y+76,27,ink,600)
+            input('TABLE CODE / 6 DIGITS','room_code',x,y+222,600,53)
+            txt('A fresh code for every table. No IP address needed.',x,y+288,20,muted,600)
         else
             input('HOST IP OR DNS NAME','address',x,y+96,600,48)
             input('PORT','port',x,y+200,270,48); input('ROOM PIN','pin',x+305,y+200,295,48)
@@ -203,11 +256,11 @@ local function connect_screen(w,h,is_host)
         end
     end
     local by=is_host and y+452 or y+342
-    button(is_host and 'OPEN TABLE' or 'CONNECT',x,by,390,53,function() BT.persist(); if is_host then BT.client.host(steam and 'steam' or 'tcp') elseif steam then BT.client.join_steam(BT.config.steam_lobby) else BT.client.join() end end)
+    button(is_host and 'OPEN TABLE' or 'JOIN TABLE',x,by,390,53,function() BT.persist(); if is_host then BT.client.host(steam and 'steam' or 'tcp') elseif steam then BT.client.join_code(BT.config.room_code) else BT.client.join() end end)
     button('BACK',x+406,by,194,53,function() U.screen='home'; U.focus=nil end,muted)
 end
 local function steam_friends(w,h)
-    backdrop(w,h,'INVITE YOUR FRIENDS','SEND A STEAM LOBBY INVITE FROM THIS LIST')
+    backdrop(w,h,'INVITE YOUR FRIENDS','AN INVITE OR SIX DIGITS. SAME TABLE.')
     local x=w/2-390
     if not (BT.steam.lobby and BT.client.model and BT.client.model.phase=='lobby') then
         txt('Open a Steam table before inviting friends.',x,225,30,ink,780)
@@ -257,7 +310,7 @@ local function name_screen(w,h)
 end
 local function lobby(w,h)
     local s=BT.state
-    backdrop(w,h,'YOUR TABLE',s and 'GET READY. YOUR NEXT RUN STARTS TOGETHER.' or 'CONNECTING TO YOUR FRIEND’S TABLE…')
+    backdrop(w,h,s and s.phase=='resuming' and 'WELCOME BACK.' or 'YOUR TABLE',s and s.phase=='resuming' and 'ORIGINAL PLAYERS JOIN WITH THE NEW CODE. EVERY BUILD RETURNS.' or s and 'GET READY. YOUR NEXT RUN STARTS TOGETHER.' or 'FINDING YOUR FRIEND\'S TABLE...')
     local start=math.max(190,h*0.24); local gap=18; local width=math.min((w-130)/4,264); local x=(w-width*4-gap*3)/2
     for i=1,4 do
         local p=s and s.players[tostring(i)]; local px=x+(i-1)*(width+gap); local c=palette(i)
@@ -282,7 +335,8 @@ local function lobby(w,h)
         elseif p and p.steam_name then txt(p.steam_name,px+10,start+149,16,muted,width-20,'center') end
         local ry=start+175-(animated and math.max(0,ready-1)*10 or 0)
         rect(px+30,ry,width-60,27,p and p.ready and shade(c,0.35) or bg,6)
-        txt(p and (p.connected and (p.ready and 'READY' or 'NOT READY') or 'OFFLINE') or 'WAITING',px+32,ry+3,19,p and p.ready and c or muted,width-64,'center')
+        local status=p and (p.connected and (s.phase=='resuming' and (p.restore_done and 'RESTORED' or 'RESTORING...') or p.ready and 'READY' or 'NOT READY') or 'OFFLINE') or 'WAITING'
+        txt(status,px+32,ry+3,19,p and p.ready and c or muted,width-64,'center')
         if p and not p.connected and not p.bot and BT.client.model and i~=1 then
             button('RETIRE SEAT',px+12,start+210,width-24,28,function() BT.client.drop(i) end,colors[4])
         end
@@ -297,23 +351,32 @@ local function lobby(w,h)
         button(me() and me().ready and 'UNREADY' or 'READY UP',w/2-305,y,295,55,BT.client.ready)
         button('START RUN',w/2+10,y,295,55,BT.client.start,colors[2],BT.client.model~=nil)
         txt('Requires '..s.intended..' ready player'..(s.intended==1 and '' or 's')..' / '..BT.Session.deck_name(s.deck)..' / Seed '..(s.custom_seed~='' and s.custom_seed or 'RANDOM')..' / ENDLESS',w/2-445,y+69,21,muted,890,'center')
+    elseif s and s.phase=='resuming' then
+        txt('Restoring builds / the run waits for every original seat.',w/2-445,y+10,27,colors[2],890,'center')
+        txt(BT.Session.deck_name(s.deck)..' / ANTE '..s.ante,w/2-445,y+66,22,muted,890,'center')
     elseif s then
         button('RETURN TO RUN',w/2-305,y,295,55,close)
         button('FAST RESTART',w/2+10,y,295,55,BT.client.restart,colors[2],BT.client.model~=nil)
-        txt(BT.Session.deck_name(s.deck)..' / seed '..s.seed..' / '..(s.custom_seed~='' and 'fixed seed on restart' or 'new seed on restart'),w/2-400,y+70,22,muted,800,'center')
+        local checkpoint=s.checkpoint;local status=checkpoint and checkpoint.status=='saving' and 'SAVING EVERY BUILD...' or checkpoint and checkpoint.status=='failed' and 'SAVE FAILED / PREVIOUS CHECKPOINT RETAINED' or checkpoint and checkpoint.at and ('CHECKPOINT '..os.date('%H:%M',checkpoint.at)) or 'AUTOSAVES BETWEEN BLINDS'
+        txt(status,w/2-400,y+70,22,checkpoint and checkpoint.status=='failed' and colors[4] or muted,800,'center')
     end
-    if BT.client.model then
-        if BT.client.transport=='steam' then
-            txt(BT.steam.lobby and 'STEAM TABLE / NO PORT FORWARDING' or 'OPENING STEAM TABLE...',w/2-400,y+111,27,colors[1],800,'center')
-            button('INVITE FRIENDS',w/2-305,y+153,295,35,BT.steam.friends,colors[1],BT.steam.lobby~=nil and s and s.phase=='lobby')
-            button('COPY TABLE LINK',w/2+10,y+153,295,35,function() love.system.setClipboardText('steam://joinlobby/2379780/'..BT.steam.lobby..'/'..BT.steam.local_id); BT.notice('Steam table link copied.') end,muted,BT.steam.lobby~=nil)
-        else
+    if s and BT.client.model and (s.phase=='prepare' or s.phase=='shop') then
+        button(s.manual_save_requested and 'WAITING FOR SHOPS...' or 'SAVE & LEAVE',w/2-305,y+207,295,35,function() BT.save.request(true) end,colors[2],not s.manual_save_requested)
+        button('SAVE CHECKPOINT',w/2+10,y+207,295,35,function() BT.save.request(false) end,muted,not s.manual_save_requested)
+    end
+    if BT.client.transport=='steam' then
+            local code=BT.client.model and (BT.steam.code_ready and BT.steam.code) or s and s.room_code
+            txt(code and ('TABLE CODE  '..code:sub(1,3)..' '..code:sub(4)) or 'MAKING A FRESH TABLE CODE...',w/2-400,y+107,34,colors[1],800,'center')
+            local open=code and s and (s.phase=='lobby' or s.phase=='resuming')
+            button('INVITE FRIENDS',w/2-305,y+154,240,35,BT.steam.friends,colors[1],open and BT.client.model~=nil)
+            button('COPY CODE',w/2-53,y+154,172,35,function() love.system.setClipboardText(code); BT.notice('Six-digit table code copied.') end,muted,open)
+            button('NEW CODE',w/2+131,y+154,174,35,BT.steam.rotate_code,muted,open and BT.client.model~=nil)
+    elseif BT.client.model then
             txt('DIRECT IP TABLE : '..BT.config.port..'  /  PIN '..BT.config.pin,w/2-400,y+111,27,colors[1],800,'center')
             button('CHANGE PIN',w/2-305,y+153,190,35,function() BT.config.host_pin=BT.client.pin; U.screen='pin'; U.focus='host_pin' end,muted)
             button('COPY PIN + PORT',w/2-100,y+153,405,35,function() love.system.setClipboardText('TCP port '..BT.config.port..' / PIN '..BT.config.pin); BT.notice('PIN and port copied. Share your host IP separately.') end,muted)
-        end
     end
-    button('LEAVE',w-160,h-73,120,35,function() BT.client.stop(); U.screen='home' end,colors[4])
+    button('LEAVE',w-160,h-73,120,35,function() BT.client.stop(); U.navigate('home') end,colors[4],not (s and s.phase=='saving'))
     button('SETTINGS',w-320,h-73,145,35,function() U.return_to='lobby'; U.screen='settings' end,muted)
     if s then txt('PARTY / '..BT.Session.deck_name(s.deck),60,h-65,21,muted,570) end
 end
@@ -415,9 +478,15 @@ local function hud(w,h)
         end
     end
     if s.phase=='prepare' then
-        button(me() and me().ready and 'READY — CLICK TO WAIT' or 'READY FOR SHARED BLIND',l.x+l.w/2-180*z,l.y+l.h+8*z,360*z,37*z,BT.game.ready,colors[1])
+        button(me() and me().ready and 'READY / CLICK TO WAIT' or 'READY FOR SHARED BLIND',l.x+l.w/2-270*z,l.y+l.h+8*z,310*z,37*z,BT.game.ready,colors[1],not s.skip_vote)
+        if s.blind_index<3 then button(s.skip_vote and ('SKIP '..s.skip_vote.yes..' / '..s.skip_vote.needed) or 'VOTE TO SKIP',l.x+l.w/2+52*z,l.y+l.h+8*z,220*z,37*z,function() if s.skip_vote then U.navigate('vote') else BT.game.vote_skip('yes') end end,colors[2]) end
     elseif s.phase=='shop' and G.STATE==G.STATES.BLIND_SELECT then
         button(me() and me().ready and 'WAITING FOR TEAM SHOPPERS' or 'READY FOR NEXT BLIND',l.x+l.w/2-180*z,l.y+l.h+8*z,360*z,37*z,BT.game.ready,colors[1],not (me() and me().ready))
+    elseif s.phase=='saving' then
+        local n=0;for _ in pairs(s.checkpoint and s.checkpoint.uploads or {}) do n=n+1 end
+        txt('SAVING PARTY / '..n..' BUILDS RECEIVED',l.x,l.y+l.h+8*z,22*z,colors[2],l.w,'center')
+    elseif s.phase=='skipping' then
+        txt('MAJORITY PASSED / COLLECTING EVERY PLAYER\'S TAG',l.x,l.y+l.h+8*z,22*z,colors[2],l.w,'center')
     elseif s.phase=='starting' then
         txt('WAITING FOR EVERY PLAYER TO LOAD THE BLIND',l.x,l.y+l.h+8*z,22*z,colors[2],l.w,'center')
     elseif not BT.client.connected then
@@ -434,40 +503,6 @@ local function hud(w,h)
     local own=me();local tickets=(own and own.dice_gold or 0)+(own and own.dice_red or 0)+(own and own.dice_boss or 0)
     button('DICE '..tickets,w-160,127,148,29,function() U.navigate('dice') end,tickets>0 and colors[2] or muted)
     if own and (own.dice_active_mult or 0)>0 then txt('DICE +'..own.dice_active_mult..' MULT',w-190,167,20,colors[4],178,'right') end
-end
-local function inspect(w,h)
-    local p=BT.state.players[tostring(U.shown_player)]; if not p then U.expanded=nil; return end
-    local z=math.min(h/900,1.2); local width=math.min(470*z,w-30); local height=math.min(630*z,h-35)
-    local x=w-width-18+(1-U.open_amount)*(width+20); local y=h-height-18; local c=palette(p.id)
-    U.inspect_rect={x=x,y=y,w=width,h=height}
-    rect(x,y,width,height,bg,12); col(c); g.rectangle('line',x,y,width,height,12,12)
-    hit(x,y,width,height,function() end,'Inspection panel')
-    txt(p.name,x+22,y+16,35*z,c,width-70)
-    button('X',x+width-50,y+16,32,28,function() U.expanded=nil end,muted)
-    txt(p.activity:upper()..'  •  $'..p.money..'  •  H'..p.hands..' D'..p.discards,x+22,y+58*z,21*z,muted,width-40)
-    txt('CONTRIBUTION '..fmt(p.contribution)..'  /  BEST '..fmt(p.highest),x+22,y+90*z,22*z,ink,width-40)
-    if not p.inspect then txt('This player has disabled inspection.',x+22,y+150*z,24*z,muted,width-44); return end
-    local clip_y=y+128*z; local clip_h=height-192*z
-    g.setScissor(x+12,clip_y,width-24,clip_h)
-    local cy=clip_y-U.inspection_scroll
-    txt('JOKERS '..#p.jokers,x+22,cy,24*z,c,width-44); cy=cy+30*z
-    for i,j in ipairs(p.jokers) do
-        txt(j.name..(j.edition~='' and ' ['..j.edition..']' or '')..(j.debuff and ' • DEBUFFED' or ''),x+22,cy,22*z,ink,width-44); cy=cy+25*z
-        if j.effect and j.effect~='' then txt(j.effect,x+32,cy,18*z,muted,width-54); cy=cy+22*z end
-    end
-    cy=cy+12*z; txt('CONSUMABLES',x+22,cy,24*z,c); cy=cy+29*z
-    local names={}; for _,v in ipairs(p.consumables) do names[#names+1]=v.name end
-    txt(#names>0 and table.concat(names,' / ') or 'Empty',x+22,cy,21*z,ink,width-44); cy=cy+43*z
-    txt('DECK COMPOSITION',x+22,cy,24*z,c); cy=cy+29*z
-    txt('S '..(p.deck.Spades or 0)..'    H '..(p.deck.Hearts or 0)..'    C '..(p.deck.Clubs or 0)..'    D '..(p.deck.Diamonds or 0),x+22,cy,24*z,ink,width-44); cy=cy+40*z
-    txt('LAST HAND  '..(p.last_hand~='' and p.last_hand or '—'),x+22,cy,23*z,muted,width-44); cy=cy+34*z
-    local board={}; for _,v in ipairs(p.board or {}) do board[#board+1]=(v.selected and '*' or '')..v.rank..' '..v.suit:sub(1,1) end
-    txt(p.reveal and ('LIVE HAND  '..table.concat(board,' / ')) or 'LIVE HAND  Hidden by player',x+22,cy,21*z,ink,width-44); cy=cy+54*z
-    local items={}; for _,v in ipairs(p.shop or {}) do items[#items+1]=v.name end
-    txt('SHOP  '..(#items>0 and table.concat(items,' / ') or 'Not browsing'),x+22,cy,21*z,muted,width-44)
-    cy=cy+65*z; U.inspect_max=math.max(0,cy+U.inspection_scroll-clip_y-clip_h)
-    g.setScissor()
-    txt('Read-only build view / scroll for details\nHidden cards stay private unless shared.',x+22,y+height-54*z,18*z,muted,width-44)
 end
 local function feed(w,h)
     local z=math.min(h/1080,1.2); local width=320*z; local x=BT.config.feed_right and w-width-18 or 18
@@ -506,9 +541,23 @@ function U.update(dt)
     pot_view.update(dt)
     dice_view.update(dt)
     local s=BT.state
+    if s and s.phase=='saving' and U.screen~='saving' then U.before_save=U.screen;U.navigate('saving')
+    elseif U.screen=='saving' and not (s and s.phase=='saving') then local screen=U.before_save;U.before_save=nil;U.navigate(screen) end
+    if s and s.skip_vote and U.vote_seen~=s.skip_vote.deadline then
+        U.vote_seen=s.skip_vote.deadline;if not U.screen or U.screen=='lobby' then U.navigate('vote') end
+    elseif U.screen=='vote' and not (s and s.skip_vote) then U.navigate(nil) end
+    local editor=U.screen and U.ensure_editor()
+    if editor and love.keyboard and love.keyboard.isDown then editor:update(dt,love.keyboard.isDown) end
     sync_screen()
     U.screen_age=U.screen_age+dt
     local reduced=BT.config.reduced_motion or (BT.config.motion or 1)==0
+    local checkpoint=s and s.checkpoint
+    if checkpoint and U.save_generation~=checkpoint.id then U.save_generation=checkpoint.id;U.save_progress={x=0,v=0} end
+    if checkpoint and U.save_progress then
+        local done,total=0,0
+        for id,p in pairs(s.players) do if not p.withdrawn then total=total+1;if checkpoint.uploads[tostring(id)] then done=done+1 end end end
+        motion.spring(U.save_progress,done/math.max(1,total),dt,reduced,BT.config.motion or 1)
+    end
     U.seat_ready=U.seat_ready or {}
     for i=1,4 do
         U.seat_ready[i]=U.seat_ready[i] or {x=0,v=0}
@@ -577,6 +626,7 @@ function U.draw()
     -- immediately, avoiding one fully visible frame before its entrance.
     sync_screen()
     U.hits={};U.fields={}
+    if G.OVERLAY_TUTORIAL then U.modal=nil;U.inspect_rect=nil;U.blind_rect=nil;return end
     if G.OVERLAY_MENU and not U.screen then
         -- Native deck/run-info/options menus own the screen and input. Clear
         -- cached bounds as well as hiding the HUD and its notifications.
@@ -608,12 +658,14 @@ function U.draw()
         elseif U.screen=='dice' then dice_view.draw(1280,800)
         elseif U.screen=='boss_rewards' then dice_view.draw_rewards(1280,800)
         elseif U.screen=='admin' then admin_view.draw(1280,800) end
+        if U.screen=='vote' then vote_view.draw(1280,800) end
+        if U.screen=='saving' then saving_view.draw(1280,800) end
     elseif BT.state and BT.state.phase~='lobby' then
         U.modal=nil
         if BT.state.phase=='victory' or BT.state.phase=='defeat' then
             local scale=math.min(w/1280,h/800); g.translate((w-1280*scale)/2,(h-800*scale)/2); g.scale(scale)
             U.modal={scale=scale,x=(w-1280*scale)/2,y=(h-800*scale)/2}; ending(1280,800)
-        else hud(w,h); celebrations(w,h); feed(w,h); if U.open_amount>0.01 and U.shown_player then inspect(w,h) end end
+        else hud(w,h); celebrations(w,h); feed(w,h); if U.open_amount>0.01 and U.shown_player then inspect_view.draw(w,h) end end
     else
         U.modal=nil
         if G.STAGE==G.STAGES.MAIN_MENU and not G.OVERLAY_MENU then
@@ -635,7 +687,7 @@ function U.install()
     function love.resize(w,h,...)
         -- Recreate our text atlases after a Windows graphics-mode change.
         -- Reusing them across setMode can leave previously cached glyphs blank.
-        U.fonts={}
+        U.fonts={};inspect_view.reset()
         if resize then return resize(w,h,...) end
     end
     G.FUNCS.bt_menu=function() U.menu() end
@@ -645,6 +697,7 @@ function U.install()
     }} end
     local draw=love.draw; function love.draw(...) draw(...); U.draw() end
     local wheel=love.wheelmoved; function love.wheelmoved(dx,dy)
+        if G.OVERLAY_TUTORIAL then if wheel then return wheel(dx,dy) end;return end
         if U.screen then return end
         if G.OVERLAY_MENU then if wheel then return wheel(dx,dy) end;return end
         local r=U.inspect_rect; local x,y=love.mouse.getPosition()
@@ -654,6 +707,7 @@ function U.install()
         if wheel then return wheel(dx,dy) end
     end
     local press=love.mousepressed; function love.mousepressed(x,y,button,...)
+        if G.OVERLAY_TUTORIAL then if press then return press(x,y,button,...) end;return end
         if G.OVERLAY_MENU and not U.screen then if press then return press(x,y,button,...) end;return end
         local px,py=x,y
         if U.modal then px=(x-U.modal.x)/U.modal.scale; py=(y-U.modal.y)/U.modal.scale end
@@ -666,12 +720,15 @@ function U.install()
         if press then return press(x,y,button,...) end
     end
     local release=love.mousereleased; function love.mousereleased(...)
+        if G.OVERLAY_TUTORIAL then if release then return release(...) end;return end
         if G.OVERLAY_MENU and not U.screen then if release then return release(...) end;return end
         if U.screen or U.modal then return end; if release then return release(...) end
     end
-    local move=love.mousemoved; function love.mousemoved(...) if U.screen then return end; if move then return move(...) end end
+    local move=love.mousemoved; function love.mousemoved(...) if U.screen and not G.OVERLAY_TUTORIAL then return end; if move then return move(...) end end
     local key=love.keypressed; function love.keypressed(k,...)
+        if G.OVERLAY_TUTORIAL then if key then return key(k,...) end;return end
         local scancode,isrepeat=...
+        if BT.state and (BT.state.phase=='saving' or BT.state.phase=='resuming') and (k=='escape' or k=='f8' or k=='r' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('rctrl'))) then return end
         if k=='space' and BT.dice.space and BT.dice.space(isrepeat) then U.screen='dice';return end
         if BT.dice.challenge and BT.dice.challenge() and (k=='f8' or k=='escape') then U.screen='dice';return end
         if k=='/' and not U.focus and not (G.CONTROLLER and G.CONTROLLER.text_input_hook) then
@@ -680,19 +737,20 @@ function U.install()
         if k=='r' and BT.active() and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('rctrl')) then BT.client.restart(); return end
         if k=='f8' then if U.screen then close() else U.screen=BT.state and 'lobby' or 'home' end; return end
         if U.screen then
-            if U.screen=='pot' and pot_view.keypressed(k,love.keyboard.isDown('lctrl') or love.keyboard.isDown('rctrl')) then return end
+            local ctrl=love.keyboard.isDown('lctrl') or love.keyboard.isDown('rctrl')
+            local shift=love.keyboard.isDown('lshift') or love.keyboard.isDown('rshift')
+            local editor=U.ensure_editor()
+            if editor and editor:key(k,ctrl,shift,isrepeat) then return end
             if k=='escape' then close()
             elseif k=='tab' then
                 local index=0; for i,f in ipairs(U.fields) do if f==U.focus then index=i end end
-                U.focus=U.fields[index%math.max(1,#U.fields)+1]
-            elseif U.focus and k=='backspace' then local value=BT.config[U.focus] or ''; BT.config[U.focus]=BT.Session.limit_text(value,#value-1)
-            elseif U.focus and k=='v' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('rctrl')) then
-                local value=love.system.getClipboardText()
-                if U.focus=='username' or U.focus=='friend_search' then value=BT.Session.limit_text(value:gsub('[%z\1-\31\127]',''),24)
-                else value=value:gsub('[^%w%._%-:/]',''):sub(1,U.focus=='steam_lobby' and 100 or U.focus=='address' and 100 or 24) end
-                if U.focus=='seed' then value=value:upper():gsub('[^A-Z0-9]',''):sub(1,8) end
-                if U.focus=='pin' or U.focus=='host_pin' then value=value:gsub('[^0-9]',''):sub(1,6) end
-                BT.config[U.focus]=value
+                U.focus=U.fields[(index+(shift and -2 or 0))%math.max(1,#U.fields)+1];U.editor=nil;U.ensure_editor(true)
+            elseif (k=='return' or k=='kpenter') and not isrepeat then
+                if U.screen=='join' then
+                    if (BT.config.transport or 'steam')=='steam' then BT.client.join_code(BT.config.room_code) else BT.client.join() end
+                elseif U.screen=='name' then BT.client.rename(BT.config.username)
+                elseif U.screen=='pin' then if BT.client.set_pin(BT.config.host_pin) then U.navigate('lobby') end
+                else U.focus=nil end
             end
             return
         end
@@ -701,19 +759,14 @@ function U.install()
     end
     local keyrelease=love.keyreleased
     function love.keyreleased(k,...)
+        if U.editor then U.editor:release(k) end
         if k=='space' and BT.dice then BT.dice.space_down=false end
         if keyrelease then return keyrelease(k,...) end
     end
     local text=love.textinput; function love.textinput(t)
+        if G.OVERLAY_TUTORIAL then if text then return text(t) end;return end
         if U.screen then
-            if U.screen=='pot' and pot_view.textinput(t) then return end
-            if U.focus then
-                local limit=(U.focus=='address' or U.focus=='steam_lobby') and 100 or (U.focus=='username' or U.focus=='friend_search') and 24 or 8
-                if U.focus=='pin' or U.focus=='host_pin' then limit=6; t=t:gsub('[^0-9]','') end
-                if U.focus=='seed' then t=t:upper():gsub('[^A-Z0-9]','')
-                elseif U.focus~='username' and U.focus~='friend_search' then t=t:gsub('[^%w%._%-:/]','') end
-                BT.config[U.focus]=BT.Session.limit_text((BT.config[U.focus] or '')..t,limit)
-            end; return
+            local editor=U.ensure_editor();if editor then editor:write(t) end;return
         end
         if text then return text(t) end
     end

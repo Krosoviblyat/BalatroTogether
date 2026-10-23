@@ -1,3 +1,14 @@
+# 0.7.0-dev — saved parties, table codes and skip votes
+
+- Fix Cryptid Jimbo nil crashes by waiting for native tutorials/menu wipes instead of clearing their pending construction events. Native onboarding retains its screen and input.
+- Add automatic per-build checkpoints, host Save Checkpoint / Save & Leave, original-seat restoration and an all-player native-load barrier. Preserve previous complete saves on failure.
+- Replace pasted lobby links with ephemeral six-digit Steam codes, exact worldwide lookup, collision checks and code rotation. Clear stale joining state and fix stale connecting flags after leaving.
+- Add majority human skip voting for Small/Big Blinds, per-client native tags and acknowledgment barriers; no won-blind rewards for skips.
+- Rebuild teammate inspection with native joker thumbnails and Build/Deck/Shop tabs, smoother saved-party progress and tactile native-font controls.
+- Keep account-authorized admin grants/sync retries quiet. Preserve authorization and exactly-once native receipts.
+- Add held Backspace/Delete, UTF-8 cursor/selection, Home/End, Shift+arrows and clipboard shortcuts across Together inputs. Keep Space QTE repeat rules unchanged.
+- All players update together. Cross-account Steam acceptance and closed-game launching still need party verification.
+
 # 0.6.5-dev — Steam invite handoff
 
 - Send explicit Steam game invites with the lobby connect string; retain ordinary lobby invites as a fallback.

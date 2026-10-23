@@ -1,0 +1,13 @@
+# Party checkpoints and skip votes
+
+Together automatically checkpoints when every active player finishes shopping and reaches the same next blind. Native card builds, dollars, tags, hand levels, pots, donations and unused rewards are saved together. The saving screen briefly freezes purchases and run controls until every build is received. A failed upload or disk write releases play and retains the previous complete checkpoint.
+
+The host can choose **F8 → Save & Leave**. Everyone finishes their current shop first; Together saves all builds before returning the party to the menu. **Save Checkpoint** saves without leaving. These controls are available between blinds, not during a hand or reward delivery.
+
+To continue, the original host chooses **Continue Saved Party** on Together's home screen. Share the new six-digit Steam code with the original players. Their authenticated Steam accounts reclaim their saved seats; on Direct IP, use the same local profile and host address/port so the saved reconnect token can reclaim the seat. Everyone loads their own saved build before play resumes. Saved bot seats restart locally. The host can retire an absent human seat, or the account-authorized admin can retire an absent human/bot seat; new players cannot replace saved seats.
+
+Checkpoint files live in `together/party-saves` inside the host's LÖVE save profile. The latest three complete generations are retained. This is a local checkpoint, not Steam Cloud or host migration. A crash restores the last completed checkpoint, not an in-flight hand. Keep the same Balatro version, pinned mods and Cryptid gameset/settings. Compatible Together bugfix updates may read this save format; all connected players still need the same active Together version.
+
+The host stores every seat's full native build, including cards hidden from the inspector. Files contain private reconnect credentials: do not publish them or include them in support screenshots/uploads. Network saves are bounded, checksummed data; received text is never executed as Lua. Private co-op still trusts each client's native reports.
+
+At blind selection, choose **Vote to Skip** for a Small or Big Blind. More than half of connected human players must vote yes within 20 seconds. A tie or failed vote means play. Bots follow the result and Boss Blinds stay mandatory. Every active native game applies its own skip tag and confirms the next blind before the party advances. Skipping does not count as a won blind, settle wagers or earn dice.

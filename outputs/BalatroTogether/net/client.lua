@@ -75,8 +75,9 @@ end
 function C.stop(keep)
     if C.input then C.input:push{type='stop'} end
     if BT.steam.stop and not keep then BT.steam.stop() end
-    C.input=nil; C.output=nil; C.thread=nil; C.connected=false; C.reconnecting=false
+    C.input=nil; C.output=nil; C.thread=nil; C.connected=false; C.reconnecting=false; C.connecting=false
     if not keep then
+        if BT.save and BT.save.connection_reset then BT.save.connection_reset() end
         if BT.bots then BT.bots.stop_all() end
         C.model=nil; C.id=nil; C.pending={}; C.callbacks={}; C.sequence=0; C.peers={}; C.hellos={}
         BT.state=nil; BT.game.reset(); C.resume=nil; C.retry_at=nil; C.fatal=false
@@ -107,7 +108,7 @@ function C.host(transport)
     C.stop(); C.transport=transport; C.pin=pin; BT.config.pin=pin; BT.persist()
     C.compat=BT.compat and BT.compat.signature()
     C.resume=token(); C.id=1; C.sequence=0
-    C.model=BT.Session.new{intended=BT.config.intended_players,scaling=BT.config.scaling,name=BT.config.username,token=C.resume,seed=seed,deck=BT.config.deck or 'b_red'}
+    C.model=BT.Session.new{intended=BT.config.intended_players,scaling=BT.config.scaling,name=BT.config.username,token=C.resume,seed=seed,deck=BT.config.deck or 'b_red',party_id=token():sub(1,32),save_autos=BT.Session.Save~=nil}
     C.model.setup_choices=BT.compat and BT.compat.run_choices(C.model.deck)
     C.model.players[1].steam_name=BT.steam.name()
     local identity=BT.steam.available and BT.steam.available()
@@ -123,15 +124,25 @@ function C.join()
     local port=tonumber(BT.config.port)
     if not port or port%1~=0 or port<1024 or port>65535 or BT.config.address=='' then BT.notice('Enter a valid address and port.'); return end
     C.transport='tcp'; C.hosting=false; C.address=BT.config.address; C.port=port; C.pin=BT.config.pin
+    if BT.save and BT.save.reconnect_token then C.resume=BT.save.reconnect_token(C.address,C.port) end
     C.connecting=true; C.retry_at=nil; C.retry_attempt=0
     spawn('join',C.address,C.port); BT.ui.screen='lobby'; BT.notice('Connecting…')
 end
 function C.join_steam(value)
+    if BT.steam.valid_code and BT.steam.valid_code(value) then return C.join_code(value) end
     local lobby=BT.steam.valid_lobby(value)
     if not lobby then BT.notice('Paste a valid Steam table link or lobby ID.'); return end
     local available,err=BT.steam.available(); if not available then BT.notice(err or 'Open Balatro through Steam while signed in.'); return end
     C.stop(); C.transport='steam'; C.hosting=false; C.address=lobby; C.connecting=true; C.retry_at=nil; C.retry_attempt=0
     C.input,C.output=BT.steam.join(lobby); BT.ui.screen='lobby'; BT.steam.invited=nil; BT.notice('Joining your friend through Steam...')
+end
+function C.join_code(value)
+    local code=BT.steam.valid_code(value)
+    if not code then BT.notice('Enter the host\'s current six-digit table code.');return end
+    local available,err=BT.steam.available();if not available then BT.notice(err or 'Open Steam while signed in.');return end
+    C.stop();C.transport='steam';C.hosting=false;C.connecting=true;C.retry_attempt=0;C.retry_at=nil
+    C.input,C.output=BT.steam.join_code(code);BT.config.room_code='';BT.config.steam_lobby=''
+    BT.ui.screen='lobby';BT.ui.focus=nil;BT.notice('Finding table '..code..' through Steam...')
 end
 local function newseed()
     local alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; local seed=''
@@ -187,12 +198,16 @@ local function host_line(id,msg)
         if msg.protocol~=1 or msg.version~=BT.version then reject(id,'All players need Balatro Together '..BT.version); return end
         if msg.compat~=C.compat then reject(id,'Mod pack or Cryptid rules differ. Use the same installer and Cryptid gameset/settings.'); return end
         local seat,err
-        if type(msg.resume)=='string' and #msg.resume==64 then
+        if C.model.phase=='resuming' and type(id)=='string' and BT.steam.is_peer(id) then
+            for i,p in pairs(C.model.players) do if p.steam_id==id:sub(7) and not p.bot and not p.connected and not p.withdrawn then seat=C.model:reconnect(p.token);break end end
+            if not seat then reject(id,'This saved party reserves seats for its original players.');return end
+        elseif type(msg.resume)=='string' and #msg.resume==64 then
             for _,p in pairs(C.model.players) do
                 if p.token==msg.resume and p.steam_id and (type(id)~='string' or id:sub(7)~=p.steam_id) then reject(id,'This seat belongs to another Steam player.'); return end
             end
             seat,err=C.model:reconnect(msg.resume)
             if not seat and C.transport=='steam' and C.model.phase=='lobby' and BT.steam.is_peer(id) then seat,err=C.model:join(msg.name,token(),msg.steam_name) end
+            if not seat and C.transport~='steam' and C.model.phase=='lobby' and msg.pin==C.pin then seat,err=C.model:join(msg.name,token(),msg.steam_name) end
         else
             if not (C.transport=='steam' and BT.steam.is_peer(id)) and msg.pin~=C.pin then reject(id,'Incorrect room PIN.'); return end
             seat,err=C.model:join(msg.name,token(),msg.steam_name)
@@ -207,7 +222,9 @@ local function host_line(id,msg)
         raw(id,{type='welcome',id=seat,resume=C.model.players[seat].token,state=model_state(seat)})
         snapshot()
     elseif C.peers[id] then
-        if msg.type=='action' then
+        if BT.save and (msg.type=='checkpoint_chunk' or msg.type=='checkpoint_request' or msg.type=='checkpoint_failed') then
+            BT.save.host_message(C.peers[id],id,msg)
+        elseif msg.type=='action' then
             local ok,err=C.model:apply(C.peers[id],msg.action)
             raw(id,{type='ack',seq=type(msg.action)=='table' and msg.action.seq or 0,ok=ok==true,error=err})
         elseif msg.type=='ping' then raw(id,{type='pong'})
@@ -218,10 +235,14 @@ local function client_line(msg)
     if msg.type=='welcome' then
         C.id=msg.id; C.resume=msg.resume; C.connecting=false; C.retry_attempt=0; C.retry_at=nil
         receive_state(msg.state)
+        local own=BT.state and BT.state.players[tostring(C.id)]
+        if own then C.sequence=math.max(C.sequence,own.ack or 0) end
+        if BT.save then BT.save.welcome() end
         local seqs={}; for seq in pairs(C.pending) do seqs[#seqs+1]=seq end; table.sort(seqs)
         for _,seq in ipairs(seqs) do raw(1,{type='action',action=C.pending[seq]}) end
         BT.notice('Connected to seat '..tostring(C.id))
     elseif msg.type=='state' then receive_state(msg.state)
+    elseif msg.type=='checkpoint_chunk' and BT.save then BT.save.client_message(msg)
     elseif msg.type=='ack' then ack(msg.seq,msg.ok,msg.error)
     elseif msg.type=='error' then
         BT.notice(msg.error)
@@ -230,6 +251,7 @@ local function client_line(msg)
 end
 function C.update(dt)
     C.clock=C.clock+dt
+    if C.model and BT.Session.Vote then BT.Session.Vote.tick(C.model,C.clock) end
     if C.model and C.model.dice and BT.Session.Dice.QTE then BT.Session.Dice.QTE.tick(C.model,C.clock) end
     if BT.steam.update then
         BT.steam.update(dt)
@@ -302,5 +324,10 @@ function C.update(dt)
         C.last_ping=C.clock
         if C.model then raw(0,{type='pong'}) else raw(1,{type='ping'}) end
     end
+end
+function C.message(id,message) raw(id,message) end
+function C.restore_party(model)
+    C.model=model;C.resume=model.players[1].token;C.sequence=model.players[1].ack or 0
+    C.connected=true;C.id=1;C.hosting=true;C.sent_revision=nil;C.last_snapshot=-1;snapshot()
 end
 return C

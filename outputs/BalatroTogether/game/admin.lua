@@ -26,6 +26,6 @@ function A.update()
     BT.game.shop_pending=nil; BT.game.shop_sent_at=-10; BT.game.shopready=nil
     BT.game.finish_shop(true)
     if BT.client.resync then BT.client.resync() end
-    BT.notice('Admin requested a native synchronization retry.')
+    if A.allowed() then BT.notice('Synchronization retried.') end
 end
 return A

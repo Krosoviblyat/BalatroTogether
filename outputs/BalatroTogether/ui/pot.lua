@@ -14,6 +14,8 @@ return function(U,h)
         if value:find('[^0-9]') or #value>5 then return end
         V.entry=value;V.bet=tonumber(value) or 0;V.selected=false
     end
+    function V.get_entry() return V.entry end
+    function V.edit_entry(value) edit(value) end
     function V.textinput(value)
         if U.focus~='pot_amount' then return false end
         if value:find('[^0-9]') then return true end
@@ -104,11 +106,11 @@ return function(U,h)
         local focused=U.focus=='pot_amount'
         h.rect(847,327,160,50,focused and {0.18,0.35,0.33} or {0.11,0.16,0.17},7)
         if focused and V.selected then h.rect(860,333,134,33,{0.25,0.43,0.40},4) end
-        local cursor=focused and math.floor(V.time*2)%2==0 and '_' or ''
-        h.txt('$'..V.entry..cursor,851,333,32,gold,152,'center')
+        if focused and h.field_text then h.field_text(V.entry,858,333,138,37,32)
+        else h.txt('$'..V.entry,851,333,32,gold,152,'center') end
         h.txt('TYPE AMOUNT',847,376,14,h.muted,160,'center')
         U.fields=U.fields or {};U.fields[#U.fields+1]='pot_amount'
-        h.hit(847,327,160,50,function() U.focus='pot_amount';V.selected=true end,'BET AMOUNT')
+        h.hit(847,327,160,50,function() U.focus='pot_amount';V.selected=true;U.editor=nil;if U.ensure_editor then U.ensure_editor(true) end end,'BET AMOUNT')
         button('+1',1018,331,75,42,function() set_amount(math.min(10000,V.bet+1)) end,h.muted)
         button('+5',1105,331,115,42,function() set_amount(math.min(10000,V.bet+5)) end,h.muted)
         local valid=V.bet>=1 and V.bet<=BT.Session.Pot.MAX_BET

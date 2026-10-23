@@ -83,11 +83,11 @@ function C.register_decks()
         BT.Session.DECKS[#BT.Session.DECKS+1]={key,name}; C.registered[key]=true; C.decks[#C.decks+1]=key
     end
 end
-function C.signature()
+function C.signature(for_save)
     C.register_decks()
     local parts={}
     for id,mod in pairs(SMODS.Mods or {}) do
-        if not mod.disabled and mod.can_load~=false and id~='BTLabHarness' and id~='Talisman' and id~='cdataman' then
+        if not mod.disabled and mod.can_load~=false and id~='BTLabHarness' and id~='Talisman' and id~='cdataman' and not (for_save and id==BT.id) then
             parts[#parts+1]=id..':'..tostring(mod.version or '')
         end
     end

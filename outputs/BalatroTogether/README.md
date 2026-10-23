@@ -1,6 +1,6 @@
 # Balatro Together — four-player cooperative testing build
 
-**0.6.5-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
+**0.7.0-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
 
 This build bundles Cryptid 0.5.17c with Amulet 3.6.1. Large native scores, Cryptid decks and card donations use the pinned compatibility layer. Read [CRYPTID.md](CRYPTID.md) for co-op rule adaptations and limits.
 
@@ -20,11 +20,11 @@ The UI uses the native pixel font, cream lettering, stepped raised borders, soft
 
 The host can choose **F8 → Fast Restart**, use **Ctrl+R**, or use the native Restart button to restart the whole party with the same seats, selected deck and difficulty. A fixed seed repeats; a blank seed generates a fresh seed. This intentionally cancels the current run and its pending animations. Everyone receives a new run ID; delayed old-run score/action messages are rejected. A guest cannot restart the party. Reconnect or retire an absent player before restarting. Reduced motion and animation intensity are available in Settings.
 
-**Steam tables are now the default on Windows x64.** Open a table, click **Invite Friends**, and have friends accept the Steam invite with the same mod version installed. Steam reliable messaging carries the co-op traffic; no public IP, room PIN or router forwarding is needed in Steam mode. Direct IP remains available as a separate option. See [STEAM.md](STEAM.md). This is an experimental transport: real lobby hosting and native bot gameplay passed locally; cross-account invite acceptance and internet relay gameplay still require a second-account test.
+**Steam tables are now the default on Windows x64.** Open a table and share its **six-digit table code**, or click **Invite Friends**. Friends enter the code in Join Friends, or accept a fresh Steam game invite at the menu, with the same mod version installed. Steam reliable messaging carries the co-op traffic; no public IP, room PIN or router forwarding is needed in Steam mode. Direct IP remains available as a separate option. See [STEAM.md](STEAM.md). This is an experimental transport: real lobby hosting and native bot gameplay passed locally; cross-account invite acceptance and internet relay gameplay still require a second-account test.
 
 Start with [INSTALL.md](INSTALL.md). Everyone needs the same mod and loader versions. No compilation is required. Compatibility target: Windows x64, Steam Balatro 1.0.1o-FULL, LÖVE 11.5, Lovely 0.10.0, Steamodded 26.1002.0, Cryptid 0.5.17c and Amulet 3.6.1. Other combinations are not certified.
 
-Private co-op trusts each client's native score and build reports. The host orders and deduplicates these reports but does not re-simulate all remote joker triggers or purchases. Network reconnection restores the shared session while the original process stays open. It cannot recover a closed game or migrate the host.
+Private co-op trusts each client's native score and build reports. The host orders and deduplicates these reports but does not re-simulate all remote joker triggers or purchases. Automatic between-blind checkpoints and host Save & Leave can restore the original party after closing the game. The original host and matching native profiles/mod settings are required; host migration is not supported. See [SAVES.md](SAVES.md).
 
 Original source is included because this is an interpreted Lua mod. `main.lua`, mod JSON, config.lua and lovely.toml are the actual loader entry points, not build placeholders. The mod folder includes no proprietary game files, compiled Steam libraries or extracted game assets. The full installer separately bundles redistributable loaders and Cryptid/Amulet with their licenses and exact upstream sources.
 
@@ -33,3 +33,5 @@ Host setup includes all 15 vanilla decks and enabled Cryptid decks and an option
 Deck initialization now creates Steamodded/Cryptid run choices before native deck effects. All 38 currently selectable decks passed native start and same-seed restart checks; special Edition, Enhancement, Suit, Seal and Antimatter setup were checked separately. This does not certify every later card interaction.
 
 The 0.6 UI refresh adds a quieter felt palette, a card-fan home screen, compact navigation, clearer grouped betting/reward controls, staggered entrances and smooth modal dismissal. Hover/press feedback is centralized so buttons do not stack two conflicting springs. Reduced Motion and intensity zero retain all controls without movement.
+
+The 0.7 party update adds native joker thumbnails and Build/Deck/Shop inspector tabs, quiet account-authorized admin grants, six-digit Steam codes, held Backspace, cursor/selection/clipboard editing, majority skip votes and automatic party checkpoints. Native tutorials keep their screen/input until complete, preventing the Cryptid Jimbo transition crash.

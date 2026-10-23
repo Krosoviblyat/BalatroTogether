@@ -43,6 +43,9 @@ end
 local count=0
 local function test(name,fn) fn(); count=count+1; print('PASS '..name) end
 local host,a,b,c=context(1),context(2),context(3),context(4)
+test('leaving a pending connection clears the flag that previously blocked menu invite autojoin',function()
+    a.C.connecting=true;a.C.stop();assert(a.C.connecting==false and not a.e.BT.state)
+end)
 test('Steam host creates a friends-only table and keeps bot listener on loopback with an ephemeral port',function()
     host.C.host(); tick(.5); assert(host.S.lobby and host.C.model and host.C.transport=='steam' and host.C.bot_port==50123)
     assert(rooms[host.S.lobby].data.bt_mod=='BalatroTogether' and rooms[host.S.lobby].data.bt_version=='steam-test')

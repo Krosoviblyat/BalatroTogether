@@ -12,6 +12,7 @@ typedef struct { BTSteamID lobby; unsigned int permissions; bool locked; unsigne
 typedef struct { BTSteamID lobby; BTSteamID friend_id; } BTSteamJoinRequested;
 typedef struct { BTSteamID friend_id; char connect[256]; } BTSteamPresenceRequested;
 typedef struct { char unused; } BTSteamNewUrl;
+typedef struct { unsigned int count; } BTSteamLobbyList;
 typedef struct { void **vtable; unsigned char flags; int callback; } BTSteamCallback;
 void *SteamAPI_SteamUser_v022(void);
 void *SteamAPI_SteamFriends_v017(void);
@@ -38,6 +39,11 @@ BTSteamID SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex(void *, BTSteamID, in
 BTSteamID SteamAPI_ISteamMatchmaking_GetLobbyOwner(void *, BTSteamID);
 bool SteamAPI_ISteamMatchmaking_SetLobbyJoinable(void *, BTSteamID, bool);
 bool SteamAPI_ISteamMatchmaking_InviteUserToLobby(void *, BTSteamID, BTSteamID);
+BTSteamID SteamAPI_ISteamMatchmaking_RequestLobbyList(void *);
+void SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter(void *,const char *,const char *,int);
+void SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter(void *,int);
+void SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter(void *,int);
+BTSteamID SteamAPI_ISteamMatchmaking_GetLobbyByIndex(void *,int);
 int SteamAPI_ISteamFriends_GetFriendCount(void *, int);
 BTSteamID SteamAPI_ISteamFriends_GetFriendByIndex(void *, int, int);
 const char *SteamAPI_ISteamFriends_GetFriendPersonaName(void *, BTSteamID);
@@ -109,7 +115,9 @@ function N.init()
             'SteamAPI_ISteamMatchmaking_CreateLobby','SteamAPI_ISteamMatchmaking_JoinLobby','SteamAPI_ISteamMatchmaking_LeaveLobby',
             'SteamAPI_ISteamMatchmaking_SetLobbyData','SteamAPI_ISteamMatchmaking_GetLobbyData','SteamAPI_ISteamMatchmaking_GetLobbyOwner',
             'SteamAPI_ISteamMatchmaking_GetNumLobbyMembers','SteamAPI_ISteamMatchmaking_GetLobbyMemberByIndex',
-            'SteamAPI_ISteamMatchmaking_SetLobbyJoinable',
+            'SteamAPI_ISteamMatchmaking_SetLobbyJoinable','SteamAPI_ISteamMatchmaking_RequestLobbyList',
+            'SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter','SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter',
+            'SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter','SteamAPI_ISteamMatchmaking_GetLobbyByIndex',
             'SteamAPI_ISteamMatchmaking_InviteUserToLobby','SteamAPI_ISteamFriends_GetFriendCount',
             'SteamAPI_ISteamFriends_GetFriendByIndex','SteamAPI_ISteamFriends_GetFriendPersonaName',
             'SteamAPI_ISteamFriends_GetFriendPersonaState','SteamAPI_ISteamFriends_GetFriendRelationship',
@@ -153,7 +161,26 @@ function N.launch_args()
     if line and line~=N.last_launch then N.last_launch=line; out[#out+1]=line end
     return out
 end
-function N.create() return api.SteamAPI_ISteamMatchmaking_CreateLobby(interfaces.matchmaking,1,4) end
+function N.create() return api.SteamAPI_ISteamMatchmaking_CreateLobby(interfaces.matchmaking,2,4) end
+function N.search(code)
+    assert(type(code)=='string' and code:match('^%d%d%d%d%d%d$'),'Invalid room code')
+    local m=interfaces.matchmaking
+    api.SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter(m,'bt_mod','BalatroTogether',0)
+    api.SteamAPI_ISteamMatchmaking_AddRequestLobbyListStringFilter(m,'bt_code',code,0)
+    api.SteamAPI_ISteamMatchmaking_AddRequestLobbyListDistanceFilter(m,3)
+    api.SteamAPI_ISteamMatchmaking_AddRequestLobbyListResultCountFilter(m,8)
+    return api.SteamAPI_ISteamMatchmaking_RequestLobbyList(m)
+end
+function N.poll_search(call)
+    local failed=ffi.new('bool[1]')
+    if not api.SteamAPI_ISteamUtils_IsAPICallCompleted(interfaces.utils,call,failed) then return end
+    if failed[0] then return false,'Steam code lookup failed. Check that Steam is online.' end
+    local list=ffi.new('BTSteamLobbyList')
+    if not api.SteamAPI_ISteamUtils_GetAPICallResult(interfaces.utils,call,list,ffi.sizeof(list),510,failed) or failed[0] then return false,'Steam code lookup is unavailable.' end
+    local out={}
+    for i=0,math.min(8,tonumber(list.count))-1 do out[#out+1]=decimal(api.SteamAPI_ISteamMatchmaking_GetLobbyByIndex(interfaces.matchmaking,i)) end
+    return out
+end
 function N.join(lobby) return api.SteamAPI_ISteamMatchmaking_JoinLobby(interfaces.matchmaking,assert(id(lobby))) end
 function N.poll(call,creating)
     local failed=ffi.new('bool[1]')
@@ -166,6 +193,7 @@ function N.poll(call,creating)
     return decimal(result.lobby)
 end
 function N.leave(lobby) api.SteamAPI_ISteamMatchmaking_LeaveLobby(interfaces.matchmaking,assert(id(lobby))) end
+function N.joinable(lobby,value) return api.SteamAPI_ISteamMatchmaking_SetLobbyJoinable(interfaces.matchmaking,assert(id(lobby)),value==true) end
 function N.set(lobby,key,value) return api.SteamAPI_ISteamMatchmaking_SetLobbyData(interfaces.matchmaking,assert(id(lobby)),key,value) end
 function N.get(lobby,key) return ffi.string(api.SteamAPI_ISteamMatchmaking_GetLobbyData(interfaces.matchmaking,assert(id(lobby)),key)) end
 function N.owner(lobby) return decimal(api.SteamAPI_ISteamMatchmaking_GetLobbyOwner(interfaces.matchmaking,assert(id(lobby)))) end

@@ -9,7 +9,7 @@ if B.config then
     -- A companion failure belongs in its own log, never in a desktop crash
     -- screen that can steal focus from the human player's game.
     local function failed(message)
-        sendErrorMessage('Companion stopped: '..tostring(message),'BalatroTogether')
+        sendErrorMessage('Companion stopped: '..debug.traceback(tostring(message),2),'BalatroTogether')
         return function() return 1 end
     end
     love.errhand=failed; love.errorhandler=failed
@@ -40,6 +40,20 @@ function B.remove(id)
     process.close(B.children[id]); B.children[id]=nil
     for peer,seat in pairs(BT.client.peers) do if seat==id then BT.client.peers[peer]=nil; BT.client.close_peer(peer) end end
     model.players[id]=nil; model:changed()
+end
+function B.resume_saved()
+    local model=BT.client.model
+    if not model or model.phase~='resuming' or not BT.client.bot_port or not process.spawn then return end
+    if B.saved_checkpoint~=model.resume_checkpoint then B.saved_checkpoint=model.resume_checkpoint;B.saved_attempts={} end
+    for id,p in pairs(model.players) do
+        if p.bot and not p.withdrawn and not p.connected and not B.children[id] and not B.saved_attempts[id] then
+            B.saved_attempts[id]=true
+            local ok,child,err=pcall(process.spawn,{address='127.0.0.1',port=BT.client.bot_port,pin=BT.client.pin,token=p.token,name=p.name,parent=process.pid(),
+                cryptid=BT.compat and BT.compat.profile(),identity='BalatroTogetherBot'..process.pid()..'S'..id..'R'..math.floor(love.timer.getTime()*1000)})
+            if ok and child then child.started=B.clock;child.name=p.name;B.children[id]=child
+            else BT.notice('Saved '..p.name..' could not start: '..tostring(ok and err or child)) end
+        end
+    end
 end
 local function num(value,fallback)
     if BT.numbers and BT.numbers.finite(value) then return value end
