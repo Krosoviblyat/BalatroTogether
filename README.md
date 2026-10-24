@@ -1,12 +1,14 @@
 # Balatro Together — Zero Crew
 
-Private development source for the four-player cooperative Balatro mod and Windows installer. Current launcher/setup: **0.7.1-dev**; tested gameplay payload: **0.7.1-dev**.
+Private development source for the four-player cooperative Balatro mod and Windows installer. Current prepared launcher/setup: **0.7.2-dev**; tested gameplay payload: **0.7.1-dev**.
 
 Each player keeps their own build, cards, money and shop while contributing to a shared blind. Features include Steam tables, native companion bots, shared donations, personal/team Bet Pots, reward dice, a boss wheel with a Space challenge, automatic endless and animated UI.
 
+Source commits alone do not create an updater release. The 0.7.2 installer and its signed update assets are prepared locally; publication is currently blocked by the browser upload tool. Until it is published, get the full EXE from the maintainer. The updater sees only published releases.
+
 ## Install
 
-Download **BalatroTogether-Setup-0.7.1-dev.exe** from Releases, close Balatro, open the EXE and click **Install / update**. No ZIP extraction or extra dependencies are needed. Setup includes the full bundle and an animated updating launcher; its top link exports manual files, licenses and source. Use the same build on every party member's PC. Backups and rollback are included. After this one-time install, the desktop shortcut checks and applies signed updates before play. Private GitHub downloads require each player to configure their own access once; see [Automatic updates](outputs/InstallerSource/UPDATES.md).
+Download **BalatroTogether-Setup-0.7.2-dev.exe** from Releases, close Balatro, open the EXE and click **Install / update**. No ZIP extraction or extra dependencies are needed. Setup includes the full bundle and an animated updating launcher; its top link exports manual files, licenses and source. Use the same build on every party member's PC. Backups and rollback are included. After this one-time install, the desktop shortcut checks and applies signed updates before play. Private GitHub downloads require each player to configure their own access once; see [Automatic updates](outputs/InstallerSource/UPDATES.md).
 
 Supported bundle: Windows x64, owned Steam Balatro 1.0.1o-FULL, Lovely 0.10.0, Steamodded 26.1002.0, Cryptid 0.5.17c and Amulet 3.6.1.
 

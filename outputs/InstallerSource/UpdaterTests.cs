@@ -75,6 +75,45 @@ namespace TogetherSetup {
                 test("tokens encrypted with current-user DPAPI and removable",()=>{string token="synthetic_read_token_1234567890";UpdateStorage.SaveToken(user,token);Check(UpdateStorage.Token(user)==token,"DPAPI round trip");string raw=Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(UpdateStorage.Root(user),"github-token.bin")));Check(!raw.Contains(token),"Plaintext token on disk");UpdateStorage.SaveToken(user,"");Check(UpdateStorage.Token(user)=="","Token retained");});
                 test("settings survive atomic replacement",()=>{UpdateStorage.Save(user,new UpdateSettings {game="fixture",automatic=false,highest_version="0.6.3-dev"});UpdateStorage.Save(user,new UpdateSettings {game="fixture2",automatic=true,highest_version="0.6.4-dev"});Check(UpdateStorage.Load(user).game=="fixture2"&&UpdateStorage.Load(user).automatic,"Settings replacement failed");});
                 test("launcher replacement preserves update preference and high water mark",()=>{var settings=UpdateStorage.Load(user);settings.automatic=false;settings.highest_version="9.0.0";UpdateStorage.Save(user,settings);string exe=UpdateStorage.InstallLauncher(user,"fixture game");UpdateStorage.InstallLauncher(user,"fixture game");Check(File.Exists(exe)&&UpdateStorage.Load(user).highest_version=="9.0.0"&&!UpdateStorage.Load(user).automatic,"Launcher replacement lost settings");});
+                string bundle=Payload.Extract(Path.Combine(root,"Bundle"));
+                Func<UserPaths> fixture=()=>{
+                    string folder=Path.Combine(root,Guid.NewGuid().ToString("N"));
+                    var context=new UserPaths {Local=Path.Combine(folder,"Local"),Roaming=Path.Combine(folder,"Roaming")};
+                    Paths.CopyTree(Path.Combine(bundle,"Mods","BalatroTogether"),Path.Combine(context.Roaming,"Balatro","Mods","BalatroTogether"),null);return context;
+                };
+                Func<UserPaths,string> metadata=context=>Path.Combine(context.Roaming,"Balatro","Mods","BalatroTogether","BalatroTogether.json");
+                Action<UserPaths,string> version=(context,value)=>File.WriteAllText(metadata(context),"{\"id\":\"BalatroTogether\",\"version\":\""+value+"\"}",Encoding.UTF8);
+                test("actual installed mod files are verified independently of launcher version",()=>{
+                    var context=fixture();var state=InstalledBuild.Inspect(context);Check(!state.NeedsRepair&&state.Version=="0.7.1-dev"&&state.BundledVersion=="0.7.1-dev","Current bundle not recognized");
+                });
+                test("new launcher plus old mod requires repair rather than reporting up to date",()=>{
+                    var context=fixture();version(context,"0.6.1-dev");var state=InstalledBuild.Inspect(context);
+                    Check(state.NeedsRepair&&state.Version=="0.6.1-dev"&&state.CanRepair(Build.Version),"Old mod was missed by the launcher");
+                });
+                test("same-version damaged and missing runtime files require repair",()=>{
+                    var context=fixture();string file=Path.Combine(Path.GetDirectoryName(metadata(context)),"main.lua");File.AppendAllText(file,"changed");
+                    Check(InstalledBuild.Inspect(context).NeedsRepair,"Damaged runtime trusted");File.Delete(file);Check(InstalledBuild.Inspect(context).NeedsRepair,"Missing runtime trusted");
+                });
+                test("missing and malformed mod metadata do not count as installed",()=>{
+                    var context=fixture();File.WriteAllText(metadata(context),"{broken");Check(InstalledBuild.Inspect(context).NeedsRepair,"Malformed metadata trusted");
+                    File.Delete(metadata(context));Check(InstalledBuild.Inspect(context).NeedsRepair,"Missing metadata trusted");
+                });
+                test("newer gameplay builds are never overwritten by an older embedded mod",()=>{
+                    var context=fixture();version(context,"9.0.0");var state=InstalledBuild.Inspect(context);
+                    Check(state.NewerMod&&!state.CanRepair(Build.Version),"Newer gameplay would be downgraded");
+                });
+                test("embedded repair respects the committed launcher high-water mark",()=>{
+                    var context=fixture();version(context,"0.6.1-dev");var state=InstalledBuild.Inspect(context);
+                    Check(!state.CanRepair("9.0.0"),"Old embedded package bypassed rollback floor");
+                    Reject(()=>state.StageRepair(Path.Combine(root,"BlockedRepair"),"9.0.0"));
+                });
+                test("offline repair stages this exact verified full installer without GitHub credentials",()=>{
+                    var context=fixture();version(context,"0.6.1-dev");var state=InstalledBuild.Inspect(context);
+                    Check(UpdateStorage.Token(context)=="","Unexpected fixture credentials");
+                    string staged=state.StageRepair(Path.Combine(root,"OfflineRepair"),Build.Version);
+                    Check(Paths.Hash(staged)==Paths.Hash(System.Reflection.Assembly.GetExecutingAssembly().Location),"Repair did not stage the full installer");
+                });
+                Paths.RemoveOwned(bundle,Path.Combine(root,"Bundle"));
                 Write(parent,tests,0,null);return 0;
             }catch(Exception e){Write(parent,tests,1,e.ToString());return 1;}
         }

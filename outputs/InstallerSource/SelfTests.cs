@@ -46,6 +46,16 @@ namespace TogetherSetup {
                     Check(!File.Exists(Path.Combine(f.Saves,"Mods","Amulet","manifest.json")),"Thunderstore metadata installed as SMODS metadata");
                     Check(File.ReadAllText(Path.Combine(e.Backup,"Saves","1","save.jkr"))=="preserve this unfinished run","Missing save backup");
                 });
+                test("launcher detects an old mod and verifies the actual repaired installation",()=>{
+                    var f=new Fixture(parent);f.OldMods();
+                    string meta=Path.Combine(f.Saves,"Mods","BalatroTogether","BalatroTogether.json");
+                    File.WriteAllText(meta,"{\"id\":\"BalatroTogether\",\"version\":\"0.6.1-dev\"}");
+                    var user=new UserPaths {Roaming=Path.GetDirectoryName(f.Saves),Local=Path.Combine(f.Root,"Local")};
+                    var before=InstalledBuild.Inspect(user);Check(before.NeedsRepair&&before.CanRepair(Build.Version),"Old installed mod incorrectly accepted");
+                    var engine=f.Engine(false);engine.Install();var after=InstalledBuild.Inspect(user);
+                    Check(!after.NeedsRepair&&after.Version==after.BundledVersion,"Repair did not update actual mod files");f.AssertOriginals();
+                    Check(File.ReadAllText(Path.Combine(engine.Backup,"PreviousMods","BalatroTogether","main.lua"))=="OLD TOGETHER","Repair did not preserve the old mod");
+                });
                 test("updates quarantine old loaders, duplicate Together and conflicting mods",()=>{
                     var f=new Fixture(parent); f.OldMods(); var duplicate=Path.Combine(f.Saves,"Mods","RenamedTogether"); Directory.CreateDirectory(duplicate); File.WriteAllText(Path.Combine(duplicate,"metadata.json"),"{\"id\":\"BalatroTogether\"}");
                     var e=f.Engine(false); e.Install(); f.AssertOriginals();

@@ -1,8 +1,12 @@
-# Automatic updates (launcher/setup 0.7.1-dev)
+# Automatic updates (launcher/setup 0.7.2-dev)
 
 Run the standalone setup EXE once, with Balatro closed. No extraction is needed. Then use **Play Balatro Together** on your desktop. The shortcut opens the launcher, checks for a newer signed release, downloads and verifies it, and starts installation automatically. After installation, click Play (or use the desktop shortcut if Windows requested administrator access). The launcher never opens the game during a failed update.
 
-The update checkbox is enabled by default. Turn it off to launch the installed build directly; **Check updates** still performs a manual update. Launching Balatro directly through Steam bypasses the launcher. Everyone in a party should use the same gameplay build. Start a fresh party after updating.
+Launcher/setup **0.7.2-dev** bundles gameplay **0.7.1-dev**. These versions can differ: the footer identifies setup; the installed-mod line identifies the version players must match.
+
+The launcher checks the original Windows user's installed Together metadata and compares the installed files with the hash-verified embedded package. A current launcher with an old, missing or damaged mod is **repair needed**, never up to date. With no newer eligible release, it stages its own full installer for repair; this local path works without GitHub access. Play also verifies the mod and uses this repair path before launching. A newer mod is preserved, and the trusted launcher high-water mark prevents an older embedded repair.
+
+The update checkbox is enabled by default. Turn it off to skip online checks (installed-file verification and local repair still apply); **Check updates** still performs a manual update. Launching Balatro directly through Steam bypasses the launcher. Everyone in a party should use the same gameplay build. Start a fresh party after updating.
 
 ## One-time private GitHub access
 
@@ -25,7 +29,7 @@ New launchers prefer `Update-v2.json` plus `Update-v2.sig`, whose schema 2 descr
 
 Balatro must be closed at the initial check, before download/installation handoff, and at the installer's existing mutation barriers. A running match is never terminated. Installation reuses the embedded pinned payload, backs up saves and recognized previous mods, validates every copied file and rolls back failures. Launcher replacement is atomic and retains its settings/access file. The new installed version becomes the replay floor only after successful installation. Temporary completed handoff downloads remain under `%LocalAppData%\BalatroTogether\Updates`; they can be removed when all setup windows are closed. Old mods/saves remain under `%AppData%\BalatroTogether\Backups`.
 
-Offline, denied private access, incomplete downloads, bad signatures and bad hashes leave the existing build available. The launcher does not resume a partial download; it retries from the beginning on the next check. The game and installer binaries remain Windows-unsigned: update signatures verify our package, and are separate from Authenticode/SmartScreen reputation. Do not disable Windows protections.
+Offline or denied private access is shown as an unsuccessful online check, with the installed mod and launcher versions displayed separately. It never means a new version was installed. A valid existing build stays available; an older/damaged local mod can be repaired from the trusted embedded installer. Incomplete downloads, bad signatures and bad hashes never execute an unverified downloaded installer. The launcher does not resume a partial download; it retries from the beginning on the next check. The game and installer binaries remain Windows-unsigned: update signatures verify our package, and are separate from Authenticode/SmartScreen reputation. Do not disable Windows protections.
 
 ## Publishing future updates
 
@@ -41,16 +45,18 @@ The first init generates a signing key encrypted with current-user DPAPI under `
 For a release, bump `Build.Version`, assembly/manifest versions and changelog, set the correct embedded payload hash, and rebuild/test the installer with Build.cmd. Keep `UpdateKey.cs` unchanged. Package as `BalatroTogether-<version>-Easy-Installer.zip`, including its source, dependency licenses and exact upstream sources. Then run:
 
 ```bat
-SignUpdate.exe --sign BalatroTogether-0.7.1-dev-Easy-Installer.zip 0.7.1-dev release-assets
+SignUpdate.exe --sign BalatroTogether-0.7.2-dev-Easy-Installer.zip 0.7.2-dev release-assets
 ```
 
 For the native EXE path also run:
 
 ```bat
-SignUpdate.exe --sign BalatroTogether-Setup-0.7.1-dev.exe 0.7.1-dev release-assets
+SignUpdate.exe --sign BalatroTogether-Setup-0.7.2-dev.exe 0.7.2-dev release-assets
 ```
 
 This produces Update-v2.json and Update-v2.sig. Publish the EXE and both v2 assets. Keep the legacy ZIP, Update.json and Update.sig on this transition release for 0.6.2 launchers. Never sign different EXE bytes from those packaged inside that ZIP.
+
+Committing or pushing source code does not publish an update. The updater can only discover a published release with its required signed assets.
 
 Publish the ZIP, `Update.json` and `Update.sig` together on the matching `v<version>` GitHub release, after reviewing the package. Drafts do not trigger updates. Never change the ZIP after signing; re-sign changed bytes. The checksum sidecar is useful for manual verification but is not a substitute for the signature. Refresh expired metadata by re-signing the same package when necessary; never reset the client version to force a reinstall.
 
@@ -58,6 +64,6 @@ Publish the ZIP, `Update.json` and `Update.sig` together on the matching `v<vers
 
 `Install Balatro Together.exe --updater-self-test <test directory>` runs updater fixtures, without network access or executing downloaded files. `--self-test <test directory>` runs synthetic install/rollback scenarios. `--verify-update <release directory>` prefers real Update-v2.json/Update-v2.sig when present, otherwise Update.json/Update.sig, and the signed ZIP with the compiled production public key; it extracts a verified installer for inspection but never executes it. See verification-result.json in that directory.
 
-The release is checked with 34 updater fixtures, 23 installer scenarios and 9 native UI render checks (including Windows icon extraction, panel bounds, animation changes and reduced motion). Production private-token authentication and actual cross-PC update handoff need verification with each player's own GitHub access; browser login alone cannot prove those paths. Synthetic tests do not certify every antivirus, alternate Windows account or UAC configuration.
+The release is checked with 41 updater fixtures, 24 installer scenarios and 9 native UI render checks (including Windows icon extraction, panel bounds, animation changes and reduced motion). Production private-token authentication and actual cross-PC update handoff need verification with each player's own GitHub access; browser login alone cannot prove those paths. Synthetic tests do not certify every antivirus, alternate Windows account or UAC configuration.
 
 References: [GitHub release assets and required read permissions](https://docs.github.com/en/rest/releases/assets), [GitHub token creation and limitations](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens), [Windows DPAPI](https://learn.microsoft.com/en-us/dotnet/standard/security/how-to-use-data-protection).
