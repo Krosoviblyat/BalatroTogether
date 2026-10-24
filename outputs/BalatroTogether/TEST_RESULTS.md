@@ -1,3 +1,11 @@
+# 0.8.1 verification
+
+Six isolated two-client native checks pass: real Chromatic Ante 7 round 21,
+signed negative hands, follow-up positive hands, replicated score debt, home/lobby
+Credits and real runtime crash capture. All 221 Lua/Amulet checks pass.
+The unknown earlier friend crash is not diagnosed by this evidence.
+Private real-account Steam remains a separate manual check.
+
 # 0.8.0-dev verification
 
 The main release uses manual checkpoints, an explicitly continued restore lobby,

@@ -1,0 +1,26 @@
+UI refresh native audit — 2026-10-22
+Private owned-game copies, separate profiles, TCP. Mouse/text/key callbacks called inside the test clients; no desktop input or live game changed.
+{
+  "native_clients": 2,
+  "real_mouse_callback_hit_tests": true,
+  "typed_team_bet": 7,
+  "typed_personal_bet": 3,
+  "gold_native_payout": true,
+  "QTE_jackpot_native_payout": true,
+  "layouts": [
+    960,
+    1280,
+    1920
+  ],
+  "screens": [
+    "home",
+    "lobby",
+    "pots",
+    "donations",
+    "rewards"
+  ],
+  "reduced_motion_and_animated_close": true,
+  "live_install_untouched": true,
+  "desktop_input_untouched": true
+}
+Final transition timing fix additionally verified with an actual $5 team bet through transformed mouse bounds and native page open/close recordings.

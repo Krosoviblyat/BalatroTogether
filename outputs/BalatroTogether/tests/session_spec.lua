@@ -51,7 +51,7 @@ test('stale round, repeated hand, nonfinite and unsolicited scores rejected',fun
     local s=start(4)
     assert(not act(s,2,'score',{round=1,hand=1,amount=500}))
     act(s,2,'busy',{round=1})
-    for _,amount in ipairs({-1,math.huge,0/0,1e101}) do assert(not act(s,2,'score',{round=1,hand=1,amount=amount})) end
+    for _,amount in ipairs({math.huge,-math.huge,0/0,1e101,-1e101}) do assert(not act(s,2,'score',{round=1,hand=1,amount=amount})) end
     assert(not act(s,2,'score',{round=0,hand=1,amount=500}))
     assert(act(s,2,'score',{round=1,hand=1,amount=200}))
     assert(not act(s,2,'score',{round=1,hand=1,amount=200})); eq(s.score,200)

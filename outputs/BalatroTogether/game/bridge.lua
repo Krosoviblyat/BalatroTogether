@@ -21,7 +21,7 @@ function B.reset()
     if BT.pot then BT.pot.reset() end
     if BT.dice then BT.dice.reset() end
     B.started=false; B.round=0; B.hand=0; B.lastchips=0; B.operation=nil; B.pending_play=nil
-    B.operation_done=false
+    B.operation_done=false;B.score_fault=nil
     B.finished=0; B.shopready=nil; B.laststatus=nil; B.lastphase=nil; B.started_round=0
     B.evaluated_round=nil; B.entry_sent=nil; B.shop_sent_at=-10; B.cashout_requested=nil; B.mismatch=nil
     B.entry_pending=nil; B.entry_sent_at=-10; B.shop_pending=nil
@@ -128,8 +128,18 @@ function B.capture_score()
     if not active() or B.round~=BT.state.round or B.reported==B.hand then return true end
     if Talisman and Talisman.scoring_coroutine then return false end
     local amount=G.GAME.chips-B.lastchips
-    local supported=BT.numbers and BT.numbers.score(amount) or (type(amount)=='number' and amount==amount and amount>=0 and amount<=1e100)
-    if not supported then BT.notice('Unsupported score value; session cannot continue safely.'); return false end
+    local supported
+    if BT.numbers then supported=BT.numbers.delta(amount)
+    else supported=type(amount)=='number' and amount==amount and math.abs(amount)<=1e100 end
+    if not supported then
+        if B.score_fault~=B.hand then
+            B.score_fault=B.hand
+            if BT.diagnostics then BT.diagnostics.record('score-error','Unsupported native score delta',{
+                chips=G.GAME.chips,previous=B.lastchips,delta=amount,hand=B.hand}) end
+            BT.notice('Nonfinite or unsupported score. Report saved in TogetherReports; restore a checkpoint or restart.')
+        end
+        return false
+    end
     B.lastchips=G.GAME.chips; B.reported=B.hand
     BT.client.action('score',{round=B.round,hand=B.hand,amount=amount,name=B.last_hand or 'Hand',boss_disabled=G.GAME.blind and G.GAME.blind.disabled==true})
     BT.client.action('idle',{round=B.round,exhausted=G.GAME.current_round.hands_left<1 or (#G.hand.cards==0 and #G.deck.cards==0)})
@@ -296,13 +306,13 @@ function B.update(dt)
             local label=({'Small','Big','Boss'})[index]
             local key=G.GAME.round_resets.blind_choices[label]
             local blind=G.P_BLINDS[key]
-            if blind and G.GAME.round_resets.ante==BT.state.ante then BT.client.propose{key=key,ante=G.GAME.round_resets.ante,index=index,
+            if blind and G.GAME.round_resets.ante==BT.state.ante then BT.client.propose{key=key,ante=B.position().ante,index=index,
                 base=get_blind_amount(G.GAME.round_resets.ante)*blind.mult*G.GAME.starting_params.ante_scaling,
                 name=blind.name,boss=blind.boss~=nil} end
         end
     end
     if BT.state.phase=='starting' and B.started_round<BT.state.round and G.STATE==G.STATES.BLIND_SELECT and G.blind_select and settled() then
-        B.round=BT.state.round; B.started_round=B.round; B.hand=0; B.reported=0; B.lastchips=0
+        B.round=BT.state.round; B.started_round=B.round; B.hand=0; B.reported=0; B.lastchips=0;B.score_fault=nil
         B.exhaustion_sent=false; B.operation=nil
         local proposal=BT.state.proposal
         local label=({'Small','Big','Boss'})[proposal.index]

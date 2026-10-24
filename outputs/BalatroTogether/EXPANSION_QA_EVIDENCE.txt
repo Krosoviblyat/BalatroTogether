@@ -1,0 +1,26 @@
+Native expansion audit — 2026-10-22
+{
+  "native_clients": 2,
+  "transport": "private TCP",
+  "qte_space_repeat_ignored": true,
+  "qte_hold_one_press": true,
+  "qte_win_guarantees_face100": true,
+  "native_jackpot_money": 100,
+  "missed_qte_gets_normal_spin": true,
+  "team_stake": 16,
+  "team_bonus": 6,
+  "team_bank": 22,
+  "personal_stakes": [
+    10,
+    20
+  ],
+  "personal_banks": [
+    11,
+    23
+  ],
+  "guest_collects_only_own_personal_bank": true,
+  "team_host_split_each": 11,
+  "both_native_endless_ante": 9,
+  "endless_fixture": "Controlled jump to ante-eight final boss; normal native scoring/cash-out/next-blind transition. 12 Cavendish per client.",
+  "live_install_untouched": true
+}

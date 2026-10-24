@@ -1,0 +1,15 @@
+Native overlay hotfix — 2026-10-22
+Isolated native clients/profiles; no live game or desktop input changes.
+{
+  "native_clients": 2,
+  "native_menus_checked": [
+    "deck",
+    "run",
+    "options",
+    "hands"
+  ],
+  "HUD_toast_inspector_and_hits_hidden": true,
+  "HUD_returns_after_close": true,
+  "explicit_Together_menu_still_opens": true,
+  "live_install_untouched": true
+}

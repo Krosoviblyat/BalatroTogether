@@ -1,3 +1,16 @@
+# Local crash reports (0.8.1+)
+
+Together > Credits > Open Crash Reports opens the active profile's
+TogetherReports folder (normally %APPDATA%\Balatro\TogetherReports).
+last-crash.txt records the latest uncaught Lua crash before the normal crash
+screen opens. last-score-error.txt records unsupported/nonfinite score context
+once per hand. Files stay local; nothing is uploaded. Hard native/driver crashes
+may not enter Lua's handler. Send the report text when a crash occurs.
+
+The Chromatic deliberately scores negative hands. 0.8.1 accepts those signed
+values and preserves score debt; all players must update together. This does
+not identify an earlier crash whose actual traceback was not captured.
+
 ## Jimbo nil crash during menu/run transitions
 
 Together 0.7 waits for native/Cryptid tutorials and screen wipes before starting or restoring a run. Finish Cryptid onboarding when it appears; Together yields its screen and controls to it. Everyone closes Balatro before updating. A crash from an older build cannot recover an unsaved hand; Continue Saved Party uses the last complete checkpoint.
@@ -18,7 +31,7 @@ If a bot cannot start, read its separate `together-bots/.../Mods/lovely/log` dir
 
 **The game crashes on startup:** move Together outside Mods, then launch with only Steamodded. Check conflicts and duplicate copies. Lovely logs are in `%AppData%\Balatro\Mods\lovely\log`. Save the first error and stack, mod list and exact versions. Do not post your entire save folder, session reconnect tokens, room PINs or personal network addresses publicly.
 
-**Cannot host / address already in use:** only one host can bind a given port. Close an older host or change the port (1024–65535); friends must use the same port. A failed listener must not be treated as a successful lobby.
+**Cannot host / address already in use:** only one host can bind a given port. Close an older host or change the port (1024â€“65535); friends must use the same port. A failed listener must not be treated as a successful lobby.
 
 **Direct IP cannot connect / timeout:** confirm host is running, address is reachable, PIN is current and every player has exactly 0.3.3-dev. 127.0.0.1 connects only on the same PC. LAN addresses are not public internet addresses. Remote play may need an existing private VPN or manual TCP forwarding; Direct IP does not use Steam relay. The mod does not change firewalls. If your network blocks TCP or uses carrier-grade NAT, ask the network owner for an appropriate reachable connection.
 
@@ -30,11 +43,11 @@ If a bot cannot start, read its separate `together-bots/.../Mods/lovely/log` dir
 
 **A player used all hands:** they wait for teammates. Individual exhaustion does not cause loss until every active player is exhausted below the target.
 
-**Waiting after shopping:** cash out first, finish buying/packs, then select native Next Round. Each player must return to blind selection and ready for the next shared blind. Close overlays that pause your local game. F8 → Return to Run closes the Together lobby.
+**Waiting after shopping:** cash out first, finish buying/packs, then select native Next Round. Each player must return to blind selection and ready for the next shared blind. Close overlays that pause your local game. F8 â†’ Return to Run closes the Together lobby.
 
 **Connection drops:** keep the original game process open. It retries the selected transport using a per-session reconnect token and requests a current snapshot. Shared transitions pause. Closing the game loses local private deck state and cannot be repaired from the shared snapshot. No host migration: if the host exits, restart the session together.
 
-**HUD is too large / blocks a control:** F8 → Settings → reduce HUD scale, move HUD to the other edge, hide panels, or change feed side. Closing inspection restores card-area visibility. 3840×1080 uses height-based scaling rather than stretching.
+**HUD is too large / blocks a control:** F8 â†’ Settings â†’ reduce HUD scale, move HUD to the other edge, hide panels, or change feed side. Closing inspection restores card-area visibility. 3840Ã—1080 uses height-based scaling rather than stretching.
 
 **Joker details or selected cards are missing:** inspection may be disabled by that player; hands are hidden unless explicitly revealed. Inspection is a compact textual state view, not a second interactive board. See KNOWN_ISSUES.md for remaining visual limitations.
 

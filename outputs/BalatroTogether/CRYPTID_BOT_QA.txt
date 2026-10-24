@@ -1,0 +1,16 @@
+{
+  "cryptid": "0.5.17c",
+  "amulet": "3.6.1",
+  "deck": "b_cry_misprint",
+  "seed": "CRYBOTS1",
+  "won_blinds": 2,
+  "bot_hands": 2,
+  "bot_chips": 6092,
+  "hidden_companion_windows": 0,
+  "real_native_scores": true,
+  "bot_discard_shop_exit_verified": true,
+  "ruleset_inherited": true,
+  "controlled_host_fixture": "12 Cavendish; bot has no granted build",
+  "native_errors": 0,
+  "exits_on_host_leave": true
+}

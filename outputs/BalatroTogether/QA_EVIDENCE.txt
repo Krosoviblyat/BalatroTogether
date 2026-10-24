@@ -1,0 +1,804 @@
+{
+  "controlled_progression": {
+    "kind": "four real local native clients, controlled 12-Cavendish fixture per client",
+    "version": "0.1.0-dev",
+    "victory_clients": 4,
+    "rounds": 24,
+    "completed_antes": 8,
+    "pre_cashout_ledger_audits": 92,
+    "ledger_mismatches": 0,
+    "team_lifetime_score": 5110336656,
+    "hands_per_seat": {
+      "2": 24,
+      "4": 24,
+      "1": 24,
+      "3": 24
+    },
+    "harness_errors": 0
+  },
+  "normal_build_network_chaos": {
+    "kind": "four real native local clients with normal starting builds; TCP chaos on guest four",
+    "ending": "shared defeat at ante 1 boss (The Manacle)",
+    "rounds_started": 3,
+    "pre_cashout_ledger_audits": 7,
+    "ledger_mismatches": 0,
+    "all_clients_agree": true,
+    "team_lifetime_score": 6640,
+    "proxy": {
+      "connections": 2,
+      "cuts_after_busy_ack": 1,
+      "duplicated_scores": 9,
+      "delay_each_direction_ms": 80
+    },
+    "discard_requests": 1,
+    "purchase_requests": 2,
+    "harness_errors": 0
+  },
+  "native_player_counts": [
+    {
+      "players": 1,
+      "passed_clients": 1,
+      "first_blind_target": 300,
+      "native_score_audits": 1,
+      "mismatches": 0
+    },
+    {
+      "players": 2,
+      "passed_clients": 2,
+      "first_blind_target": 635,
+      "native_score_audits": 2,
+      "mismatches": 0
+    },
+    {
+      "players": 3,
+      "passed_clients": 3,
+      "ending": "shared defeat on first blind",
+      "first_blind_target": 983,
+      "team_score": 576,
+      "unassisted_best-hand bot": true
+    }
+  ],
+  "single_player": {
+    "seat": 1,
+    "time": 13.085049449164,
+    "type": "PASS",
+    "chips": 360,
+    "test": "singleplayer_native_blind_completed",
+    "network_state": false
+  },
+  "party_restart": {
+    "real_clients": 4,
+    "party_restarts": 2,
+    "fresh_native_deck_audits": 8,
+    "all_decks_52_and_zero_score": true,
+    "same_seed_each_epoch": true,
+    "old_run_score_ignored": true,
+    "guest_restart_refused": true,
+    "restarted_during_hand": true,
+    "restarted_from_shop_or_defeat": true
+  },
+  "date": "2026-10-21",
+  "version": "0.3.3-dev",
+  "environment": {
+    "os": "Windows x64",
+    "game": "1.0.1o-FULL",
+    "love": "11.5",
+    "lovely": "0.10.0",
+    "steamodded": "26.1002.0",
+    "native_test_topology": "four processes on one PC and Steam account"
+  },
+  "pure_tests": {
+    "session_layout_framing": 15,
+    "native_event_regression": 1,
+    "runtime_syntax_files": 13
+  },
+  "negative_tcp_checks": {
+    "passed": 6,
+    "unauthenticated_snapshot_leaks": 0
+  },
+  "limitations": [
+    "Controlled progression grants 12 Cavendish jokers per client.",
+    "Full 24-blind fixture predates final restart/UI refinements; those received separate checks.",
+    "Four-PC internet and Steam invitations not verified.",
+    "Ordinary unassisted eight-ante victory not verified.",
+    "Three-player native bot gate ended in legitimate defeat.",
+    "0.3.2 Steam cross-account invites, cold-launch invites and internet Steam relay traffic remain unverified; real local lobby and same-account API checks do not certify them."
+  ],
+  "installed_native_smoke": {
+    "version": "0.2 historical; 0.3 installation check recorded separately",
+    "loaded": true,
+    "native_log_errors": 0,
+    "private_harness": false,
+    "original_executable_unchanged": true,
+    "visible_human_game_windows": 1,
+    "visible_console_windows": 0
+  },
+  "historical_baseline_version": "0.1.0-dev",
+  "native_bots_candidate": {
+    "date": "2026-10-21",
+    "kind": "one native test player plus three automatically launched native bot companions; no score grants or fixture jokers",
+    "seed": "BOTTEST1",
+    "deck": "b_blue",
+    "round_reached": 11,
+    "phase": "defeat",
+    "target": 33519,
+    "team_score": 21128,
+    "players": [
+      {
+        "name": "Bot Ada",
+        "bot": true,
+        "native_hands": 29,
+        "lifetime_score": 44932,
+        "jokers": [
+          "j_loyalty_card",
+          "j_8_ball",
+          "j_crazy",
+          "j_blue_joker",
+          "j_blackboard"
+        ]
+      },
+      {
+        "name": "Bot Hopper",
+        "bot": true,
+        "native_hands": 29,
+        "lifetime_score": 44932,
+        "jokers": [
+          "j_loyalty_card",
+          "j_8_ball",
+          "j_crazy",
+          "j_blue_joker",
+          "j_blackboard"
+        ]
+      },
+      {
+        "name": "Test 1",
+        "bot": false,
+        "native_hands": 42,
+        "lifetime_score": 4388,
+        "jokers": []
+      },
+      {
+        "name": "Bot Turing",
+        "bot": true,
+        "native_hands": 29,
+        "lifetime_score": 44932,
+        "jokers": [
+          "j_loyalty_card",
+          "j_8_ball",
+          "j_crazy",
+          "j_blue_joker",
+          "j_blackboard"
+        ]
+      }
+    ],
+    "companions": 3,
+    "native_errors": 0,
+    "host_ledger_audits": 10,
+    "ledger_mismatches": 0,
+    "decisions": {
+      "play": 87,
+      "discard": 72,
+      "buy": 30,
+      "voucher": 3,
+      "consume": 9,
+      "sell": 3,
+      "reroll": 15,
+      "leave_shop": 30
+    },
+    "first_blind_same_seed_comparison": {
+      "new_bot_chips_each": 504,
+      "new_bot_hands_each": 2,
+      "old_test_player_chips": 281,
+      "old_test_player_hands": 3
+    },
+    "limits": [
+      "Single PC/account; heuristic estimates, not a full joker engine.",
+      "No claim of ordinary eight-ante victory or all boss/joker optimality."
+    ]
+  },
+  "native_deck_initialization": [
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 1,
+      "faces": 12,
+      "native": "b_red",
+      "selected": "b_red",
+      "cards": 52,
+      "discards": 4
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 5,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 2,
+      "faces": 12,
+      "native": "b_blue",
+      "selected": "b_blue",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 14,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 3,
+      "faces": 12,
+      "native": "b_yellow",
+      "selected": "b_yellow",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 4,
+      "faces": 12,
+      "native": "b_green",
+      "selected": "b_green",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 3,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 5,
+      "faces": 12,
+      "native": "b_black",
+      "selected": "b_black",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 6,
+      "faces": 12,
+      "native": "b_magic",
+      "selected": "b_magic",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 7,
+      "faces": 12,
+      "native": "b_nebula",
+      "selected": "b_nebula",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 8,
+      "faces": 12,
+      "native": "b_ghost",
+      "selected": "b_ghost",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 10,
+        "Hearts": 10,
+        "Diamonds": 10,
+        "Spades": 10
+      },
+      "ante_scaling": 1,
+      "run": 9,
+      "faces": 0,
+      "native": "b_abandoned",
+      "selected": "b_abandoned",
+      "cards": 40,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Spades": 26,
+        "Hearts": 26
+      },
+      "ante_scaling": 1,
+      "run": 10,
+      "faces": 12,
+      "native": "b_checkered",
+      "selected": "b_checkered",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 11,
+      "faces": 12,
+      "native": "b_zodiac",
+      "selected": "b_zodiac",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 12,
+      "faces": 12,
+      "native": "b_painted",
+      "selected": "b_painted",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 1,
+      "run": 13,
+      "faces": 12,
+      "native": "b_anaglyph",
+      "selected": "b_anaglyph",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 13,
+        "Hearts": 13,
+        "Diamonds": 13,
+        "Spades": 13
+      },
+      "ante_scaling": 2,
+      "run": 14,
+      "faces": 12,
+      "native": "b_plasma",
+      "selected": "b_plasma",
+      "cards": 52,
+      "discards": 3
+    },
+    {
+      "seed": "DECKTEST",
+      "hands": 4,
+      "money": 4,
+      "suits": {
+        "Clubs": 10,
+        "Hearts": 13,
+        "Diamonds": 10,
+        "Spades": 19
+      },
+      "ante_scaling": 1,
+      "run": 15,
+      "faces": 13,
+      "native": "b_erratic",
+      "selected": "b_erratic",
+      "cards": 52,
+      "discards": 3
+    }
+  ],
+  "current_pure_tests": {
+    "total": 76,
+    "lua_syntax_files": 28,
+    "steam_transport_and_names": 18,
+    "native_handshake": 6,
+    "pin_regressions": 8,
+    "other_regressions": 44
+  },
+  "final_native_bot_gate": {
+    "version": "0.2.0-dev",
+    "ui_add_bot_clicks": 3,
+    "native_bot_clients": 3,
+    "first_blind_success": true,
+    "party_restart": true,
+    "fresh_native_decks": 4,
+    "fixed_seed": "BOTTEST1",
+    "selected_deck": "b_blue",
+    "all_new_scores_and_builds_reset": true,
+    "native_log_errors": 0,
+    "visible_companion_windows": 0,
+    "companions_stopped_after_host_leave": 3,
+    "main_menu_button_callback": true
+  },
+  "current_native_menu": {
+    "dedicated_top_right_button": true,
+    "actual_together_host_callbacks": true,
+    "seed_deck_setup_visuals_checked_at": [
+      960,
+      1920
+    ]
+  },
+  "callback_hotfix": {
+    "regression_polls": 20000,
+    "persistent_callbacks_per_module": 1,
+    "actual_windows_luajit_calls": 21000,
+    "post_gc_calls_included": true,
+    "unrelated_pids_hidden": false,
+    "native_bot_gate": {
+      "version": "0.2.1-dev",
+      "ui_add_bot_clicks": 3,
+      "native_bot_clients": 3,
+      "first_blind_success": true,
+      "party_restart": true,
+      "fresh_native_decks": 4,
+      "fixed_seed": "BOTTEST1",
+      "selected_deck": "b_blue",
+      "all_new_scores_and_builds_reset": true,
+      "native_log_errors": 0,
+      "visible_companion_windows": 0,
+      "companions_stopped_after_host_leave": 3,
+      "main_menu_button_callback": true
+    }
+  },
+  "donation_native": {
+    "version": "0.3.0-dev",
+    "native_clients": 4,
+    "donor_removed_before_claim": true,
+    "simultaneous_claim_winners": 1,
+    "green_joker_mult": 17,
+    "foil_perishable_rental_preserved": true,
+    "negative_received_at_full_inventory": true,
+    "juggler_hand_size_donor_after": 8,
+    "juggler_hand_size_recipient_after": 9,
+    "eternal_rejected": true,
+    "full_consumable_inventory_rejected": true,
+    "disconnect_reservation_retained": true,
+    "reconnected_copies": 1,
+    "donated_tarot_used_natively": true,
+    "hermit_money_before": 4,
+    "hermit_money_after": 8,
+    "native_errors": 0,
+    "fixtures": "Granted private transfer-test cards; not balance or ordinary victory evidence."
+  },
+  "donation_ui": {
+    "native_planet_spectral_transfer": true,
+    "sizes": [
+      [
+        960,
+        600
+      ],
+      [
+        1920,
+        1080
+      ],
+      [
+        3840,
+        1080
+      ]
+    ],
+    "entry_frames": 5,
+    "transfer_frames": 6,
+    "reduced_motion_capture": true,
+    "small_window_notice_fix_rechecked": [
+      960,
+      1920
+    ]
+  },
+  "donation_bot": {
+    "version": "0.3.0-dev",
+    "native_bot_clients": 1,
+    "public_gift_not_taken": true,
+    "addressed_green_joker_received_mult": 17,
+    "addressed_foil_preserved": true,
+    "addressed_tarot_received_and_used": true,
+    "automatic_unready_and_ready": true,
+    "shared_first_blind_cleared": true,
+    "visible_test_and_bot_windows": 0,
+    "native_bot_errors": 0,
+    "host_leave_stopped_companion": true
+  },
+  "donation_installed_native_smoke": {
+    "version": "0.3.0-dev",
+    "loaded": true,
+    "native_log_errors": 0,
+    "private_harness": false,
+    "visible_game_windows": 1,
+    "visible_console_windows": 0,
+    "original_executable_unchanged": true,
+    "installed_files_match_zip": true
+  },
+  "progression_barrier_native": {
+    "version": "0.3.1-dev candidate runtime",
+    "clients": 2,
+    "fixture": "12 granted Cavendish jokers per client; transfer/progression only, not balance",
+    "rounds": 24,
+    "completed_antes": 8,
+    "ledger_audits": 46,
+    "ledger_mismatches": 0,
+    "harness_errors": 0,
+    "final_cashout_wrapper": "separate unit regression and final four-client native donation/entry test; full fixture preceded this wrapper"
+  },
+  "final_031_four_client_donation": {
+    "version": "0.3.1-dev verified by native load markers",
+    "native_clients": 4,
+    "donor_removed_before_claim": true,
+    "simultaneous_claim_winners": 1,
+    "green_joker_mult": 17,
+    "foil_perishable_rental_preserved": true,
+    "negative_received_at_full_inventory": true,
+    "juggler_hand_size_donor_after": 8,
+    "juggler_hand_size_recipient_after": 9,
+    "eternal_rejected": true,
+    "full_consumable_inventory_rejected": true,
+    "disconnect_reservation_retained": true,
+    "reconnected_copies": 1,
+    "donated_tarot_used_natively": true,
+    "hermit_money_before": 4,
+    "hermit_money_after": 8,
+    "native_errors": 0
+  },
+  "installer_tests": {
+    "passed": 13,
+    "tests": [
+      "fresh install preserves game, saves and unrelated mods",
+      "updates quarantine old loaders, duplicate Together and conflicting mods",
+      "failure after replacement rolls back every previous mod",
+      "repeat install remains verified and creates separate backups",
+      "running game blocks before changes",
+      "unknown DLL is never overwritten",
+      "existing version.dll requires review",
+      "wrong game build is rejected",
+      "unknown Together destination is preserved",
+      "unknown Steamodded destination is preserved",
+      "absolute and traversal extraction targets are refused",
+      "current user folders validate before elevation context is accepted",
+      "quiet desktop shortcut uses the owned game without launching it"
+    ],
+    "failed": 0,
+    "environment": "Windows temporary synthetic game/profile fixtures; real installed game untouched"
+  },
+  "historical_031_pure_tests": {
+    "base_session_layout_framing": 17,
+    "native_event_regression": 2,
+    "bots_and_setup": 10,
+    "lua_syntax_files": 24,
+    "callback_lifetime_and_pid_scope": 1,
+    "donation_and_motion": 12,
+    "native_donation_boundary": 2,
+    "total": 44
+  },
+  "steam_transport": {
+    "real_steam_lobby_created": true,
+    "real_steam_metadata_roundtrip": true,
+    "native_callbacks_pumped": true,
+    "steam_host_with_native_bot": true,
+    "native_blinds_completed": 1,
+    "native_phase": "shop",
+    "bot_listener_loopback": true,
+    "ephemeral_bot_port": "57726",
+    "cross_account_invite_acceptance": "NOT TESTED - requires a second Steam account/device",
+    "cross_account_steam_packets": "NOT TESTED - simulated in unit tests only",
+    "errors": 0,
+    "native_message_self_loopback": true,
+    "self_loopback_scope": "Same-account in-process Steam API roundtrip only; not internet/relay evidence. Steam SDK printed a nonfatal pipe unlink assertion in this private self-send probe; the gameplay check preceded it and had no log errors.",
+    "synthetic_native_callback_abi": {
+      "lobby_callbacks": 10000,
+      "presence_callbacks": 1,
+      "persistent_callback_objects": 2,
+      "ffi_callback_allocations": 6,
+      "overflow": false,
+      "actual_steam_invite_event": false
+    }
+  },
+  "historical_032_pure_tests": {
+    "total": 65,
+    "lua_syntax_files": 27,
+    "steam_transport_simulated_native_service": 13,
+    "pin_regressions": 8,
+    "other_regressions": 44
+  },
+  "waiting_recovery_native": {
+    "native_clients": 2,
+    "native_blinds_completed": 7,
+    "controlled_fixture": "12 Cavendish per client; progression evidence only",
+    "rejected_entry_recovered_on_both": true,
+    "rejected_shop_exit_recovered_on_both": true,
+    "host_and_guest_name_ui_synchronized": true,
+    "native_steam_friend_list_read_only": true,
+    "friend_picker_ui_uses_anonymized_fixture": true,
+    "test_invites_sent": 0,
+    "gameplay_transport": "TCP; no Steam lobby create/join during active user Steam session",
+    "errors": 0,
+    "instrumentation_note": "Original 60-second four-round wait expired before the fourth round finished; the same running pair continued, crossed Ante 1, and was then audited without restarting."
+  },
+  "reported_steam_observation": "User screenshot shows host Steam table with a connected named second Steam player in 0.3.2. Old overlay invite UI offered only Invite to Watch. New direct lobby invite receipt is not yet verified.",
+  "bet_pot_0_3_4": {
+    "version": "0.3.4-dev",
+    "native_clients": 2,
+    "transport": "isolated TCP, no Steam lobby creation",
+    "deck": "Yellow Deck",
+    "controlled_fixture": "12 Cavendish per client; progression only",
+    "native_ui_bets": [
+      5,
+      6
+    ],
+    "wallets_before": [
+      14,
+      14
+    ],
+    "wallets_after_deposit": [
+      9,
+      8
+    ],
+    "won_stake": 11,
+    "rounded_bonus": 2,
+    "saved_winnings": 13,
+    "equal_payouts": [
+      6,
+      6
+    ],
+    "retained_remainder": 1,
+    "wallets_after_payout": [
+      15,
+      14
+    ],
+    "delayed_guest_receipt_did_not_duplicate_payout": true,
+    "next_blind_shop_bets": [
+      1,
+      1
+    ],
+    "native_blinds_completed": 2,
+    "paused_native_results_payout": true,
+    "restart_clears_old_pot_and_payouts": true,
+    "errors": 0,
+    "lua_tests": 94,
+    "lua_files": 33
+  },
+  "reward_dice_0_3_5": {
+    "version": "0.3.5-dev",
+    "native_clients": 2,
+    "visible_preview": true,
+    "transport": "isolated TCP",
+    "two_pairs_earned_after_real_wins": [
+      2,
+      4
+    ],
+    "controlled_fixture": "12 Cavendish per player, progression only",
+    "gold_face": 4,
+    "gold_payout": 20,
+    "red_d20_face": 13,
+    "red_bonus_observed_in_native_hand_round": 3,
+    "bonus_expired_round": 4,
+    "guest_delayed_receipt_did_not_duplicate_gold": true,
+    "errors": 0,
+    "lua_tests": 110,
+    "lua_files": 40,
+    "initial_preview_canvas_error_fixed": true
+  },
+  "boss_wheel_0_3_6": {
+    "version": "0.3.6-dev",
+    "native_clients": 2,
+    "visible_host_preview": true,
+    "transport": "private TCP",
+    "controlled_fixture": "12 Cavendish per player; fixed physics seed 147 on the host wheel to exercise jackpot",
+    "boss_ticket_after_real_boss_win_round": 3,
+    "gold_red_pair_preserved": true,
+    "both_wheel_slots": 100,
+    "money_per_player": 100,
+    "all_native_hand_levels_added": 3,
+    "free_refreshes_awarded": 6,
+    "native_free_refresh_spent_without_money": true,
+    "next_blind_round": 4,
+    "extra_hands": 3,
+    "extra_discards": 3,
+    "extra_chips": 400,
+    "extra_mult": 100,
+    "temporary_effects_expired_round": 5,
+    "permanent_hand_levels_and_remaining_refreshes_preserved": true,
+    "delayed_guest_effect_receipt_no_duplicate": true,
+    "harness_errors": 0,
+    "lua_tests": 118,
+    "lua_files": 42,
+    "live_installed_version_unchanged": "0.3.5-dev"
+  },
+  "owner_admin_0_3_6": {
+    "version": "0.3.6-dev",
+    "native_clients": 2,
+    "transport": "private TCP",
+    "owner_native_steam_identity_verified": true,
+    "non_owner_seat_slash_denied": true,
+    "forged_guest_admin_command_denied": true,
+    "native_guest_cash_grant": 100,
+    "native_guest_hand_level_grant": 1,
+    "guest_wheel_ticket": 1,
+    "guest_next_mult": 20,
+    "retry_reaches_both_without_skipping": true,
+    "restart_requires_panel_confirmation": true,
+    "same_seed_native_restart": true,
+    "slash_toggles_after_restart": true,
+    "harness_errors": 0,
+    "visible_preview": true,
+    "limitation": "Both lab processes run under the owner Steam account; peer is intentionally an unverified TCP seat. Separate-account Steam authorization is covered by reducer tests, not a live second Steam login.",
+    "lua_tests": 126,
+    "lua_files": 46
+  }
+}

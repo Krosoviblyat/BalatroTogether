@@ -46,13 +46,43 @@ test('two huge contributions sum once and meet a huge shared target with exact a
     assert(m.phase=='shop' and m.winner and m.players[2].highest==big('2e1000'))
     local s=J.decode(J.encode(m:snapshot(2))); assert(s.score==m.score and s.target==m.target)
 end)
-test('negative, infinite and nonnumeric scores cannot corrupt a Cryptid session',function()
+test('infinite, oversized and nonnumeric scores cannot corrupt a Cryptid session',function()
     local m=S.new{intended=1}; m.phase='blind';m.run_id=1;m.round=1;m.target=big('ee100');m.players[1].busy=true
-    for _,v in ipairs({big('-1e1000'),Big.constants.NaN,Big.constants.POSITIVE_INFINITY,1e308,{array={1000,1}}}) do
+    for _,v in ipairs({Big.constants.NaN,Big.constants.POSITIVE_INFINITY,1e308,-1e308,{array={1000,1}}}) do
         assert(not act(m,1,'score',{round=1,hand=1,amount=v,name='bad'}))
     end
     assert(m.score==0 and m.players[1].completed==0)
     assert(N.score(big('1e308')) and not N.score(1e308))
+end)
+
+test('Chromatic negative hands retain debt and the next positive hand recovers on every client',function()
+    for _,penalty in ipairs({125,big('1e1000')}) do
+        local m=S.new{intended=2};m:join('Guest','guest');m.phase='blind';m.run_id=1;m.round=1;m.target=big('ee100')
+        for hand,amount in ipairs({-penalty,penalty*3}) do
+            assert(act(m,2,'busy',{round=1}))
+            local payload=J.decode(J.encode({round=1,hand=hand,amount=amount,name='Pair'}))
+            assert(act(m,2,'score',payload))
+            assert(not act(m,2,'score',payload),'Repeated negative/positive hand was counted twice')
+            assert(act(m,2,'idle',{round=1,exhausted=false}))
+            local replicated=J.decode(J.encode(m:snapshot(2)))
+            assert(replicated.score==m.score and replicated.players['2'].contribution==m.score)
+            if hand==1 then assert(m.score==-penalty and not m.players[2].busy and m.phase=='blind') end
+        end
+        assert(N.abs((m.score-penalty*2)/(penalty*2))<1e-10 and m.players[2].highest==penalty*3 and m.players[2].completed==2)
+        assert(not m:set_proposal(1,{base=-penalty,ante=1,index=1,key='bl_small'}))
+    end
+end)
+
+test('native bridge accepts a real negative Amulet hand and returns to play exactly once',function()
+    local calls={}
+    BT={numbers=N,state={round=1},active=function() return true end,notice=function() error('Negative hand rejected') end,
+        client={action=function(k,d) calls[#calls+1]={kind=k,data=d} end}}
+    G={GAME={chips=big(-70),current_round={hands_left=3}},hand={cards={1}},deck={cards={1}}}
+    local b=dofile(ROOT..'/game/bridge.lua');b.started=true;b.round=1;b.hand=1;b.lastchips=0
+    assert(b.capture_score() and calls[1].data.amount==big(-70) and calls[2].kind=='idle')
+    assert(b.capture_score() and #calls==2)
+    G.GAME.chips=big(130);b.hand=2
+    assert(b.capture_score() and calls[3].data.amount==big(200) and #calls==4)
 end)
 test('UI score ratios are ordinary bounded numbers and huge values retain readable formatting',function()
     assert(type(N.ratio(big('1e1000'),big('2e1000')))=='number')

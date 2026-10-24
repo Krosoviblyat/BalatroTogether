@@ -1,8 +1,8 @@
-# Automatic updates (launcher/setup 0.8.0-dev)
+# Automatic updates (launcher/setup 0.8.1-dev)
 
 Run the standalone setup EXE once, with Balatro closed. No extraction is needed. Then use **Play Balatro Together** on your desktop. The shortcut opens the launcher, checks for a newer signed release, downloads and verifies it, and starts installation automatically. After installation, click Play (or use the desktop shortcut if Windows requested administrator access). The launcher never opens the game during a failed update.
 
-Launcher/setup **0.8.0-dev** bundles gameplay **0.7.1-dev**. These versions can differ: the footer identifies setup; the installed-mod line identifies the version players must match.
+Launcher/setup **0.8.1-dev** bundles gameplay **0.7.1-dev**. These versions can differ: the footer identifies setup; the installed-mod line identifies the version players must match.
 
 The launcher checks the original Windows user's installed Together metadata and compares the installed files with the hash-verified embedded package. A current launcher with an old, missing or damaged mod is **repair needed**, never up to date. With no newer eligible release, it stages its own full installer for repair; this local path works without GitHub access. Play also verifies the mod and uses this repair path before launching. A newer mod is preserved, and the trusted launcher high-water mark prevents an older embedded repair.
 
@@ -45,13 +45,13 @@ The first init generates a signing key encrypted with current-user DPAPI under `
 For a release, bump `Build.Version`, assembly/manifest versions and changelog, set the correct embedded payload hash, and rebuild/test the installer with Build.cmd. Keep `UpdateKey.cs` unchanged. Package as `BalatroTogether-<version>-Easy-Installer.zip`, including its source, dependency licenses and exact upstream sources. Then run:
 
 ```bat
-SignUpdate.exe --sign BalatroTogether-0.8.0-dev-Easy-Installer.zip 0.8.0-dev release-assets
+SignUpdate.exe --sign BalatroTogether-0.8.1-dev-Easy-Installer.zip 0.8.1-dev release-assets
 ```
 
 For the native EXE path also run:
 
 ```bat
-SignUpdate.exe --sign BalatroTogether-Setup-0.8.0-dev.exe 0.8.0-dev release-assets
+SignUpdate.exe --sign BalatroTogether-Setup-0.8.1-dev.exe 0.8.1-dev release-assets
 ```
 
 This produces Update-v2.json and Update-v2.sig. Publish the EXE and both v2 assets. Keep the legacy ZIP, Update.json and Update.sig on this transition release for 0.6.2 launchers. Never sign different EXE bytes from those packaged inside that ZIP.

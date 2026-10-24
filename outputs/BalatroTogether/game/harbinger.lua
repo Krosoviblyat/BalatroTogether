@@ -10,7 +10,7 @@ function V.install()
         local s=BT.state;if not s or not self.states.visible then return end
         local g=love.graphics;g.push('all');prep_draw(self,1)
         g.setColor(0.06,0.08,0.09,1);g.rectangle('fill',0,0,self.T.w,self.T.h,0.035,0.035)
-        local gross=0;for _,p in pairs(s.players) do gross=gross+p.contribution end
+        local gross=0;for _,p in pairs(s.players) do if p.contribution>0 then gross=gross+p.contribution end end
         local cursor=0;local colors={{0.19,0.85,0.7,1},{1,0.61,0.2,1},{0.52,0.59,1,1},{1,0.33,0.59,1}}
         if gross>0 then for id=1,4 do local p=s.players[tostring(id)]
             if p then local width=math.min(self.T.w-cursor,self.T.w*V.progress*BT.numbers.ratio(p.contribution,gross))

@@ -16,6 +16,10 @@ end
 M.copy = copy
 local function finite(x) return type(x) == 'number' and x == x and x >= 0 and x < 1e300 end
 local function score_number(x) return M.Numbers and M.Numbers.score(x) or (finite(x) and x<=1e100) end
+local function score_delta(x)
+    if M.Numbers then return M.Numbers.delta(x) end
+    return type(x)=='number' and x==x and math.abs(x)<=1e100
+end
 local function integer(x, lo, hi) return finite(x) and x % 1 == 0 and x >= lo and x <= hi end
 local function clean(x, n)
     local value=tostring(x or ''):gsub('[%z\1-\31\127]', '')
@@ -253,9 +257,12 @@ function M:apply(id, action)
         else p.busy=true; p.activity='calculating' end
     elseif kind=='score' then
         if self.phase~='blind' or d.round~=self.round or not p.busy
-            or not score_number(d.amount) or not integer(d.hand,1,10000)
+            or not score_delta(d.amount) or not integer(d.hand,1,10000)
             or d.hand~=p.completed+1 then ok,err=nil,'Invalid, stale, or unsolicited hand score.'
         else
+            -- Cryptid's Chromatic (and other effects) can legitimately score a
+            -- negative hand. Keep its signed native delta, including debt below
+            -- zero; never turn a penalty into free progress by clamping it.
             p.completed=d.hand; p.contribution=p.contribution+d.amount; p.total=p.total+d.amount
             if d.amount>p.highest then p.highest=d.amount end; p.hands_played=p.hands_played+1
             p.last_hand=clean(d.name,36); self.score=self.score+d.amount; self.lifetime_score=self.lifetime_score+d.amount

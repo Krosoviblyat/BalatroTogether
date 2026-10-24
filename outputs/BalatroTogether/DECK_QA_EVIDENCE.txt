@@ -1,0 +1,85 @@
+Native deck setup audit — 2026-10-22
+Pinned Steam Balatro 1.0.1o-FULL, SMODS 26.1002.0, Cryptid 0.5.17c, Amulet 3.6.1.
+Private owned-game copy and isolated QA profile; no live installation changed.
+38 selectable decks, two native starts per deck (initial plus same-seed restart), seed DECKTEST.
+This proves initialization and the recorded starting effects, not all later gameplay combinations.
+
+Run 01: b_red -> b_red; 52 cards; hands=4; discards=4; dollars=4; seed=DECKTEST
+Run 02: b_red -> b_red; 52 cards; hands=4; discards=4; dollars=4; seed=DECKTEST
+Run 03: b_blue -> b_blue; 52 cards; hands=5; discards=3; dollars=4; seed=DECKTEST
+Run 04: b_blue -> b_blue; 52 cards; hands=5; discards=3; dollars=4; seed=DECKTEST
+Run 05: b_yellow -> b_yellow; 52 cards; hands=4; discards=3; dollars=14; seed=DECKTEST
+Run 06: b_yellow -> b_yellow; 52 cards; hands=4; discards=3; dollars=14; seed=DECKTEST
+Run 07: b_green -> b_green; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 08: b_green -> b_green; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 09: b_black -> b_black; 52 cards; hands=3; discards=3; dollars=4; seed=DECKTEST
+Run 10: b_black -> b_black; 52 cards; hands=3; discards=3; dollars=4; seed=DECKTEST
+Run 11: b_magic -> b_magic; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 12: b_magic -> b_magic; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 13: b_nebula -> b_nebula; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 14: b_nebula -> b_nebula; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 15: b_ghost -> b_ghost; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 16: b_ghost -> b_ghost; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 17: b_abandoned -> b_abandoned; 40 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 18: b_abandoned -> b_abandoned; 40 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 19: b_checkered -> b_checkered; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 20: b_checkered -> b_checkered; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 21: b_zodiac -> b_zodiac; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 22: b_zodiac -> b_zodiac; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 23: b_painted -> b_painted; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 24: b_painted -> b_painted; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 25: b_anaglyph -> b_anaglyph; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 26: b_anaglyph -> b_anaglyph; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 27: b_plasma -> b_plasma; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 28: b_plasma -> b_plasma; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 29: b_erratic -> b_erratic; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 30: b_erratic -> b_erratic; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 31: b_cry_CCD -> b_cry_CCD; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 32: b_cry_CCD -> b_cry_CCD; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 33: b_cry_antimatter -> b_cry_antimatter; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 34: b_cry_antimatter -> b_cry_antimatter; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 35: b_cry_beige -> b_cry_beige; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 36: b_cry_beige -> b_cry_beige; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 37: b_cry_beta -> b_cry_beta; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 38: b_cry_beta -> b_cry_beta; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 39: b_cry_blank -> b_cry_blank; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 40: b_cry_blank -> b_cry_blank; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 41: b_cry_bountiful -> b_cry_bountiful; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 42: b_cry_bountiful -> b_cry_bountiful; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 43: b_cry_conveyor -> b_cry_conveyor; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 44: b_cry_conveyor -> b_cry_conveyor; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 45: b_cry_critical -> b_cry_critical; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 46: b_cry_critical -> b_cry_critical; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 47: b_cry_e_deck -> b_cry_e_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 48: b_cry_e_deck -> b_cry_e_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 49: b_cry_encoded -> b_cry_encoded; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 50: b_cry_encoded -> b_cry_encoded; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 51: b_cry_equilibrium -> b_cry_equilibrium; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 52: b_cry_equilibrium -> b_cry_equilibrium; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 53: b_cry_et_deck -> b_cry_et_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 54: b_cry_et_deck -> b_cry_et_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 55: b_cry_glowing -> b_cry_glowing; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 56: b_cry_glowing -> b_cry_glowing; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 57: b_cry_infinite -> b_cry_infinite; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 58: b_cry_infinite -> b_cry_infinite; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 59: b_cry_legendary -> b_cry_legendary; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 60: b_cry_legendary -> b_cry_legendary; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 61: b_cry_misprint -> b_cry_misprint; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 62: b_cry_misprint -> b_cry_misprint; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 63: b_cry_redeemed -> b_cry_redeemed; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 64: b_cry_redeemed -> b_cry_redeemed; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 65: b_cry_sk_deck -> b_cry_sk_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 66: b_cry_sk_deck -> b_cry_sk_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 67: b_cry_sl_deck -> b_cry_sl_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 68: b_cry_sl_deck -> b_cry_sl_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 69: b_cry_spooky -> b_cry_spooky; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 70: b_cry_spooky -> b_cry_spooky; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 71: b_cry_st_deck -> b_cry_st_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 72: b_cry_st_deck -> b_cry_st_deck; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 73: b_cry_very_fair -> b_cry_very_fair; 52 cards; hands=2; discards=1; dollars=4; seed=DECKTEST
+Run 74: b_cry_very_fair -> b_cry_very_fair; 52 cards; hands=2; discards=1; dollars=4; seed=DECKTEST
+Run 75: b_cry_wormhole -> b_cry_wormhole; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+Run 76: b_cry_wormhole -> b_cry_wormhole; 52 cards; hands=4; discards=3; dollars=4; seed=DECKTEST
+
+Native assertions passed: Edition Deck 52 Foil cards; Enhancement Deck 52 Bonus cards; Suit Deck 52 Spades; Seal Deck 52 Gold seals; Antimatter deck-state table initialized.
+Host setup defaults include all available Cryptid run-selection pages and are copied before native deck apply.

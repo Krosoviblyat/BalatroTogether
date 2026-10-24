@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.8.0-dev'
+BT.version='0.8.1-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
@@ -32,6 +32,8 @@ BT.admin=load('game/admin.lua')
 BT.save=load('game/checkpoint.lua')
 BT.bots=load('bots/controller.lua')
 BT.ui=load('ui/interface.lua')
+BT.diagnostics=load('game/diagnostics.lua')
+BT.diagnostics.install()
 function BT.active() return BT.state and BT.state.phase~='lobby' end
 function BT.round_won() return BT.active() and BT.state.winner==true end
 function BT.notice(message) BT.message=tostring(message); BT.message_time=love.timer.getTime() end

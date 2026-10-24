@@ -99,7 +99,7 @@ function H.tick(m,now,paused)
     start(m);local a=b.pending;if not a then return end
     a.age=math.min(H.DURATION,a.age+dt)
     if a.age>=H.IMPACT and not a.hit then
-        a.hit=true;a.removed=m.score<a.damage and m.score or a.damage;m.score=m.score-a.removed
+        a.hit=true;a.removed=m.score<0 and 0 or (m.score<a.damage and m.score or a.damage);m.score=m.score-a.removed
         b.score=b.score+a.damage;b.damage=b.damage+a.removed
         local shown=m.Numbers and m.Numbers.format(a.removed) or tostring(a.removed)
         m:event(0,'boss',a.name..' / '..a.chips..' x '..a.mult..' / TEAM -'..shown)

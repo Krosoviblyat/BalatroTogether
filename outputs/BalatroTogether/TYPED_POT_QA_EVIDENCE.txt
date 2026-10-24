@@ -1,0 +1,22 @@
+Exact bet amount native audit — 2026-10-22
+Private owned-game copies, isolated profiles and TCP; captured native Lua text/key callbacks, without desktop input takeover.
+{
+  "native_clients": 2,
+  "team_typed_deposits": [
+    7,
+    11
+  ],
+  "personal_typed_deposits": [
+    3,
+    2
+  ],
+  "host_wallet": 2,
+  "guest_wallet": 3,
+  "over_limit_and_unaffordable_buttons_disabled": true,
+  "enter_only_finishes_editing": true,
+  "layouts": [
+    1280,
+    960
+  ],
+  "live_game_untouched": true
+}

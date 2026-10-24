@@ -1,0 +1,56 @@
+{
+  "version": "0.4.0-dev",
+  "cryptid": "0.5.17c",
+  "amulet": "3.6.1",
+  "native_clients": 2,
+  "transport": "private TCP",
+  "controlled_fixture": "12 Cavendish per client; donated real Cryptid j_cry_m with QA x_mult=1e1000 and Mosaic edition; fixed wheel jackpot seed 147",
+  "cryptid_boss": "bl_cry_joke",
+  "won_blinds": 4,
+  "huge_shared_score": {
+    "__bt_omega": 1,
+    "sign": 1,
+    "values": [
+      "1008.1568188207949",
+      "1"
+    ]
+  },
+  "cry_mosaic_and_huge_ability_transferred": true,
+  "code_card_transferred": true,
+  "native_jackpot_delivered": true,
+  "available_cryptid_decks": [
+    "b_cry_CCD",
+    "b_cry_antimatter",
+    "b_cry_beige",
+    "b_cry_beta",
+    "b_cry_blank",
+    "b_cry_bountiful",
+    "b_cry_conveyor",
+    "b_cry_critical",
+    "b_cry_e_deck",
+    "b_cry_encoded",
+    "b_cry_equilibrium",
+    "b_cry_et_deck",
+    "b_cry_glowing",
+    "b_cry_infinite",
+    "b_cry_legendary",
+    "b_cry_misprint",
+    "b_cry_redeemed",
+    "b_cry_sk_deck",
+    "b_cry_sl_deck",
+    "b_cry_spooky",
+    "b_cry_st_deck",
+    "b_cry_very_fair",
+    "b_cry_wormhole"
+  ],
+  "native_score_ledgers_match": true,
+  "harness_errors": 0,
+  "visible_host_preview": true,
+  "live_install_untouched": true,
+  "ledger_round4": {
+    "native_ante": 2,
+    "party_ante": 2,
+    "all_contributions_match": true,
+    "both_native_contributions_match": true
+  }
+}

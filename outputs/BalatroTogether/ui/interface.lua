@@ -211,8 +211,9 @@ local function home(w,h)
             if not saved.compatible then txt('Save needs its original Cryptid pack/settings.',722,583,17,colors[4],462,'center') end
         end
         local sy=saved and 620 or 544
-        button('SETTINGS',722,sy,224,39,function() U.return_to='home';U.navigate('settings') end,muted)
-        button('BACK',960,sy,224,39,close,muted)
+        button('OPTIONS',722,sy,145,39,function() U.return_to='home';U.navigate('settings') end,muted)
+        button('CREDITS',880,sy,145,39,function() U.credits_return='home';U.navigate('credits') end,colors[3])
+        button('BACK',1038,sy,146,39,close,muted)
         txt('RUNNING '..BT.version..' / SIX-DIGIT CODES',722,sy+63,19,colors[1],462,'center')
     end)
 end
@@ -384,6 +385,7 @@ local function lobby(w,h)
     end
     button('LEAVE',w-160,h-73,120,35,function() BT.client.stop(); U.navigate('home') end,colors[4],not (s and s.phase=='saving'))
     button('SETTINGS',w-320,h-73,145,35,function() U.return_to='lobby'; U.screen='settings' end,muted)
+    button('CREDITS',w-480,h-73,145,35,function() U.credits_return='lobby';U.navigate('credits') end,colors[3])
     if s then txt('PARTY / '..BT.Session.deck_name(s.deck),60,h-65,21,muted,570) end
 end
 local setting_list={
@@ -414,6 +416,45 @@ local function settings(w,h)
     button('−',x+width+265,py+105,50,36,function() BT.config.motion=math.max(0,(BT.config.motion or 1)-0.1); BT.persist() end,muted)
     button('+',x+width+325,py+105,50,36,function() BT.config.motion=math.min(1.5,(BT.config.motion or 1)+0.1); BT.persist() end,muted)
     button('BACK',w/2-130,math.min(h-76,py+162),260,46,function() U.screen=U.return_to; BT.persist() end)
+end
+local function credits(w,h)
+    backdrop(w,h,'THE ZERO CREW','MADE BY THE ZERO CREW FOR THE ZERO CREW / VIVAT NIHIL')
+    group(0.02,function()
+        rect(60,197,548,424,panel)
+        for i=1,4 do
+            g.push();g.translate(126+(i-1)*125,260)
+            if not BT.config.reduced_motion and (BT.config.motion or 1)>0 then g.rotate(math.sin(love.timer.getTime()*1.4+i)*0.06) end
+            diamond(0,0,27,palette(i));g.pop()
+        end
+        txt('by Mind_the_assassin',88,323,38,ink,490,'center')
+        txt('Balatro Together',88,382,29,colors[1],490,'center')
+        txt('One table. Four builds. Your crew.',88,429,24,muted,490,'center')
+        txt('Design, direction and supplied boss art:\nMind_the_assassin / the Zero Crew',88,484,23,ink,490,'center')
+        txt('AI-assisted code and testing: Codex\nModding tools: Universal Modder',88,554,21,muted,490,'center')
+    end)
+    group(0.09,function()
+        rect(636,197,584,424,panel)
+        txt('BUILT ON GREAT MODS',664,222,29,colors[3],528)
+        local rows={
+            {'Balatro','LocalThunk / Playstack'},
+            {'Lovely','ethangreen-dev and contributors'},
+            {'Steamodded','Steamodded contributors'},
+            {'Cryptid','MathIsFun_ / Cryptid contributors'},
+            {'Amulet','frostice482 and contributors'},
+            {'JSON','rxi / MIT licensed'},
+        }
+        for i,row in ipairs(rows) do local y=274+(i-1)*42
+            txt(row[1],664,y,24,ink,155)
+            txt(row[2],824,y+2,20,muted,368)
+        end
+        txt('Dependency licenses and exact sources ship with setup.\nTogether code: MIT / see ATTRIBUTION.md.',664,552,20,muted,528)
+    end)
+    button('OPEN CRASH REPORTS',60,650,360,46,function()
+        love.filesystem.createDirectory('TogetherReports')
+        love.system.openURL('file://'..love.filesystem.getSaveDirectory()..'/TogetherReports')
+    end,muted)
+    button('BACK',w/2-130,h-104,260,46,function() U.navigate(U.credits_return or 'home') end)
+    txt('Crash reports stay on this PC. Nothing is uploaded.',60,712,18,muted,480)
 end
 local function scorebox(l)
     local s=BT.state; local z=l.s
@@ -490,7 +531,7 @@ local function feed(w,h)
             rect(x+offset,y,width,64*z,panel,7*z,a)
             local p=BT.state.players[tostring(e.player)]
             txt(p and p.name or 'TEAM',x+12*z+offset,y+6*z,20*z,palette(e.player),width-24*z)
-            txt(e.amount and ('+'..fmt(e.amount)..' • '..e.text) or e.text,x+12*z+offset,y+29*z,19*z,ink,width-24*z)
+            txt(e.amount and ((e.amount>=0 and '+' or '')..fmt(e.amount)..' • '..e.text) or e.text,x+12*z+offset,y+29*z,19*z,ink,width-24*z)
             y=y+72*z
             U.opacity=opacity
         end
@@ -626,6 +667,7 @@ function U.draw()
         elseif U.screen=='lobby' then lobby(1280,800)
         elseif U.screen=='boss_lab' then boss_view.rules(1280,800)
         elseif U.screen=='settings' then settings(1280,800)
+        elseif U.screen=='credits' then credits(1280,800)
         elseif U.screen=='pin' then pin_screen(1280,800)
         elseif U.screen=='name' then name_screen(1280,800)
         elseif U.screen=='steam_invite' then steam_invite(1280,800)
@@ -668,8 +710,10 @@ function U.install()
         if resize then return resize(w,h,...) end
     end
     G.FUNCS.bt_menu=function() U.menu() end
+    G.FUNCS.bt_credits=function() U.credits_return='home';U.navigate('credits') end
     BT.config_tab=function() return {n=G.UIT.ROOT,config={align='cm',padding=0.2,colour=G.C.BLACK},nodes={
         UIBox_button{label={'Together settings / lobby'},button='bt_menu',minw=5},
+        UIBox_button{label={'Credits / Zero Crew'},button='bt_credits',minw=5},
         {n=G.UIT.R,config={align='cm'},nodes={{n=G.UIT.T,config={text='F8 opens Together at any time',scale=0.35,colour=G.C.WHITE}}}}
     }} end
     local draw=love.draw; function love.draw(...) draw(...); U.draw() end

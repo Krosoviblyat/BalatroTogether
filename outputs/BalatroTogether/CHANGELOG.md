@@ -1,4 +1,17 @@
-# 0.7.1-dev — Steam invitation repair and reward-table polish
+# 0.8.1-dev — Chromatic scoring and in-game credits
+
+- Accept finite signed native hand deltas, including The Chromatic's negative
+  Mult hands. Preserve negative score debt and count every hand once; both
+  clients return to play. Keep nonfinite/malformed score and blind validation.
+- Normalize Cryptid/Amulet ante numbers before sending a host blind proposal.
+- Add animated Credits beside Together Options and in the party lobby/mod tab.
+- Save local crash reports before the existing crash screen, with version,
+  native boss, party round and traceback. A failed report write never replaces
+  the crash handler. No tokens, PINs, names or complete saves are serialized.
+- Report unsupported scores once per hand instead of spamming each frame.
+- Checkpoints remain manual; the original 0.8 Harbinger behavior is retained.
+
+# 0.7.1-dev â€” Steam invitation repair and reward-table polish
 
 - Repair the Windows Steam callback vtable: normal accepted invitations were calling the empty call-result slot. Preserve exact 64-bit IDs and route accepted lobby/rich-presence events from the main menu.
 - Add regression checks through the Windows vtable slots, plus a real Steam-dispatched lobby event in the private QA lab.
@@ -6,7 +19,7 @@
 - Fuck the Table now requires 32 separate Space presses in **five seconds**, timed by the host. Add a tactile Space keycap, press meter and countdown. Reduced Motion remains supported.
 - Clearly mark the lobby as **BETA** beside its version.
 
-# 0.7.0-dev — saved parties, table codes and skip votes
+# 0.7.0-dev â€” saved parties, table codes and skip votes
 
 - Fix Cryptid Jimbo nil crashes by waiting for native tutorials/menu wipes instead of clearing their pending construction events. Native onboarding retains its screen and input.
 - Add automatic per-build checkpoints, host Save Checkpoint / Save & Leave, original-seat restoration and an all-player native-load barrier. Preserve previous complete saves on failure.
@@ -17,21 +30,21 @@
 - Add held Backspace/Delete, UTF-8 cursor/selection, Home/End, Shift+arrows and clipboard shortcuts across Together inputs. Keep Space QTE repeat rules unchanged.
 - All players update together. Cross-account Steam acceptance and closed-game launching still need party verification.
 
-# 0.6.5-dev — Steam invite handoff
+# 0.6.5-dev â€” Steam invite handoff
 
 - Send explicit Steam game invites with the lobby connect string; retain ordinary lobby invites as a fallback.
-- Recover invites from SteamApps launch parameters, Windows command line and LÖVE arguments, including quoted IDs.
+- Recover invites from SteamApps launch parameters, Windows command line and LÃ–VE arguments, including quoted IDs.
 - Handle NewUrlLaunchParameters and both running-game invite callbacks. Register before the first vanilla callback pump and retry temporary Steam startup/offline failures.
 - Join accepted invites directly from the menu; confirm before replacing a party or solo run. Suppress duplicate in-flight joins and prefer fresh accepted invites over stale startup arguments.
 - All party members must update. Real cross-account acceptance and Steam's closed-game launch still require party verification.
 
-# 0.6.1-dev — native menu overlap fix
+# 0.6.1-dev â€” native menu overlap fix
 
 - Hide the Together HUD, feed, inspector and toast while a native deck/run-info/options menu owns the screen.
 - Clear cached hit regions and pass native mouse/scroll input through, including the first frame a menu opens.
 - Restore the HUD when the native menu closes; explicitly opened Together menus remain available.
 
-# 0.6.0-dev — felt-table UI refresh
+# 0.6.0-dev â€” felt-table UI refresh
 
 - Rebuild the home screen around a card fan and a simpler seat/join form.
 - Add compact Table/Gifts/Bet Pots/Rewards navigation and remove redundant in-run lobby controls.
@@ -41,13 +54,13 @@
 - Match click bounds to transformed animated controls; remove duplicate button springs.
 - Preserve the original gameplay, economy and motion/accessibility settings.
 
-# 0.5.1-dev — exact bet amounts
+# 0.5.1-dev â€” exact bet amounts
 
 - Type an exact deposit into either personal or team pots, with select-all, paste and Backspace support.
 - Keep quick presets and +/- controls; require an explicit Bet click and disable invalid/unaffordable amounts.
 - Package the update separately; do not modify a live game.
 
-# 0.5.0-dev — endless, jackpot challenge and deck repairs
+# 0.5.0-dev â€” endless, jackpot challenge and deck repairs
 
 - Initialize and share native run-selection choices before applying decks, fixing Cryptid Antimatter and special-deck effects.
 - Continue automatically beyond the ante-eight boss, preserving builds, rewards and pots.
@@ -56,7 +69,7 @@
 - Add native-font cream lettering, raised pixel borders, shadows, hover sounds/lift, press squish and softer floating panels.
 - Bundle the same pinned Lovely, Steamodded, Cryptid and Amulet versions in Setup 4 with reversible upgrade cleanup.
 
-# 0.4.0-dev — Cryptid co-op compatibility
+# 0.4.0-dev â€” Cryptid co-op compatibility
 
 - Pin Cryptid 0.5.17c and Amulet 3.6.1; negotiate active mod/ruleset signatures.
 - Preserve bounded finite Omega scores and contribution accounting through JSON.
@@ -69,7 +82,7 @@
 
 # Changelog
 
-## 0.4.0-dev — Boss Reward Wheel and owner admin panel
+## 0.4.0-dev â€” Boss Reward Wheel and owner admin panel
 
 - Bind `/` to an owner Steam account admin panel, with host-validated grants and native sync/retire/confirmed-restart recovery.
 - Award each player a saved wheel spin after every won Boss Blind.
@@ -78,7 +91,7 @@
 - Publish the complete in-game prize table and preserve existing gold d6/red d20 rewards.
 - Protect native reward delivery from duplicate receipts and partial hand-upgrade failures; include wheel chips in bot scoring.
 
-## 0.3.5-dev — physical reward dice
+## 0.3.5-dev â€” physical reward dice
 
 - Award one gold d6 and red d20 per player after every two won team blinds.
 - Pay $5 per gold pip; apply the red d20 face as additive Mult on every hand in the next blind, expiring at the following blind.
@@ -87,7 +100,7 @@
 - Add Reward Dice HUD/lobby controls, teammate viewing and bot scoring awareness of the active Mult.
 - Protect number-texture creation from Steamodded's nil-backbuffer getCanvas wrapper.
 
-## 0.3.4-dev — Bet Pot
+## 0.3.4-dev â€” Bet Pot
 
 - Add voluntary in-game dollar bets on the next shared blind, with a rounded-down 25% win bonus.
 - Keep saved winnings safe from later losing bets; let the host split them evenly among connected seats and retain whole-dollar remainders.
@@ -96,7 +109,7 @@
 - Add a spring-animated pot, counted winnings, flying coins, hover/press bounce and reduced motion support.
 - Preserve Setup 2 automatic backup of old Steamodded/smods and Cryptid installations.
 
-## 0.3.3-dev — invite picker, names and waiting recovery
+## 0.3.3-dev â€” invite picker, names and waiting recovery
 
 - Send Steam lobby invites from an in-game searchable friend list instead of the overlay invite menu.
 - Add own-seat Change Name with host-synchronized names and UTF-8-safe limits.
@@ -105,7 +118,7 @@
 - Preserve human Unready-to-Trade behavior and all native shop/entry barriers.
 
 
-## 0.3.2-dev — experimental Steam tables
+## 0.3.2-dev â€” experimental Steam tables
 
 - Add friends-only Steam lobbies, Invite Friends, invite acceptance and table-link joining.
 - Carry game traffic with reliable Steam networking; retain Direct IP as an option.
@@ -114,7 +127,7 @@
 - Add custom/live-changing six-digit PINs for Direct IP.
 - Verify real Steam lobby creation and native bot gameplay; add 13 simulated-service transport regressions. Cross-account invites/internet packets remain unverified.
 
-## 0.3.1-dev — native progression barriers
+## 0.3.1-dev â€” native progression barriers
 
 - Wait for every client to acknowledge actual native blind entry before enabling play. A fast teammate cannot finish a blind that another native game has not loaded.
 - Require a matching native shop-exit acknowledgement before shared progression. Plain Ready cannot skip native cash-out or shopping.
@@ -122,7 +135,7 @@
 - Add regressions for delayed entry, premature readiness and stale/wrong native positions.
 - Supply a separate double-click Windows installer with pinned Lovely/Steamodded, backups, rollback and a quiet-launch shortcut.
 
-## 0.3.0-dev — Donation Box and spring animations
+## 0.3.0-dev â€” Donation Box and spring animations
 
 - Add an eight-slot team donation box for owned vanilla Jokers, Tarot, Planet and Spectral cards. Public gifts, addressed gifts and donor recovery are supported.
 - Transfer native ability state, editions, stickers and passive effects through host escrow, recipient reservations and acknowledged commits. Block simultaneous claims, full inventories and stale-run requests; preserve same-process reconnect reservations.
@@ -131,25 +144,25 @@
 - Keep donation notices clear of footer controls in small windows. Add native transfer/reconnect/bot verification and 14 donation/motion regressions.
 - Retain the 0.2.1 callback-overflow fix and hidden bot lifecycle.
 
-## 0.2.1-dev — bot window callback hotfix
+## 0.2.1-dev â€” bot window callback hotfix
 
 - Fix the reported table-overflow crash in bots/process.lua by allocating one persistent EnumWindows callback and reusing its PID buffer.
 - Disable JIT tracing for the C-to-Lua callback path.
-- Add a 20,000-poll regression that detects the released code’s repeated callback allocation and verifies PID isolation.
+- Add a 20,000-poll regression that detects the released codeâ€™s repeated callback allocation and verifies PID isolation.
 - Stress-test 21,000 actual Windows API calls through LuaJIT, including after garbage collection.
 
 
-## 0.2.0-dev — native bots and run setup
+## 0.2.0-dev â€” native bots and run setup
 
 - Add/remove up to three native bot companions in host lobbies. Expected-score play/discard search, purchases, upgrades, vouchers, selected consumables, bounded rerolls and automatic progression.
 - Add host seed entry and 15 vanilla party-deck choices; fixed seeds persist through Fast Restart.
 - Move Together from the crowded native menu row into a dedicated top-right button.
-- Isolate each bot’s Mods/logs/save identity; exclude private test harness and unrelated mods.
+- Isolate each botâ€™s Mods/logs/save identity; exclude private test harness and unrelated mods.
 - Guard native shop transactions against unfinished event queues and repeated cash-out/leave calls.
 - Add planner/setup regressions and native companion/deck verification.
 
 
-## 0.1.0-dev — 2026-10-21
+## 0.1.0-dev â€” 2026-10-21
 
 - Initial original cooperative testing implementation for up to four simultaneous native clients.
 - Host-owned ordered/deduplicated score ledger, scaled targets and shared blind/shop barriers.

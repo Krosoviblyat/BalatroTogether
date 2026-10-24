@@ -5,11 +5,12 @@ function N.finite(x)
     if type(x)=='number' then return x==x and x>-math.huge and x<math.huge end
     return N.big(x) and x:isFinite() or false
 end
-function N.score(x)
+function N.delta(x)
     -- Ordinary IEEE values must not overflow when several reports are added.
     -- Larger native Amulet scores use the explicit Omega envelope instead.
-    return N.finite(x) and x>=0 and (N.big(x) or x<=1e100)
+    return N.finite(x) and (N.big(x) or math.abs(x)<=1e100)
 end
+function N.score(x) return N.delta(x) and x>=0 end
 function N.ceil(x) return N.big(x) and x:ceil() or math.ceil(x) end
 function N.abs(x) return N.big(x) and x:abs() or math.abs(x) end
 function N.native(x,cap)

@@ -1,4 +1,10 @@
-# Balatro Together 0.8.0-dev
+# Balatro Together 0.8.1-dev
+
+0.8.1 fixes The Chromatic's negative hand scores and Amulet ante proposals.
+Signed score debt is preserved, then positive hands repay it. Credits now sits
+beside Together Options and in the lobby. Credits > Open Crash Reports opens
+the local TogetherReports folder in the active save profile. Reports are never
+uploaded automatically; share last-crash.txt when reporting an uncaught crash.
 
 Four-player Cryptid co-op with Steam tables, native bots, donations, team/personal
 bets, reward dice, a boss wheel and endless play.
@@ -15,7 +21,7 @@ between blinds. Continue Saved Party opens a new joinable lobby/code; the origin
 players recover their builds. The host presses Continue Saved Run when all builds
 are restored. No automatic checkpoint interrupts a new run or blind transition.
 
-Use the full 0.8.0 setup with Balatro closed. The normal desktop launcher can
+Use the full 0.8.1 setup with Balatro closed. The normal desktop launcher can
 receive this signed update from 0.7 once published. Private-repository access is
 still required for online updates. Every player must use the same gameplay build.
 Native saves remain in the ordinary Balatro profile; the Harbinger Lab is separate.
