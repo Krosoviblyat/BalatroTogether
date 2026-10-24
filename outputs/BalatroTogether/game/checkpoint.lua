@@ -174,11 +174,12 @@ function S.update(dt)
     if not s then S.upload_id=nil;S.restore_id=nil;S.native_started=nil;S.restore_sent=nil;S.restore_packet=nil;S.restore_error=nil;S.outgoing={};S.leave_at=nil;return end
     if S.was_resuming and s.phase~='resuming' then BT.ui.navigate(nil);BT.notice('Every saved build is restored. Ready when you are.');S.was_resuming=nil end
     if s.phase=='resuming' then
+        if not S.was_resuming then BT.ui.navigate('lobby') end
         S.was_resuming=true
         if m and BT.bots and BT.bots.resume_saved and c.bot_port then BT.bots.resume_saved() end
     end
     if m and m.phase=='prepare' and ledger.safe(m) and not (m.checkpoint and m.checkpoint.status=='saving')
-        and (m.manual_save_requested or m.save_autos and m.checkpoint_position~=ledger.position(m)) then
+        and m.manual_save_requested then
         local leave=m.save_leave_requested==true;m.manual_save_requested=nil
         c.action('save_begin',{leave=leave});s=BT.state
     end

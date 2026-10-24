@@ -10,7 +10,7 @@ Everyone installs the same 0.7.1-dev build and restarts Balatro. The host opens 
 
 ## Bot windows or consoles
 
-Update every client to 0.3.3-dev. Bots launch the owned game with `--disable-console` and hide only their own native windows. The private LabHarness is never part of the ZIP or installed mod. Closing the party's host game stops its bots; closing unrelated apps does not. On this PC, the supplied Play Balatro Together shortcut also suppresses Lovely's console for the main game. With Steam, use `--disable-console` in Balatro's launch options if you want to suppress that host console too.
+Update every client to 0.8.0-dev. Bots launch the owned game with `--disable-console` and hide only their own native windows. The private LabHarness is never part of the ZIP or installed mod. Closing the party's host game stops its bots; closing unrelated apps does not. On this PC, the supplied Play Balatro Together shortcut also suppresses Lovely's console for the main game. With Steam, use `--disable-console` in Balatro's launch options if you want to suppress that host console too.
 
 If a bot cannot start, read its separate `together-bots/.../Mods/lovely/log` directory under the host's save identity. A bot's three normal seats need extra native processes and sufficient RAM. Add them before Start Run and wait for Ready. Remove/re-add in the lobby if startup failed; during a run, retire an absent failed seat to continue.
 

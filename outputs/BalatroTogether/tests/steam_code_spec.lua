@@ -17,6 +17,11 @@ local function fixture(known)
     local f=assert(loadfile(ROOT..'/net/steam.lua'));setfenv(f,e);local s=f()
     return s,n,e,data,joins,joinable
 end
+test('restoring checkpoints keep the fresh code searchable until the host continues',function()
+    local s,n,e,data,joins,open=fixture();e.BT.client.model.phase='resuming';s.host();s.update(.1)
+    assert(s.code_ready and data.bt_code==s.code and open[#open]==true)
+    e.BT.client.model.phase='prepare';s.update(.1);assert(open[#open]==false)
+end)
 test('Steam codes preserve leading zeroes and accept exactly six digits',function()
     local s=fixture();assert(s.valid_code('001234')=='001234')
     for _,bad in ipairs({'12345','1234567','123 456','abc123',lobby,'steam://joinlobby/2379780/'..lobby..'/'..local_id}) do assert(not s.valid_code(bad)) end

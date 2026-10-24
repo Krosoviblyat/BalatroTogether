@@ -138,4 +138,17 @@ test('only a hidden bot can dismiss a normal unlock notice, never an Amulet calc
     button='tal_abort';assert(not c.dismiss_bot_notice() and dismissed==1)
     button='continue_unlock';BT.bots.config=nil;assert(not c.dismiss_bot_notice() and dismissed==1)
 end)
+test('Harbinger targets, damage and replicated attacks retain real Amulet scores beyond infinity',function()
+    local H=dofile(ROOT..'/core/harbinger.lua');H.Strategy=dofile(ROOT..'/bots/strategy.lua');S.Harbinger=H
+    local m=S.new{intended=1,boss_stake=4};m.phase='prepare';m.run_id=1;m.seed='HARBINGR';m.blind_index=3
+    assert(m:set_proposal(1,{base=big('1e1000'),ante=1,index=3,key=H.KEY}));m.players[1].ready=true;m:begin_blind()
+    m.players[1].entered=true;m:advance();assert(m.target==big('2e1000'))
+    assert(act(m,1,'busy',{round=1}));assert(act(m,1,'score',{round=1,hand=1,amount=big('3e1000'),name='Cryptid hand'}))
+    assert(act(m,1,'idle',{round=1}));assert(H.blocks(m) and N.big(m.harbinger.pending.damage))
+    local attack=J.decode(J.encode(m:snapshot())).harbinger.pending
+    assert(attack.damage==m.harbinger.pending.damage and #attack.cards==5)
+    for i=1,60 do H.tick(m,i*.05,false) end
+    assert(m.harbinger.last.hit and m.score>=0 and m.score<big('3e1000'))
+    assert(m.players[1].contribution==big('3e1000') and N.finite(m.score))
+end)
 print('TOTAL '..count..' PINNED AMULET/CRYPTID TESTS PASSED')

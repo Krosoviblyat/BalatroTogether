@@ -1,6 +1,18 @@
+# 0.8.0-dev verification
+
+The main release uses manual checkpoints, an explicitly continued restore lobby,
+and the native Harbinger boss from the separately verified lab. Native two-client
+testing checks no save on start/skip, explicit saves, Save & Leave, lobby retention,
+original builds/money/pots, and warm/cold resume. See the release test JSON files.
+Steam service fixtures cover searchable restore tables and reserved identities.
+Separate-account internet Steam join/relay still needs party testing.
+
+The older evidence below is historical; automatic checkpoint behavior described
+there was deliberately replaced by manual saves in 0.8.0.
+
 # Test results
 
-## 0.7.1-dev — Windows invite ABI and reward presentation — 2026-10-23
+## 0.7.1-dev â€” Windows invite ABI and reward presentation â€” 2026-10-23
 
 196 Lua checks pass with syntax for 64 Lua files. New coverage dispatches invitation payloads through both Windows callback vtable overloads, checks exact 64-bit lobby IDs and failure filtering, and verifies the five-second host deadline immediately before and exactly at expiration.
 
@@ -9,7 +21,7 @@ The old Windows vtable was reproduced through Steam's actual dispatcher: one rea
 Six reward checks passed in two isolated native game copies: gold face-to-cash, red d20, a host-owned five-second timer, 32 separate Space presses securing Perfect Hundred, a missed deadline resolving normally, and rendering at 960x600/1920x1080 with Reduced Motion. The native lobby BETA badge, wheel, rolling dice, payout, Space challenge and prize list were visually reviewed. All live game files stayed unchanged; no live install or saves were edited. Existing package signatures and pinned dependencies are preserved; installer/update validation is recorded in the setup package.
 
 
-## 0.7.0-dev — party features and Cryptid transition repair — 2026-10-23
+## 0.7.0-dev â€” party features and Cryptid transition repair â€” 2026-10-23
 
 193 Lua checks pass with syntax for 64 Lua files. New coverage includes native tutorial/menu-wipe start guards, local held-key repeat and UTF-8 editing, majority vote ties/expiry/bots/stale positions, native skip acknowledgements, data-only checkpoint/chunk validation, large escaped-string parsing, stopped native GC, original saved seats and authorized absent-seat retirement. Existing account authorization, Steam invite dispatch, pots, rewards, Cryptid and Amulet regressions also pass.
 
@@ -20,20 +32,20 @@ Three live Steam backend checks passed: publish/resolve an exact six-digit code,
 These checks do not prove cross-account Steam invitation receipt, Steam launching a closed game on another PC, four-PC relay quality, every Cryptid interaction or an ordinary eight-ante victory. Signed installer/update tests are recorded separately in the setup package. Large saves have bounded data-only validation, not a guarantee of compatibility with arbitrary extra mods.
 
 
-## 0.6.5-dev — Steam invite handoff — 2026-10-22
+## 0.6.5-dev â€” Steam invite handoff â€” 2026-10-22
 
-166 Lua checks pass, including 15 new invite/native-bridge checks, with syntax for 53 Lua files. New cases cover quoted/sparse startup arguments, Steam launch API with empty LÖVE args, offline startup recovery, menu readiness, running-game invites, existing party/solo protection, duplicate suppression, stale startup precedence, bounded native initialization retry, explicit game invite/fallback and later launch parameters.
+166 Lua checks pass, including 15 new invite/native-bridge checks, with syntax for 53 Lua files. New cases cover quoted/sparse startup arguments, Steam launch API with empty LÃ–VE args, offline startup recovery, menu readiness, running-game invites, existing party/solo protection, duplicate suppression, stale startup precedence, bounded native initialization retry, explicit game invite/fallback and later launch parameters.
 
-An isolated copy of the owned Windows game loaded the exact pinned Cryptid stack. Seven native checks passed: Windows command-line recovery with LÖVE args deliberately cleared, SteamApps and game-invite exports, all three callback registrations, lobby/rich-presence delivery through real FFI callback bridges (10,000 repeat callback invocations), and exactly three expected fixture joins. Join transport was intercepted; no real friends were invited. Live game files were fingerprinted and remained unchanged. This does not prove real cross-account delivery, relay behavior or Steam launching a closed game on another PC; those need a second account/device.
+An isolated copy of the owned Windows game loaded the exact pinned Cryptid stack. Seven native checks passed: Windows command-line recovery with LÃ–VE args deliberately cleared, SteamApps and game-invite exports, all three callback registrations, lobby/rich-presence delivery through real FFI callback bridges (10,000 repeat callback invocations), and exactly three expected fixture joins. Join transport was intercepted; no real friends were invited. Live game files were fingerprinted and remained unchanged. This does not prove real cross-account delivery, relay behavior or Steam launching a closed game on another PC; those need a second account/device.
 
 
-## 0.6.1-dev — native menu overlap hotfix — 2026-10-22
+## 0.6.1-dev â€” native menu overlap hotfix â€” 2026-10-22
 
 151 Lua checks and syntax for all 51 files pass. The added regression forbids any HUD/toast/inspector graphics calls under a native overlay, clears cached hit rectangles and verifies native mouse, release and wheel callbacks bypass stale Together controls. Controls work again after the overlay closes.
 
 Two isolated native clients loaded the hotfix. Deck, Run Info, Options and hand-list menus all hid Together drawing/hit regions; closing each restored the goal HUD and controls. The full deck viewer screenshot was inspected with all deck details visible. An explicitly opened Together pot screen still works above a native overlay, then hides correctly on return to that overlay. See OVERLAY_QA_EVIDENCE.txt. The packaged runtime is checked against source and its installer retains the 23 synthetic upgrade/backup/rollback checks. Live files remain untouched.
 
-## 0.6.0-dev — UI polish — 2026-10-22
+## 0.6.0-dev â€” UI polish â€” 2026-10-22
 
 All 150 Lua checks and 51 syntax checks pass. Motion checks now include delayed reveal boundaries, bounded overshoot, settling and Reduced Motion. This release changes presentation and input geometry; prior gameplay/deck/endless evidence remains below.
 
@@ -43,7 +55,7 @@ Home, lobby, pots, donations and rewards were visually inspected; reward/pot lay
 
 Setup 5 keeps the existing pinned dependencies and reversible upgrade engine. Its payload, archive integrity and 23 synthetic install/backup/rollback scenarios are validated during packaging. Controller navigation, arbitrary extra mods and cross-account Steam remain outside this local UI check.
 
-## 0.5.1-dev — typed pot amounts — 2026-10-22
+## 0.5.1-dev â€” typed pot amounts â€” 2026-10-22
 
 All 150 Lua checks and syntax for 51 files pass. The existing real-screen regression now covers typing/replacing an amount, switching team/personal tabs, select-all, Backspace, empty/over-limit values, formatted dollar paste, refusing a negative paste and Enter without a deposit.
 
@@ -51,7 +63,7 @@ Two private native clients used the actual pot field and text/key callbacks. Hos
 
 The separate patch installer keeps the same pinned loaders/dependencies and backup engine. Its embedded payload, extraction checks and 23 synthetic installer scenarios are validated during packaging. Earlier full expansion/deck/endless evidence below is unchanged; these checks focus on the amount-entry change.
 
-## 0.5.0-dev — deck repairs and endless expansion — 2026-10-22
+## 0.5.0-dev â€” deck repairs and endless expansion â€” 2026-10-22
 
 - 150 Lua checks pass; all 51 Lua files compile under LuaJIT/Lua 5.1. Added personal/team accounting, ownership/privacy, retry/restart, 48-blind default endless, QTE success/timeout/repeat/rate/ownership and forced-pointer regressions. A native completion regression covers suppressing victory before queued round evaluation.
 - All 38 selectable decks passed initial native start and same-seed restart: 76 initializations. Edition, Enhancement, Suit and Seal decks applied their selected starting effects; Antimatter initialized without the reported missing-choice crash. Details: DECK_QA_EVIDENCE.txt. This does not certify every later deck/card interaction.
@@ -62,7 +74,7 @@ The separate patch installer keeps the same pinned loaders/dependencies and back
 
 An initial native test exposed a second adapter completion path that bypassed the endless preparation. Both paths now share the same preparation before native end_round. Another early QTE rate check rejected valid batched presses; an accumulated host allowance now tolerates network batching. The final native pair was rerun after both fixes. Cross-account Steam behavior, unrestricted extra mods, later Cryptid combinations and extreme endless builds remain outside this evidence.
 
-## 0.4.0-dev Cryptid compatibility — 2026-10-22
+## 0.4.0-dev Cryptid compatibility â€” 2026-10-22
 
 - 140 Lua checks pass; 49 Lua files compile under LuaJIT/Lua 5.1. Fourteen integration regressions use the real pinned Amulet Omega backend: huge-score JSON, malformed payloads, contribution accounting, donation state, plain graphics ratios, scoring coroutines, content/ruleset signatures, deck registration, co-op ante rules and hidden-bot prompts. Existing admin/dice/pot/Steam/progression checks remain green.
 - Two real local TCP clients loaded Cryptid 0.5.17c and Amulet 3.6.1. They won four blinds, including Cryptid's Joke boss, and reached native/shared ante two without a progression mismatch. A real Cryptid M Joker with QA-granted x_mult=1e1000 and Mosaic edition transferred from host to guest; a Code Multiply card also transferred. The next hand produced a shared score approximately 1.435e1008, with identical snapshots, summed contributions and both native contribution comparisons matching. This is a transfer/arithmetic/progression fixture, not an ordinary balanced victory: each client had 12 granted Cavendish Jokers and a forced boss identity.
@@ -117,7 +129,7 @@ An initial native UI run exposed a bet-amount/opening-animation name collision. 
 
 65 Lua regressions pass; 27 Lua runtime/test files compile under LuaJIT/Lua 5.1. Thirteen new cases execute the real transport and client/session modules against a simulated native Steam service: four identities, no-PIN join, seeded start, outsider/stale-room rejection, reconnect/identity binding, malformed links, disabled overlay, explicit invite consent, owner loss, version refusal, cancelled creation cleanup and nonblocking timeout. The eight PIN regressions also pass.
 
-On the real installed Steam library in an isolated hidden game, a friends-only lobby was created, metadata round-tripped, and membership/leave completed. A final Steam-mode host opened its lobby, accepted one hidden native bot through its loopback ephemeral listener and completed the first native blind (target 635, team 984) with zero game log errors. The actual Steam callback pump ran throughout. A later private probe sent and received one same-account Steam message and invoked the retained callback ABI 10,000 times plus one presence callback without overflow. The SDK emitted a nonfatal pipe-unlink assertion during that self-send probe; it is not cross-account/relay evidence. Host, join and lobby UI were captured at 960×600 and 1920×1080 and inspected. This is host/API and local bot evidence; it does not demonstrate a second Steam account or internet relay traffic.
+On the real installed Steam library in an isolated hidden game, a friends-only lobby was created, metadata round-tripped, and membership/leave completed. A final Steam-mode host opened its lobby, accepted one hidden native bot through its loopback ephemeral listener and completed the first native blind (target 635, team 984) with zero game log errors. The actual Steam callback pump ran throughout. A later private probe sent and received one same-account Steam message and invoked the retained callback ABI 10,000 times plus one presence callback without overflow. The SDK emitted a nonfatal pipe-unlink assertion during that self-send probe; it is not cross-account/relay evidence. Host, join and lobby UI were captured at 960Ã—600 and 1920Ã—1080 and inspected. This is host/API and local bot evidence; it does not demonstrate a second Steam account or internet relay traffic.
 
 **Not yet verified:** a friend receiving/accepting an actual invite, cold-launch invites, reliable packets between distinct Steam accounts, NAT/relay paths or an entire Steam multiplayer run. These require a second licensed account/device. This release is explicitly an experimental candidate for that test. Earlier sections below are historical checks.
 
@@ -132,7 +144,7 @@ The reported screenshot showed shared Ante 4 against native Ante 3. The adapter 
 - A Negative Juggler entered a full five-Joker inventory: six cards and six slots after delivery. The donor's hand size fell from 9 to 8 and recipient's grew from 8 to 9. Native testing caught and fixed Steamodded's edition-slot bonus being applied twice.
 - A real TCP disconnect during a held reservation retained the gift. The original token/process reconnected and received exactly one Hermit. Its actual native use doubled money from 4 to 8 after the queued effect settled. The final complete rerun passed with zero native errors.
 - Additional native Planet (Jupiter) and Spectral (Aura) deliveries reconstructed the correct consumables. One actual bot left a public Jupiter untouched, automatically unreadied/received/readied for addressed Foil Green Joker and Hermit, used the Hermit natively, and scored enough to clear the two-seat first blind. No test or bot windows were visible; host Leave stopped the child. No bot log errors.
-- Native UI inspected at 960×600, 1920×1080 and 3840×1080. Captured five entry and six confirmed-transfer frames, plus Reduced Motion. Card art, locked Eternal state, box counts, paging and transfer flight rendered correctly. Small-window notifications were moved below footer controls and rechecked at 960×600 and 1920×1080.
+- Native UI inspected at 960Ã—600, 1920Ã—1080 and 3840Ã—1080. Captured five entry and six confirmed-transfer frames, plus Reduced Motion. Card art, locked Eternal state, box counts, paging and transfer flight rendered correctly. Small-window notifications were moved below footer controls and rechecked at 960Ã—600 and 1920Ã—1080.
 - Final installed-original-game launch loaded 0.3.0-dev with zero runtime log errors, no private harness, one visible native game window and zero console windows. The original executable digest is unchanged; installed files match the verified final ZIP.
 - Four-client party restart cleared the escrow and native inventories before the subsequent UI fixture. The unit suite also rejects old-run transfers.
 
@@ -159,7 +171,7 @@ The older 0.2 and 0.1 records below remain historical evidence; they did not cat
 - Final 0.2 native deck matrix: all fifteen selected deck identities and fixed seed matched native start_run across fourteen restarts. Verified Red extra discard, Blue extra hand, Black reduced hands, Abandoned 40 cards/no faces, Checkered only Spades/Hearts and Plasma double target scaling. Full eight-ante gameplay on every deck is not certified.
 - Companion initialization now uses separate Mods/log/save directories containing only Steamodded/Together. An earlier private harness nil-folder crash and a shared Lovely dump-directory race were test setup failures; those paths were removed from companions. A native premature-shop-exit callback failure was fixed by waiting for native event queues and guarding one-shot cash-out/leave transactions.
 
-- Final 0.2 native companion gate: three Add Bot UI callbacks, native first-blind success, host Fast Restart, four fresh Blue decks/zero scores and builds, same fixed seed, zero child log errors, zero visible bot game/console windows during play and after restart. Host Leave stopped all three child processes. Native Together → Host callbacks verified; seed/deck setup inspected at 960×600 and 1920×1080.
+- Final 0.2 native companion gate: three Add Bot UI callbacks, native first-blind success, host Fast Restart, four fresh Blue decks/zero scores and builds, same fixed seed, zero child log errors, zero visible bot game/console windows during play and after restart. Host Leave stopped all three child processes. Native Together â†’ Host callbacks verified; seed/deck setup inspected at 960Ã—600 and 1920Ã—1080.
 
 - Installed final 0.2 ZIP on this PC and launched the original game with --disable-console: Together load marker present, no log errors or private harness, exactly one visible native game window and zero console windows. Installed files match the final archive; original executable SHA256 unchanged.
 
@@ -169,7 +181,7 @@ Bot estimates cover many common vanilla interactions but are heuristic. No ordin
 
 
 
-Date: 2026-10-21. Build: 0.1.0-dev. Windows x64; Steam Balatro 1.0.1o-FULL; LÖVE 11.5; Lovely 0.10.0; Steamodded 26.1002.0. Native tests used private copies and isolated save identities on one PC/account. No game source or private harness is shipped.
+Date: 2026-10-21. Build: 0.1.0-dev. Windows x64; Steam Balatro 1.0.1o-FULL; LÃ–VE 11.5; Lovely 0.10.0; Steamodded 26.1002.0. Native tests used private copies and isolated save identities on one PC/account. No game source or private harness is shipped.
 
 | Check | Observed result |
 | --- | --- |
@@ -184,7 +196,7 @@ Date: 2026-10-21. Build: 0.1.0-dev. Windows x64; Steam Balatro 1.0.1o-FULL; LÖV
 | Ordinary single player | Without a Together session, native blind completed at score 360; no network state. |
 | Four-client Fast Restart | Two host restarts, during a hand and from shop/defeat. Eight fresh-deck audits: 52 cards, zero score/jokers, matching seed per epoch. Old-run score 999,999,999 ignored; guest restart refused. |
 | Actual TCP negative checks | Wrong PIN, wrong version, late/fifth join, malformed JSON, oversized frame and deep nesting rejected; no snapshots sent to unauthenticated peers. |
-| Native visuals | Custom menus, four-seat HUD, inspector, results, restart and animation settings inspected. 1920×1080 and 3840×1080 captures plus smaller-window checks. Static captures cannot prove every animation path. |
+| Native visuals | Custom menus, four-seat HUD, inspector, results, restart and animation settings inspected. 1920Ã—1080 and 3840Ã—1080 captures plus smaller-window checks. Static captures cannot prove every animation path. |
 | Steam | Runtime Lua bindings expose overlay/persona helpers, no lobby/invite API. Native DLL exports exist; an additional bridge is possible but unimplemented. |
 | Installed game smoke check | Real Mods installation loaded Steamodded 26.1002.0 and Together 0.1.0-dev in a normal original-game launch; process remained running. No private LabHarness. Original executable digest unchanged. |
 | Packaging | Builder checks required files, vendor digest, prohibited game/binary payloads, CRC, safe paths, loader entry points and byte-identical clean Mods extraction. |

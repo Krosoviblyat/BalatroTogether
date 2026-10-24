@@ -43,9 +43,10 @@ end
 function M.new(opts)
     opts=opts or {}
     local self=setmetatable({phase='lobby', revision=0, round=0, ante=1, blind_index=1,
-        intended=opts.intended or 4, scaling=opts.scaling or 1, players={}, events={},party_id=opts.party_id,save_autos=opts.save_autos==true,
+        intended=opts.intended or 4, scaling=opts.scaling or 1, players={}, events={},party_id=opts.party_id,save_autos=false,
         seed='', target=0, score=0, lifetime_score=0, winner=nil, proposal=nil,
         completed_antes=0, protocol=M.PROTOCOL,run_id=0,restarts=0,
+        boss_stake=opts.boss_stake or 1,boss_mode=opts.boss_mode or 'mixed',quick_duel=opts.quick_duel==true,
         deck=opts.deck or 'b_red',custom_seed=opts.seed or '',endless=opts.endless~=false,donation_data={items={},seen={},history={},history_order={},counter=0}},M)
     assert(M.valid_deck(self.deck),'Choose a vanilla deck.')
     if M.Pot then self.pot=M.Pot.empty() end
@@ -107,6 +108,7 @@ function M:start(seed)
     end
     self.seed=self.custom_seed~='' and self.custom_seed or clean(seed,8):upper(); if not self.seed:match('^[A-Z0-9]+$') or #self.seed>8 or #self.seed<1 then return nil,'Seed must contain 1-8 letters or digits.' end
     self.run_id=self.run_id+1
+    self.blind_index=self.quick_duel and 3 or 1
     self.phase='prepare'; for _,p in pairs(self.players) do p.ready=false; p.activity='loading' end
     self:changed(); return true
 end
@@ -118,7 +120,8 @@ function M:restart(seed)
     seed=self.custom_seed~='' and self.custom_seed or clean(seed,8):upper()
     if not seed:match('^[A-Z0-9]+$') or #seed>8 or #seed<1 then return nil,'Seed must contain 1-8 letters or digits.' end
     self.run_id=self.run_id+1; self.restarts=self.restarts+1; self.seed=seed
-    self.phase='prepare'; self.round=0; self.ante=1; self.blind_index=1; self.proposal=nil
+    self.phase='prepare'; self.round=0; self.ante=1; self.blind_index=self.quick_duel and 3 or 1; self.proposal=nil
+    self.harbinger=nil;self.harbinger_private=nil
     self.score=0; self.target=0; self.lifetime_score=0; self.completed_antes=0; self.winner=nil; self.events={}
     self.donation_data={items={},seen={},history={},history_order={},counter=0}
     if M.Pot then self.pot=M.Pot.empty() end
@@ -148,6 +151,7 @@ function M:begin_blind()
     if not self.proposal or not self:all(function(p) return p.connected and p.ready and not p.transferring and (not M.Pot or not M.Pot.pending(p)) and (not M.Dice or not M.Dice.pending(p)) end) then return end
     self.round=self.round+1; self.phase='starting'; self.score=0; self.winner=nil
     local target=self.proposal.base * self:count()^1.08 * self.scaling
+    if M.Harbinger then target=M.Harbinger.target(self,target);M.Harbinger.begin(self) end
     self.target=M.Numbers and M.Numbers.ceil(target) or math.ceil(target)
     for _,p in pairs(self.players) do
         p.contribution=0; p.ready=false; p.busy=false; p.exhausted=p.withdrawn or false
@@ -168,6 +172,7 @@ function M:advance()
         return
     end
     if self.phase~='blind' then return end
+    if M.Harbinger and M.Harbinger.blocks(self) then return end
     -- Do not close a blind while any connected player is resolving an action,
     -- or while a disconnected seat may still have an unacknowledged score.
     if not self:all(function(p) return p.connected and not p.busy end) then return end
@@ -216,15 +221,17 @@ function M:apply(id, action)
     end
     local kind=action.kind; local d=action.data or {}; local ok,err=true,nil
     if type(d)~='table' then return nil,'Invalid action payload.' end
-    if (self.phase=='saving' or self.phase=='resuming') and kind~='status' and kind~='restore_ready'
+    if (self.phase=='saving' or self.phase=='resuming') and kind~='status' and kind~='restore_ready' and kind~='resume_start'
         and not (self.phase=='resuming' and kind=='admin_retire') then
         ok,err=nil,'Waiting for the party checkpoint. Your run is protected.'
-    elseif kind=='save_begin' or kind=='save_request' or kind=='restore_ready' then
+    elseif kind=='save_begin' or kind=='save_request' or kind=='restore_ready' or kind=='resume_start' then
         if M.Save then ok,err=M.Save.apply(self,id,kind,d) else ok,err=nil,'Party saves unavailable.' end
     elseif kind=='rename' then
         local name=M.player_name(d.name)
         if name=='' then ok,err=nil,'Enter a display name.'
         else p.name=name; self:event(id,'activity','updated their display name') end
+    elseif kind=='boss_rules' then
+        if M.Harbinger then ok,err=M.Harbinger.rules(self,id,d) else ok,err=nil,'Boss lab unavailable.' end
     elseif kind=='ready' then
         if p.transferring or ((M.Pot and M.Pot.pending(p)) or (M.Dice and M.Dice.pending(p))) then ok,err=nil,'Finish transfers before readying.'
         elseif self.phase~='lobby' and self.phase~='prepare' and self.phase~='shop' then ok,err=nil,'Cannot ready during a hand.'
@@ -242,7 +249,7 @@ function M:apply(id, action)
         if self.phase~='shop' or p.transferring or ((M.Pot and M.Pot.pending(p)) or (M.Dice and M.Dice.pending(p))) or d.round~=self.round or d.ante~=ante or d.index~=index then ok,err=nil,'Wait for native cash-out and shop completion.'
         else p.shop_done=self.round; p.ready=true; p.activity='ready' end
     elseif kind=='busy' then
-        if self.phase~='blind' or d.round~=self.round or p.exhausted or self.score>=self.target then ok,err=nil,'The blind is closing.'
+        if self.phase~='blind' or d.round~=self.round or p.exhausted or self.score>=self.target or (M.Harbinger and M.Harbinger.blocks(self)) then ok,err=nil,'The blind is closing or the boss is countering.'
         else p.busy=true; p.activity='calculating' end
     elseif kind=='score' then
         if self.phase~='blind' or d.round~=self.round or not p.busy
@@ -253,6 +260,7 @@ function M:apply(id, action)
             if d.amount>p.highest then p.highest=d.amount end; p.hands_played=p.hands_played+1
             p.last_hand=clean(d.name,36); self.score=self.score+d.amount; self.lifetime_score=self.lifetime_score+d.amount
             self:event(id,'score','scored '..p.last_hand,d.amount)
+            if M.Harbinger then M.Harbinger.counter(self,id,d.hand,d.boss_disabled==true) end
         end
     elseif kind=='idle' then
         if self.phase~='blind' or d.round~=self.round then ok,err=nil,'Stale action completion.'
@@ -293,7 +301,7 @@ function M:apply(id, action)
 end
 function M:snapshot(viewer)
     local state={}
-    for k,v in pairs(self) do if k~='players' and k~='donation_data' then state[k]=copy(v) end end
+    for k,v in pairs(self) do if k~='players' and k~='donation_data' and k~='harbinger_private' then state[k]=copy(v) end end
     state.players={}
     for i=1,4 do
         local p=self.players[i]

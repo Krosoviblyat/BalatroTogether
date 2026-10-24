@@ -1,37 +1,27 @@
-# Balatro Together — four-player cooperative testing build
+# Balatro Together 0.8.0-dev
 
-**0.7.1-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
+Four-player Cryptid co-op with Steam tables, native bots, donations, team/personal
+bets, reward dice, a boss wheel and endless play.
 
-This build bundles Cryptid 0.5.17c with Amulet 3.6.1. Large native scores, Cryptid decks and card donations use the pinned compatibility layer. Read [CRYPTID.md](CRYPTID.md) for co-op rule adaptations and limits.
+This main release adds The Harbinger as a native Boss Blind with the supplied
+purple chip. It plays five-card hands from its own deck; its score damages net
+team chips after each team hand. CLASH uses native bouncing text and sound.
+The first boss is protected. Mixed mode rolls a 20% encounter chance on later
+regular bosses from Ante 2; finale bosses stay native. Boss Rules / Stakes offers
+four difficulty tiers and an explicit Quick Duel test mode.
 
-Each of 1–4 players keeps their own deck, hand, jokers, money, consumables and shop. Native hands resolve independently and contribute to the host's shared blind score. The team advances together; shopping ends independently and the next blind waits for everyone. Targets scale by player count. The host chooses a vanilla or available Cryptid party deck and optional seed; every client uses that deck, White Stake and the host's explicit blind identities. A blank seed generates a random run.
+Checkpoints are **manual**. The host chooses F8 > Save Checkpoint or Save & Leave
+between blinds. Continue Saved Party opens a new joinable lobby/code; the original
+players recover their builds. The host presses Continue Saved Run when all builds
+are restored. No automatic checkpoint interrupts a new run or blind transition.
 
-The UI uses the native pixel font, cream lettering, stepped raised borders, soft shadows, spring hover lift, press squish and sound feedback, alongside animated four-seat lobby entrances, colored compact HUD, a smoothly counted shared score meter, contribution bursts, teammate activity feed, sliding build/hand/shop inspection, and team results. Hidden hands stay hidden unless their owner enables sharing. F8 opens the Together menu; click any player panel to inspect. Click the co-op Ready control at blind selection. Leave each shop normally after finishing purchases.
+Use the full 0.8.0 setup with Balatro closed. The normal desktop launcher can
+receive this signed update from 0.7 once published. Private-repository access is
+still required for online updates. Every player must use the same gameplay build.
+Native saves remain in the ordinary Balatro profile; the Harbinger Lab is separate.
 
-**F8 → Donation Box** shares vanilla/Cryptid Jokers and Tarot/Planet/Spectral/Code cards through an eight-slot team box. Donate to Everyone or a chosen teammate, take an available gift, or take back your own. Trade while unready in the shop or between blinds. Editions and built-up stats travel with the card; bots automatically receive gifts addressed to them. The screen adds bouncy spring entrances, card hover lift, button squish and curved transfer flights, with Reduced Motion support. See [DONATIONS.md](DONATIONS.md).
+Pinned Windows Steam Balatro 1.0.1o / Lovely 0.10.0 / Steamodded 26.1002.0 /
+Cryptid 0.5.17c / Amulet 3.6.1. User-owned game files are never redistributed.
+Original code MIT; upstream components retain their licenses. AI-assisted work.
 
-**F8 -> Bet Pot** offers team and personal tabs. A won blind saves the team stake plus **37.5%**, a 50% increase over the old bonus. Personal bets save the stake plus **15%**. Bonuses round down to whole dollars. Only the host splits the team bank evenly; each player collects their own personal bank. Click TYPE AMOUNT to enter an exact bet, then confirm with Bet; presets and +/- remain available. Losing burns pending bets while preserving saved winnings. See [BET_POT.md](BET_POT.md).
-
-**F8 -> Reward Dice** gives each player a gold d6 and red d20 after every two won team blinds, plus a **Boss Reward Wheel spin after every won boss blind**. Gold pays $5 per pip; red adds +1 to +20 Mult for the next blind. The spinning wheel has 21 positive reward packages, including cash, poker-hand levels, free shop refreshes and powerful next-blind bonuses. Save your rewards and redeem them while unready. Dice tumble; the wheel spins, ticks, slows down and celebrates its winning sector. See [DICE.md](DICE.md).
-
-**Fuck the Table:** spend one earned boss spin on a Space challenge. Press and release Space 32 times within five seconds for a guaranteed Perfect Hundred jackpot; holding the key does not count. Missing the challenge gives the normal wheel spin. **Endless is on by default:** clearing the ante-eight boss continues into ante nine with your current builds, pots and rewards.
-
-**Owner admin panel:** press **/** to open the account-locked controls for cash, dice/wheel spins, hand levels, next-blind bonuses and run recovery. The host verifies your Steam identity for each command. Select a recipient; grants require them to be unready between blinds. Sync retry, disconnected-seat retirement and a confirmed same-seed restart are included. See [ADMIN.md](ADMIN.md).
-
-The host can choose **F8 → Fast Restart**, use **Ctrl+R**, or use the native Restart button to restart the whole party with the same seats, selected deck and difficulty. A fixed seed repeats; a blank seed generates a fresh seed. This intentionally cancels the current run and its pending animations. Everyone receives a new run ID; delayed old-run score/action messages are rejected. A guest cannot restart the party. Reconnect or retire an absent player before restarting. Reduced motion and animation intensity are available in Settings.
-
-**Steam tables are now the default on Windows x64.** Open a table and share its **six-digit table code**, or click **Invite Friends**. Friends enter the code in Join Friends, or accept a fresh Steam game invite at the menu, with the same mod version installed. Steam reliable messaging carries the co-op traffic; no public IP, room PIN or router forwarding is needed in Steam mode. Direct IP remains available as a separate option. See [STEAM.md](STEAM.md). This is an experimental transport: real lobby hosting and native bot gameplay passed locally; cross-account invite acceptance and internet relay gameplay still require a second-account test.
-
-Start with [INSTALL.md](INSTALL.md). Everyone needs the same mod and loader versions. No compilation is required. Compatibility target: Windows x64, Steam Balatro 1.0.1o-FULL, LÖVE 11.5, Lovely 0.10.0, Steamodded 26.1002.0, Cryptid 0.5.17c and Amulet 3.6.1. Other combinations are not certified.
-
-Private co-op trusts each client's native score and build reports. The host orders and deduplicates these reports but does not re-simulate all remote joker triggers or purchases. Automatic between-blind checkpoints and host Save & Leave can restore the original party after closing the game. The original host and matching native profiles/mod settings are required; host migration is not supported. See [SAVES.md](SAVES.md).
-
-Original source is included because this is an interpreted Lua mod. `main.lua`, mod JSON, config.lua and lovely.toml are the actual loader entry points, not build placeholders. The mod folder includes no proprietary game files, compiled Steam libraries or extracted game assets. The full installer separately bundles redistributable loaders and Cryptid/Amulet with their licenses and exact upstream sources.
-
-Host setup includes all 15 vanilla decks and enabled Cryptid decks and an optional 1–8 character seed. In the lobby, **Add Bot** fills an empty intended seat with a local native companion. Bots evaluate expected scores and discards, buy/replace jokers and handle progression automatically; see [BOTS.md](BOTS.md) for strategy and limits. The Together main-menu button has its own top-right position, clear of the native Options row.
-
-Deck initialization now creates Steamodded/Cryptid run choices before native deck effects. All 38 currently selectable decks passed native start and same-seed restart checks; special Edition, Enhancement, Suit, Seal and Antimatter setup were checked separately. This does not certify every later card interaction.
-
-The 0.6 UI refresh adds a quieter felt palette, a card-fan home screen, compact navigation, clearer grouped betting/reward controls, staggered entrances and smooth modal dismissal. Hover/press feedback is centralized so buttons do not stack two conflicting springs. Reduced Motion and intensity zero retain all controls without movement.
-
-The 0.7 party update adds native joker thumbnails and Build/Deck/Shop inspector tabs, quiet account-authorized admin grants, six-digit Steam codes, held Backspace, cursor/selection/clipboard editing, majority skip votes and automatic party checkpoints. Native tutorials keep their screen/input until complete, preventing the Cryptid Jimbo transition crash.
+See SAVES.md, CRYPTID.md, BOTS.md, and the included installer guide for details.

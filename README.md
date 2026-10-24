@@ -1,37 +1,29 @@
-# Balatro Together — Zero Crew
+# Balatro Together 0.8.0-dev
 
-Private development source for the four-player cooperative Balatro mod and Windows installer. Current prepared launcher/setup: **0.7.2-dev**; tested gameplay payload: **0.7.1-dev**.
+Four-player Cryptid co-op with Steam tables, native bots, donations, team/personal
+bets, reward dice, a boss wheel and endless play.
 
-Each player keeps their own build, cards, money and shop while contributing to a shared blind. Features include Steam tables, native companion bots, shared donations, personal/team Bet Pots, reward dice, a boss wheel with a Space challenge, automatic endless and animated UI.
+This main release adds The Harbinger as a native Boss Blind with the supplied
+purple chip. It plays five-card hands from its own deck; its score damages net
+team chips after each team hand. CLASH uses native bouncing text and sound.
+The first boss is protected. Mixed mode rolls a 20% encounter chance on later
+regular bosses from Ante 2; finale bosses stay native. Boss Rules / Stakes offers
+four difficulty tiers and an explicit Quick Duel test mode.
 
-Source commits alone do not create an updater release. The 0.7.2 installer and its signed update assets are prepared locally; publication is currently blocked by the browser upload tool. Until it is published, get the full EXE from the maintainer. The updater sees only published releases.
+Checkpoints are **manual**. The host chooses F8 > Save Checkpoint or Save & Leave
+between blinds. Continue Saved Party opens a new joinable lobby/code; the original
+players recover their builds. The host presses Continue Saved Run when all builds
+are restored. No automatic checkpoint interrupts a new run or blind transition.
 
-## Install
+Use the full 0.8.0 setup with Balatro closed. The normal desktop launcher can
+receive this signed update from 0.7 once published. Private-repository access is
+still required for online updates. Every player must use the same gameplay build.
+Native saves remain in the ordinary Balatro profile; the Harbinger Lab is separate.
 
-Download **BalatroTogether-Setup-0.7.2-dev.exe** from Releases, close Balatro, open the EXE and click **Install / update**. No ZIP extraction or extra dependencies are needed. Setup includes the full bundle and an animated updating launcher; its top link exports manual files, licenses and source. Use the same build on every party member's PC. Backups and rollback are included. After this one-time install, the desktop shortcut checks and applies signed updates before play. Private GitHub downloads require each player to configure their own access once; see [Automatic updates](outputs/InstallerSource/UPDATES.md).
+Pinned Windows Steam Balatro 1.0.1o / Lovely 0.10.0 / Steamodded 26.1002.0 /
+Cryptid 0.5.17c / Amulet 3.6.1. User-owned game files are never redistributed.
+Original code MIT; upstream components retain their licenses. AI-assisted work.
 
-Supported bundle: Windows x64, owned Steam Balatro 1.0.1o-FULL, Lovely 0.10.0, Steamodded 26.1002.0, Cryptid 0.5.17c and Amulet 3.6.1.
+See SAVES.md, CRYPTID.md, BOTS.md, and the included installer guide for details.
 
-## Source
-
-- [Mod and player documentation](outputs/BalatroTogether/README.md)
-- [Installer source and build instructions](outputs/InstallerSource/README.md)
-- [Compatibility](outputs/BalatroTogether/CRYPTID.md)
-- [Known limitations](outputs/BalatroTogether/KNOWN_ISSUES.md)
-- [Verification and fixture limits](outputs/BalatroTogether/TEST_RESULTS.md)
-
-The repository contains original mod/installer source and tests. It excludes game files, decompiled source, saves, private lab tools, credentials and earlier local Git history. Full installer releases separately retain exact dependency sources and licenses.
-
-## Development
-
-With Python 3.11+ and `lupa==2.8` installed, run `python outputs/BalatroTogether/tools/test.py`. Optional pinned Amulet integration tests need its source under `work/upstream-Amulet`; otherwise the runner reports them as skipped. Build the mod ZIP with `python outputs/BalatroTogether/tools/build.py`.
-
-To rebuild the Windows installer, use its included Build.cmd beside the exact Manual Install.zip from the matching release. See InstallerSource/README.md for details. The full dependency bundle is distinct from the mod-only ZIP.
-
-This is an AI-assisted development build, not a certified production release. Native tests use isolated controlled fixtures; they are not proof of all Cryptid combinations or ordinary run balance. Cross-account Steam behavior still needs real-party verification.
-
-## Licensing
-
-Original Together/installer code is MIT; vendored json.lua retains its MIT notice. Lovely is MIT. Steamodded, Cryptid and Amulet are separate GPLv3 components with their upstream sources/notices in full distributions. No Balatro or other proprietary game assets are redistributed.
-
-Private GitHub releases require repository read access. The updater authenticates with each player's own token, encrypted using Windows DPAPI, and verifies signed update metadata with a compiled public key. No account token or private signing key is embedded in distributed software.
+Main source and signed release assets: Krosoviblyat/BalatroTogether.

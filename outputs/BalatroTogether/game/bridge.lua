@@ -131,7 +131,7 @@ function B.capture_score()
     local supported=BT.numbers and BT.numbers.score(amount) or (type(amount)=='number' and amount==amount and amount>=0 and amount<=1e100)
     if not supported then BT.notice('Unsupported score value; session cannot continue safely.'); return false end
     B.lastchips=G.GAME.chips; B.reported=B.hand
-    BT.client.action('score',{round=B.round,hand=B.hand,amount=amount,name=B.last_hand or 'Hand'})
+    BT.client.action('score',{round=B.round,hand=B.hand,amount=amount,name=B.last_hand or 'Hand',boss_disabled=G.GAME.blind and G.GAME.blind.disabled==true})
     BT.client.action('idle',{round=B.round,exhausted=G.GAME.current_round.hands_left<1 or (#G.hand.cards==0 and #G.deck.cards==0)})
     B.operation=nil
     return true
@@ -146,6 +146,7 @@ local function wrap_action(name,activity,event)
         end
         if B.pending_play then return end
         if BT.state.phase=='blind' then
+            if BT.Session.Harbinger.blocks(BT.state) then return end
             if not BT.client.connected or not stable() or B.operation or (me() and me().exhausted) or BT.state.score>=BT.state.target then return end
             local validator=activity=='play' and G.FUNCS.can_play or activity=='discarding' and G.FUNCS.can_discard
             if validator then local check={config={}}; validator(check); if not check.config.button then return end end
@@ -331,6 +332,10 @@ function B.update(dt)
     if B.operation and B.operation~='play' and B.operation_done and G.STATE==G.STATES.SELECTING_HAND and stable()
         and not G.CONTROLLER.locks.discard and not G.CONTROLLER.locks.use then
         B.operation=nil; BT.client.action('idle',{round=B.round,exhausted=false})
+    end
+    if B.waiting_hand and not B.operation and BT.state.phase=='blind' and not BT.Session.Harbinger.blocks(BT.state)
+        and BT.state.score<BT.state.target and G.GAME.current_round.hands_left>0 and G.STATE==G.STATES.HAND_PLAYED then
+        B.waiting_hand=false;G.STATE=G.STATES.DRAW_TO_HAND;G.STATE_COMPLETE=false
     end
     if BT.state.winner~=nil and B.finished~=B.round and B.round>0 and not B.operation
         and (G.STATE==G.STATES.SELECTING_HAND or G.STATE==G.STATES.HAND_PLAYED or G.STATE==G.STATES.NEW_ROUND) then

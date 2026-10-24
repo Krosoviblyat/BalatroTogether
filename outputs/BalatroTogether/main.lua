@@ -1,10 +1,12 @@
 BT=SMODS.current_mod
-BT.version='0.7.1-dev'
+BT.version='0.8.0-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
 BT.json=BT.numbers.codec(load('vendor/json.lua'))
 BT.Session=load('core/session.lua')
+BT.Session.Harbinger=load('core/harbinger.lua')
+BT.Session.Harbinger.Strategy=load('bots/strategy.lua')
 BT.Session.Numbers=BT.numbers
 BT.compat=load('game/compat.lua')
 BT.compat.install()
@@ -42,12 +44,15 @@ function BT.persist()
     for key,value in pairs(transient) do BT.config[key]=value end
     if not ok then error(err) end
 end
+if BT.Session.Harbinger.migrate_config(BT.config) then BT.persist() end
 BT.game.install()
 BT.donation.install()
 BT.pot.install()
 BT.dice.install()
 BT.save.install()
 BT.ui.install()
+BT.harbinger=load('game/harbinger.lua')
+BT.harbinger.install()
 -- Install invite callbacks before vanilla's first Steam callback pump.
 if not (BT.bots and BT.bots.config) then BT.steam.available() end
 local update=love.update

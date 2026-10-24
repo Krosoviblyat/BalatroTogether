@@ -108,7 +108,7 @@ function C.host(transport)
     C.stop(); C.transport=transport; C.pin=pin; BT.config.pin=pin; BT.persist()
     C.compat=BT.compat and BT.compat.signature()
     C.resume=token(); C.id=1; C.sequence=0
-    C.model=BT.Session.new{intended=BT.config.intended_players,scaling=BT.config.scaling,name=BT.config.username,token=C.resume,seed=seed,deck=BT.config.deck or 'b_red',party_id=token():sub(1,32),save_autos=BT.Session.Save~=nil}
+    C.model=BT.Session.new{intended=BT.config.intended_players,scaling=BT.config.scaling,name=BT.config.username,token=C.resume,seed=seed,boss_stake=BT.config.boss_stake,boss_mode=BT.config.boss_mode,quick_duel=BT.config.quick_duel,deck=BT.config.deck or 'b_red',party_id=token():sub(1,32),save_autos=false}
     C.model.setup_choices=BT.compat and BT.compat.run_choices(C.model.deck)
     C.model.players[1].steam_name=BT.steam.name()
     local identity=BT.steam.available and BT.steam.available()
@@ -251,6 +251,7 @@ local function client_line(msg)
 end
 function C.update(dt)
     C.clock=C.clock+dt
+    if C.model and BT.Session.Harbinger then BT.Session.Harbinger.tick(C.model,C.clock,G and G.SETTINGS and G.SETTINGS.paused) end
     if C.model and BT.Session.Vote then BT.Session.Vote.tick(C.model,C.clock) end
     if C.model and C.model.dice and BT.Session.Dice.QTE then BT.Session.Dice.QTE.tick(C.model,C.clock) end
     if BT.steam.update then

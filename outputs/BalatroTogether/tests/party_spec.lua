@@ -52,6 +52,12 @@ test('an open vote cannot race a ready action into a native blind',function()
     for i=1,3 do assert(action(m,i,'ready',{ready=true,ante=1,index=1,round=0})) end
     assert(m.phase=='prepare' and m.skip_vote)
 end)
+test('new sessions and old restored checkpoints use manual saves only',function()
+    assert(not M.new{intended=1,save_autos=true}.save_autos)
+    local m=room();m.save_autos=true;assert(M.Save.begin(m,1));for i=1,3 do m.checkpoint.uploads[tostring(i)]='hash' end;assert(M.Save.commit(m,100))
+    local r=M.Save.restore(M,m);assert(r.save_autos==false and r.resume_lobby)
+    assert(not action(r,1,'resume_start'))
+end)
 test('checkpoint freeze requires matching native positions and protects all transactions',function()
     local m=room();m.players[2].native_index=2;assert(not action(m,1,'save_begin'));m.players[2].native_index=1
     assert(not action(m,2,'save_begin'));assert(action(m,1,'save_begin',{leave=true}));assert(m.phase=='saving')
@@ -66,6 +72,8 @@ test('party model restores original seats, tokens, pots and progression behind a
     assert(restored.players[1].personal_pot.bank==17 and restored.players[1].pot_received==12 and restored.players[2].steam_id=='76561198000000002')
     for i=2,3 do restored.players[i].connected=true end
     for i=1,3 do assert(action(restored,i,'restore_ready',{checkpoint=restored.resume_checkpoint,ante=1,index=1})) end
+    assert(restored.phase=='resuming' and restored.resume_lobby)
+    assert(not action(restored,2,'resume_start'));assert(action(restored,1,'resume_start'))
     assert(restored.phase=='prepare' and not restored.players[1].ready)
 end)
 test('failed checkpoint releases play without replacing the previous saved position',function()
@@ -106,7 +114,8 @@ test('retiring an absent saved seat releases the restoration barrier for the rem
     local m=room();assert(M.Save.begin(m,1));for i=1,3 do m.checkpoint.uploads[tostring(i)]='hash' end;assert(M.Save.commit(m,100))
     local r=M.Save.restore(M,m);r.players[2].connected=true
     for i=1,2 do assert(action(r,i,'restore_ready',{checkpoint=r.resume_checkpoint,ante=1,index=1})) end
-    assert(r.phase=='resuming');assert(r:drop(3));assert(r.phase=='prepare' and r.players[3].withdrawn)
+    assert(r.phase=='resuming');assert(r:drop(3));assert(r.phase=='resuming' and r.players[3].withdrawn)
+    assert(action(r,1,'resume_start'));assert(r.phase=='prepare')
 end)
 test('native starts wait for delayed tutorial characters and native menu wipes',function()
     local old=G;G={SETTINGS={paused=false},CONTROLLER={locks={}},E_MANAGER={}}
@@ -121,7 +130,8 @@ test('only the authorized owner may retire an absent seat during restoration',fu
     local r=M.Save.restore(M,m);r.players[1].steam_id=M.Admin.OWNER;r.players[2].connected=true
     assert(not action(r,2,'admin_retire',{target=3}));assert(not r.players[3].withdrawn)
     for i=1,2 do assert(action(r,i,'restore_ready',{checkpoint=r.resume_checkpoint,ante=1,index=1})) end
-    assert(action(r,1,'admin_retire',{target=3}));assert(r.phase=='prepare' and r.players[3].withdrawn)
+    assert(action(r,1,'admin_retire',{target=3}));assert(r.phase=='resuming' and r.players[3].withdrawn)
+    assert(action(r,1,'resume_start'));assert(r.phase=='prepare')
     M.Admin=nil
 end)
 print('TOTAL '..n..' PARTY SAVE/VOTE/EDITOR TESTS PASSED')

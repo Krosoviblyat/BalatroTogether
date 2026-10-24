@@ -29,11 +29,17 @@ function P.cancel(m,reason)
 end
 function P.advance(m)
     if m.phase~='resuming' or not m:all(function(p) return p.connected and p.restore_done==m.resume_checkpoint end) then return end
+    if m.resume_lobby then return end
     m.phase='prepare';m.checkpoint_position=P.position(m);m.checkpoint.status='saved'
     for _,p in pairs(m.players) do p.ready=false end
     m:event(1,'milestone','Saved party restored / ready when you are');m:changed()
 end
 function P.apply(m,id,kind,d)
+    if kind=='resume_start' then
+        if id~=1 or m.phase~='resuming' then return nil,'Only the host can continue a saved party.' end
+        if not m:all(function(p) return p.connected and p.restore_done==m.resume_checkpoint end) then return nil,'Wait for every saved player to join and restore their build.' end
+        m.resume_lobby=nil;P.advance(m);return true
+    end
     if kind=='save_request' then
         if id~=1 or (m.phase~='shop' and m.phase~='prepare') then return nil,'Host can save after the blind, once everyone leaves their shops.' end
         m.save_leave_requested=d.leave==true; m.manual_save_requested=true;return true
@@ -51,7 +57,8 @@ function P.restore(S,model)
     assert(type(model)=='table' and model.protocol==S.PROTOCOL and model.phase=='prepare' and S.valid_deck(model.deck),'Invalid party save')
     assert(type(model.players)=='table' and type(model.party_id)=='string' and model.party_id:match('^[0-9a-f]+$') and #model.party_id==32,'Invalid saved party')
     assert(type(model.checkpoint)=='table' and model.checkpoint.status=='saved','Incomplete checkpoint')
-    local result=S.copy(model);setmetatable(result,S);result.phase='resuming';result.resume_checkpoint=result.checkpoint.id
+    local result=S.copy(model);setmetatable(result,S);result.phase='resuming';result.resume_checkpoint=result.checkpoint.id;result.resume_lobby=true;result.save_autos=false
+    result.boss_mode=result.boss_mode or 'mixed';result.boss_stake=result.boss_stake or 1;result.quick_duel=result.quick_duel==true
     result.saved_leave=nil;result.save_leave_requested=nil;result.manual_save_requested=nil;result.skip_vote=nil;result.skip_order=nil;result.vote_clock=0
     for i,p in pairs(result.players) do
         assert(type(i)=='number' and i%1==0 and i>=1 and i<=4 and p.id==i and type(p.token)=='string','Invalid saved seat')

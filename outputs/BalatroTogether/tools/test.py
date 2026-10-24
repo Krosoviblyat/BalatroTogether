@@ -37,12 +37,12 @@ lua8.execute((root/'tests/steam_spec.lua').read_text(encoding='utf-8'))
 lua9 = LuaRuntime(unpack_returned_tuples=True)
 lua9.globals().ROOT = root.as_posix()
 lua9.execute((root/'tests/handshake_spec.lua').read_text(encoding='utf-8'))
-for suite in ('party_spec.lua','steam_code_spec.lua','steam_invites_spec.lua','pot_spec.lua','pot_bridge_spec.lua','dice_spec.lua','dice_bridge_spec.lua','admin_spec.lua','expansion_spec.lua'):
+for suite in ('party_spec.lua','steam_code_spec.lua','steam_invites_spec.lua','pot_spec.lua','pot_bridge_spec.lua','dice_spec.lua','dice_bridge_spec.lua','admin_spec.lua','expansion_spec.lua','harbinger_spec.lua'):
     runtime = LuaRuntime(unpack_returned_tuples=True)
     runtime.globals().ROOT = root.as_posix()
     runtime.execute((root/'tests'/suite).read_text(encoding='utf-8'))
 
-amulet=root.parents[1]/'work/upstream-Amulet'
+amulet=next((p/'work/upstream-Amulet' for p in root.parents if (p/'work/upstream-Amulet').is_dir()),root/'missing-amulet')
 if amulet.is_dir():
     runtime=LuaRuntime(unpack_returned_tuples=True)
     runtime.globals().ROOT=root.as_posix()

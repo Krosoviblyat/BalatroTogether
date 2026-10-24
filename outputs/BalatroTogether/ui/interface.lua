@@ -174,6 +174,7 @@ pot_view=assert(SMODS.load_file('ui/pot.lua',BT.id))()(U,{col=col,txt=txt,rect=r
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
 local dice_view=assert(SMODS.load_file('ui/dice.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
+local boss_view=assert(SMODS.load_file('ui/harbinger.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,backdrop=backdrop,ink=ink,muted=muted,panel=panel})
 local admin_view=assert(SMODS.load_file('ui/admin.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
 local inspect_view=assert(SMODS.load_file('ui/inspect.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,hit=hit,diamond=diamond,
@@ -186,8 +187,8 @@ function U.menu() U.navigate('home') end
 local function home(w,h)
     backdrop(w,h,'TOGETHER','SIMULTANEOUS CO-OP FOR 1–4 PLAYERS')
     group(0.03,function()
-        txt('BRING YOUR\nBEST BUILD.',64,214,58,ink,555)
-        txt('Your deck. Your decisions.\nOne score to beat, together.',67,365,27,muted,535)
+        txt('FACE THE\nHARBINGER.',64,214,58,ink,555)
+        txt('It plays back. You push harder.\nIsolated saves. A separate test build.',67,365,27,muted,535)
         local still=BT.config.reduced_motion or (BT.config.motion or 1)==0
         local t=still and 0 or love.timer.getTime()*(BT.config.motion or 1)
         for i=1,4 do
@@ -195,7 +196,7 @@ local function home(w,h)
             rect(-49,-64,98,135,panel);col(palette(i));cutrect(-43,-59,86,123,7)
             diamond(0,0,17,bg);txt(tostring(i),-33,-49,21,bg,66);g.pop()
         end
-        txt('FOUR SEATS / ONE TABLE',67,659,21,colors[1],535)
+        button('BOSS RULES / STAKES',67,655,462,40,function() U.navigate('boss_lab') end,colors[3])
     end)
     group(0.09,function()
         local saved=BT.save and BT.save.summary
@@ -262,7 +263,7 @@ end
 local function steam_friends(w,h)
     backdrop(w,h,'INVITE YOUR FRIENDS','AN INVITE OR SIX DIGITS. SAME TABLE.')
     local x=w/2-390
-    if not (BT.steam.lobby and BT.client.model and BT.client.model.phase=='lobby') then
+    if not (BT.steam.lobby and BT.client.model and (BT.client.model.phase=='lobby' or BT.client.model.phase=='resuming')) then
         txt('Open a Steam table before inviting friends.',x,225,30,ink,780)
         button('BACK TO TABLE',x,640,780,44,function() U.screen='lobby' end,muted); return
     end
@@ -313,6 +314,7 @@ local function lobby(w,h)
     backdrop(w,h,s and s.phase=='resuming' and 'WELCOME BACK.' or 'YOUR TABLE',s and s.phase=='resuming' and 'ORIGINAL PLAYERS JOIN WITH THE NEW CODE. EVERY BUILD RETURNS.' or s and 'GET READY. YOUR NEXT RUN STARTS TOGETHER.' or 'FINDING YOUR FRIEND\'S TABLE...')
     rect(w-271,87,214,40,colors[2],7)
     txt('BETA / '..BT.version,w-263,94,23,bg,198,'center')
+    button('BOSS STAKES / '..BT.Session.Harbinger.tier(s or BT.config).name,w-401,137,344,32,function() U.navigate('boss_lab') end,colors[3])
     local start=math.max(190,h*0.24); local gap=18; local width=math.min((w-130)/4,264); local x=(w-width*4-gap*3)/2
     for i=1,4 do
         local p=s and s.players[tostring(i)]; local px=x+(i-1)*(width+gap); local c=palette(i)
@@ -354,12 +356,14 @@ local function lobby(w,h)
         button('START RUN',w/2+10,y,295,55,BT.client.start,colors[2],BT.client.model~=nil)
         txt('Requires '..s.intended..' ready player'..(s.intended==1 and '' or 's')..' / '..BT.Session.deck_name(s.deck)..' / Seed '..(s.custom_seed~='' and s.custom_seed or 'RANDOM')..' / ENDLESS',w/2-445,y+69,21,muted,890,'center')
     elseif s and s.phase=='resuming' then
-        txt('Restoring builds / the run waits for every original seat.',w/2-445,y+10,27,colors[2],890,'center')
+        local restored,expected=0,0
+        for _,p in pairs(s.players) do if not p.withdrawn then expected=expected+1;if p.connected and p.restore_done==s.resume_checkpoint then restored=restored+1 end end end
+        button('CONTINUE SAVED RUN / '..restored..' OF '..expected,w/2-305,y,610,55,function() BT.client.action('resume_start',{}) end,colors[2],BT.client.model~=nil and restored==expected)
         txt(BT.Session.deck_name(s.deck)..' / ANTE '..s.ante,w/2-445,y+66,22,muted,890,'center')
     elseif s then
         button('RETURN TO RUN',w/2-305,y,295,55,close)
         button('FAST RESTART',w/2+10,y,295,55,BT.client.restart,colors[2],BT.client.model~=nil)
-        local checkpoint=s.checkpoint;local status=checkpoint and checkpoint.status=='saving' and 'SAVING EVERY BUILD...' or checkpoint and checkpoint.status=='failed' and 'SAVE FAILED / PREVIOUS CHECKPOINT RETAINED' or checkpoint and checkpoint.at and ('CHECKPOINT '..os.date('%H:%M',checkpoint.at)) or 'AUTOSAVES BETWEEN BLINDS'
+        local checkpoint=s.checkpoint;local status=checkpoint and checkpoint.status=='saving' and 'SAVING EVERY BUILD...' or checkpoint and checkpoint.status=='failed' and 'SAVE FAILED / PREVIOUS CHECKPOINT RETAINED' or checkpoint and checkpoint.at and ('CHECKPOINT '..os.date('%H:%M',checkpoint.at)) or 'MANUAL CHECKPOINTS / HOST SAVES BETWEEN BLINDS'
         txt(status,w/2-400,y+70,22,checkpoint and checkpoint.status=='failed' and colors[4] or muted,800,'center')
     end
     if s and BT.client.model and (s.phase=='prepare' or s.phase=='shop') then
@@ -427,41 +431,10 @@ local function scorebox(l)
         U.progress_drawn=U.progress_drawn+math.max(0,proportion)
     end end
 end
-local function blindbox(w,h)
-    local s=BT.state; local z=math.min(w/1920,h/1080)
-    local x,y,bw,bh
-    if G.HUD_blind and G.HUD_blind.VT then
-        local t=G.HUD_blind.VT; local factor=G.TILESIZE*G.TILESCALE
-        g.push(); G.HUD_blind:translate_container()
-        x,y=g.transformPoint(t.x*factor,t.y*factor); g.pop()
-        bw=t.w*factor; bh=t.h*factor
-    end
-    if not x or bw<10 then x=40*z; y=100*z; bw=390*z; bh=278*z end
-    if y<0 or y+bh>h then y=100*z end
-    U.blind_rect={x=x,y=y,w=bw,h=bh}
-    rect(x,y,bw,bh,panel,12*z)
-    txt('TOGETHER / ANTE '..s.ante..(s.ante>8 and ' / ENDLESS' or ''),x+15*z,y+11*z,s.ante>8 and 19*z or 23*z,colors[1],bw-30*z)
-    txt(s.proposal and s.proposal.name or 'NEXT BLIND',x+15*z,y+43*z,34*z,ink,bw-30*z)
-    txt('TEAM '..fmt(U.display_score or s.score),x+15*z,y+91*z,(37+(U.score_pulse or 0)*3)*z,ink,bw-30*z)
-    txt('TARGET '..fmt(s.target)..' / '..(s.target>0 and math.floor((BT.numbers and BT.numbers.ratio(s.score,s.target) or math.min(1,s.score/s.target))*100) or 0)..'%',x+15*z,y+135*z,24*z,muted,bw-30*z)
-    local bx,by,width=x+15*z,y+177*z,bw-30*z
-    col(bg); g.rectangle('fill',bx,by,width,10*z,4,4)
-    local cursor,proportion=bx,0
-    for i=1,4 do local p=s.players[tostring(i)]; if p and s.target>0 then
-        local part=math.max(0,math.min(1-proportion,(BT.numbers and BT.numbers.ratio(p.contribution,s.target) or p.contribution/s.target))); proportion=proportion+part
-        local fill=width*part*U.progress; col(palette(i)); g.rectangle('fill',cursor,by,fill,10*z,3,3); cursor=cursor+fill
-    end end
-    if BT.config.effects and (U.score_pulse or 0)>0.05 then
-        col(ink,(U.score_pulse or 0)*0.35); g.rectangle('line',x,y,bw,bh,12*z,12*z)
-        diamond(bx+width*math.min(1,U.visual_score or 0),by+5*z,7*z,ink,U.score_pulse)
-    end
-    local phase=s.phase=='blind' and (s.score>=s.target and 'FINISHING HANDS' or 'BUILD THE TEAM SCORE') or s.phase:upper()
-    txt(phase,x+15*z,y+204*z,22*z,colors[2],bw-30*z)
-    if s.proposal and s.proposal.boss then txt('BOSS EFFECTS APPLY TO EACH BUILD',x+15*z,y+236*z,17*z,muted,bw-30*z) end
-end
+-- Balatro's native blind UI remains visible in the lab.
 local function hud(w,h)
     local s=BT.state; local l=layout.compute(w,h,BT.config.hud_scale,BT.config.hud_top); local z=l.s
-    blindbox(w,h)
+    U.blind_rect=nil
     if BT.config.panels then
         local order={BT.client.id or 1}; for i=1,4 do if i~=BT.client.id then order[#order+1]=i end end
         local x=l.x
@@ -542,6 +515,7 @@ function U.update(dt)
     donation_view.update(dt)
     pot_view.update(dt)
     dice_view.update(dt)
+    boss_view.update(dt)
     local s=BT.state
     if s and s.phase=='saving' and U.screen~='saving' then U.before_save=U.screen;U.navigate('saving')
     elseif U.screen=='saving' and not (s and s.phase=='saving') then local screen=U.before_save;U.before_save=nil;U.navigate(screen) end
@@ -650,6 +624,7 @@ function U.draw()
         elseif U.screen=='host' then connect_screen(1280,800,true)
         elseif U.screen=='join' then connect_screen(1280,800,false)
         elseif U.screen=='lobby' then lobby(1280,800)
+        elseif U.screen=='boss_lab' then boss_view.rules(1280,800)
         elseif U.screen=='settings' then settings(1280,800)
         elseif U.screen=='pin' then pin_screen(1280,800)
         elseif U.screen=='name' then name_screen(1280,800)
@@ -667,7 +642,7 @@ function U.draw()
         if BT.state.phase=='victory' or BT.state.phase=='defeat' then
             local scale=math.min(w/1280,h/800); g.translate((w-1280*scale)/2,(h-800*scale)/2); g.scale(scale)
             U.modal={scale=scale,x=(w-1280*scale)/2,y=(h-800*scale)/2}; ending(1280,800)
-        else hud(w,h); celebrations(w,h); feed(w,h); if U.open_amount>0.01 and U.shown_player then inspect_view.draw(w,h) end end
+        else hud(w,h); celebrations(w,h); feed(w,h); boss_view.draw(w,h); if U.open_amount>0.01 and U.shown_player then inspect_view.draw(w,h) end end
     else
         U.modal=nil
         if G.STAGE==G.STAGES.MAIN_MENU and not G.OVERLAY_MENU then
