@@ -1,4 +1,4 @@
-# Steam tables — 0.7.0-dev
+# Steam tables — 0.7.1-dev
 
 Everyone installs the same build on Windows x64 and opens their owned Balatro with Steam signed in.
 

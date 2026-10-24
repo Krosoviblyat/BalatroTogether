@@ -51,7 +51,7 @@ Spin completion and native reward delivery hold that player's ready, shop-exit a
 
 ## Fuck the Table jackpot challenge
 
-Choose **FUCK THE TABLE** while you own a boss spin and are unready in the shop or between blinds. It spends **one earned spin**, the same as an ordinary wheel spin. Press and release **Space 32 times in eight seconds** to guarantee slot 100, Perfect Hundred. Holding Space and keyboard repeat do not count. The host owns the timer and validates progress. The wheel still spins and lands on the jackpot sector after a win.
+Choose **FUCK THE TABLE** while you own a boss spin and are unready in the shop or between blinds. It spends **one earned spin**, the same as an ordinary wheel spin. Press and release **Space 32 times in five seconds** to guarantee slot 100, Perfect Hundred. Holding Space and keyboard repeat do not count. The host owns the timer and validates progress. The wheel still spins and lands on the jackpot sector after a win.
 
 Missing the challenge does not waste the spin: it resolves the normal wheel result. Its normal result can also naturally be a jackpot. The reward belongs only to the spinner. Progression remains held through the challenge, spin and native delivery. The title, timer, progress fill, hit feedback and celebration obey the existing effects and motion settings; reducing motion does not alter the challenge requirement.
 

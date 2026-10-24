@@ -69,7 +69,9 @@ end)
 -- Real FFI conversions and callbacks, with only Steam's C service replaced.
 local ffi=require('ffi');local now,online,attempts=0,false,0
 local game_calls,lobby_calls=0,0;local refuse=false;local command=''
+local registrations={}
 local api=setmetatable({},{__index=function() return function() return ffi.cast('void *',1) end end})
+api.SteamAPI_RegisterCallback=function(object,callback) registrations[callback]=object end
 api.SteamAPI_ISteamUtils_GetAppID=function() attempts=attempts+1;return 2379780 end
 api.SteamAPI_ISteamUser_BLoggedOn=function() return online end
 api.SteamAPI_ISteamUser_GetSteamID=function() return ffi.new('uint64_t',76561198)*1000000000+123456789 end
@@ -87,6 +89,24 @@ end)
 test('explicit game invite carries lobby address and fallback sends only one invite',function()
     assert(native.invite_friend(lobby,'76561198000000002'));assert(game_calls==1 and lobby_calls==0)
     refuse=true;assert(native.invite_friend(lobby,'76561198000000002'));assert(game_calls==2 and lobby_calls==1)
+end)
+
+test('Windows Steam vtable slot one delivers exact lobby and rich-presence invitations',function()
+    local p=ffi.new('BTSteamJoinRequested');p.lobby=109775240123456789ULL
+    local cb=assert(registrations[333])
+    ffi.cast('void (*)(void *,void *)',cb.vtable[1])(cb,p)
+    assert(native.invites()[1]==lobby)
+    local presence=ffi.new('BTSteamPresenceRequested');ffi.copy(presence.connect,'+connect_lobby '..lobby)
+    cb=assert(registrations[337]);ffi.cast('void (*)(void *,void *)',cb.vtable[1])(cb,presence)
+    assert(native.invites()[1]=='+connect_lobby '..lobby)
+    assert(ffi.cast('int (*)(void *)',cb.vtable[2])(cb)==ffi.sizeof('BTSteamPresenceRequested'))
+end)
+
+test('Windows call-result overload ignores failure and forwards success without rounding',function()
+    local p=ffi.new('BTSteamJoinRequested');p.lobby=109775240123456789ULL
+    local cb=assert(registrations[333]);local run=ffi.cast('void (*)(void *,void *,bool,BTSteamID)',cb.vtable[0])
+    run(cb,p,true,0);assert(#native.invites()==0)
+    run(cb,p,false,0);assert(native.invites()[1]==lobby)
 end)
 test('Steam launch API detects later parameters without repeatedly replaying old ones',function()
     native.checked_os=true;command='+connect_lobby '..lobby

@@ -82,9 +82,14 @@ local function register(callback,ctype,queue,convert)
     local run=ffi.cast('void (*)(void *, void *)',function(_,data)
         if #queue<8 then local value=convert(ffi.cast(ctype..' *',data)); if value then queue[#queue+1]=value end end
     end)
-    local result=ffi.cast('void (*)(void *, void *, bool, BTSteamID)',function() end)
+    local result=ffi.cast('void (*)(void *, void *, bool, BTSteamID)',function(self,data,failed)
+        if not failed then run(self,data) end
+    end)
     local size=ffi.cast('int (*)(void *)',function() return ffi.sizeof(ctype) end)
-    vt[0]=ffi.cast('void *',run); vt[1]=ffi.cast('void *',result); vt[2]=ffi.cast('void *',size)
+    -- MSVC puts overloaded virtual methods in reverse declaration order.
+    -- Steam's Windows DLL calls Run(void*) through slot 1, not slot 0.
+    -- Calling refs.run directly in tests cannot detect this ABI mismatch.
+    vt[0]=ffi.cast('void *',result); vt[1]=ffi.cast('void *',run); vt[2]=ffi.cast('void *',size)
     object.vtable=vt; object.callback=callback
     -- Root all three callbacks for the process lifetime. Never allocate per frame.
     local refs={object=object,vt=vt,run=run,result=result,size=size}

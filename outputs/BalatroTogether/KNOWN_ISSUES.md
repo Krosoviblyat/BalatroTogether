@@ -2,7 +2,7 @@
 
 - The build is not a production release.
 - Six-digit codes use Steam public-lobby indexing, not a separately hosted room service. Exact lookup refuses missing or ambiguous results; Steam must be online. Steam mode uses Valve lobbies and reliable Steam networking; Direct IP uses TCP.
-- Steam invites/networking are experimental and Windows x64 only. User screenshots show a connected remote Steam player and shared score contributions. Version 0.6.5 adds explicit game invites, startup/URL handoff recovery and direct menu joining. Real cross-account invite acceptance, Steam launching a closed game on another PC and broader internet/relay behavior still need party verification. Avatars are not implemented. Steam must be online; the in-game friend picker does not use the overlay invite menu.
+- Steam invites/networking are experimental and Windows x64 only. User screenshots show a connected remote Steam player and shared score contributions. Version 0.7.1 repairs the Windows callback vtable used by Steam to deliver accepted invites; native ABI dispatch and menu routing are verified in private game copies. Real cross-account invite acceptance, Steam launching a closed game on another PC and broader internet/relay behavior still need party verification. Avatars are not implemented. Steam must be online; the in-game friend picker does not use the overlay invite menu.
 - Host trusts native score results from friends; it does not replay or validate all joker triggers, purchases or card legality remotely.
 - No host migration. Closed-process recovery uses the last complete host checkpoint, with original seats and matching native mods/settings; it cannot recover an in-flight hand. See SAVES.md.
 - No new players after run start. Saved parties reserve their original identities until restored or retired.
@@ -37,4 +37,4 @@ Boss Reward Wheel (0.3.6): designed as powerful casual co-op rewards, not balanc
 
 Owner admin access requires a verified Steam identity. With direct TCP, only the owner hosting locally can be authenticated for admin; claimed remote TCP identities are refused. The native admin test used the real owner plus an unverified same-machine TCP peer. Owner-as-Steam-guest authorization is reducer-tested but still needs a live second account. Account checks do not make editable Lua mods an anti-cheat system.
 
-The Space challenge requires 32 separate presses in eight seconds. It is intentionally optional: normal wheel spins remain available. Extremely large endless builds may exceed engine, mod, performance or bounded network-number limits.
+The Space challenge requires 32 separate presses in five seconds. It is intentionally optional: normal wheel spins remain available. Extremely large endless builds may exceed engine, mod, performance or bounded network-number limits.

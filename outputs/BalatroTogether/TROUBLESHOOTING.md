@@ -4,7 +4,7 @@ Together 0.7 waits for native/Cryptid tutorials and screen wipes before starting
 
 ## Steam invite does nothing
 
-Everyone installs the same 0.7.0-dev build and restarts Balatro. The host opens a Steam table before the run and uses INVITE FRIENDS inside Together. Accept the new game invite rather than an old chat invite or Invite to Watch. Steam must be signed in and the recipient must own/install Balatro with Together in its normal Steam installation. Accepted invites join from the menu; a current party or solo run asks before leaving. If Steam itself does not launch Balatro, open Balatro through Steam, then accept a fresh invite. Share the new six-digit TABLE CODE and enter it in Together's Steam join field. No router forwarding is needed in Steam mode.
+Everyone installs the same 0.7.1-dev build and restarts Balatro. The host opens a Steam table before the run and uses INVITE FRIENDS inside Together. Accept the new game invite rather than an old chat invite or Invite to Watch. Steam must be signed in and the recipient must own/install Balatro with Together in its normal Steam installation. Accepted invites join from the menu; a current party or solo run asks before leaving. If Steam itself does not launch Balatro, open Balatro through Steam, then accept a fresh invite. Share the new six-digit TABLE CODE and enter it in Together's Steam join field. No router forwarding is needed in Steam mode.
 
 # Troubleshooting
 

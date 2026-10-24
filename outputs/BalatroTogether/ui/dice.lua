@@ -2,11 +2,11 @@ return function(U,h)
     local g=love.graphics; local H=BT.Session.Dice.Physics
     local motion=assert(SMODS.load_file('ui/motion.lua',BT.id))()
     local renderer=assert(SMODS.load_file('ui/dice_renderer.lua',BT.id))()(H,g,h.col)
-    local V={time=0,opening={x=0,v=0},widgets={},revealed={},particles={},flash=0,shake=0,selected=nil}
+    local V={time=0,opening={x=0,v=0},widgets={},revealed={},particles={},flash=0,shake=0,selected=nil,launch={x=1,v=0},impact={x=0,v=0},prize={x=1,v=0},pointer={x=0,v=0},space={x=0,v=0},progress={x=0,v=0}}
     local gold={1,0.76,0.24}; local red={1,0.25,0.36}; local violet={0.69,0.59,1}
     local function reduced() return BT.config.reduced_motion or (BT.config.motion or 1)==0 end
     function U.qte_press()
-        if not reduced() then V.shake=1;V.flash=0.35 end
+        if not reduced() then V.space.x=1;V.space.v=0;V.flash=0.14 end
         if BT.config.sounds then pcall(play_sound,'card1',1.1+(V.time%0.2),0.25) end
     end
     local function button(label,x,y,w,height,fn,c,enabled)
@@ -15,16 +15,33 @@ return function(U,h)
     function V.update(dt)
         V.time=V.time+dt
         if V.screen~=U.screen then V.screen=U.screen; if U.screen=='dice' then V.opening={x=0,v=0}; V.widgets={} end end
-        if V.run~=(BT.state and BT.state.run_id) then V.run=BT.state and BT.state.run_id; V.revealed={}; V.particles={}; V.selected=BT.client.id end
+        if V.run~=(BT.state and BT.state.run_id) then V.run=BT.state and BT.state.run_id; V.revealed={}; V.particles={}; V.selected=BT.client.id;V.preview=nil end
         motion.spring(V.opening,U.screen=='dice' and 1 or 0,dt,reduced(),BT.config.motion or 1)
-        for _,b in pairs(V.widgets) do motion.spring(b.hover,b.target,dt,reduced(),BT.config.motion or 1); motion.spring(b.press,0,dt,reduced(),BT.config.motion or 1) end
+        for _,name in ipairs({'launch','impact','prize','pointer','space','progress'}) do
+            local target=(name=='launch' or name=='prize') and 1 or 0
+            if name=='progress' then
+                local roll=BT.state and BT.state.dice and BT.state.dice.rolls[tostring(V.selected or BT.client.id)]
+                target=roll and roll.status=='challenge' and roll.challenge.hits/roll.challenge.required or 0
+            end
+            motion.spring(V[name],target,dt,reduced(),BT.config.motion or 1)
+        end
         V.flash=math.max(0,V.flash-dt*1.8); V.shake=math.max(0,V.shake-dt*6)
         local a=BT.dice.animations[tostring(V.selected or BT.client.id)]
-        if a and a.pose and a.pose.impacts>(V.impacts or 0) then V.impacts=a.pose.impacts; if not reduced() and a.roll.die~='boss' then V.shake=1 end end
+        if a and V.animation~=a.id then
+            V.animation=a.id;V.impacts=0;V.preview=nil
+            if not reduced() then V.launch={x=0.84,v=0};V.prize={x=0.6,v=0} end
+        end
+        if a and a.pose and a.pose.impacts>(V.impacts or 0) then
+            V.impacts=a.pose.impacts
+            if not reduced() then
+                if a.roll.die=='boss' then V.pointer.x=-0.22;V.pointer.v=-1.1
+                else V.impact.x=1;V.impact.v=0;V.shake=0.4;V.impact_time=V.time end
+            end
+        end
         if a and a.elapsed>=a.roll.duration and not V.revealed[a.id] then
-            V.revealed[a.id]=true; V.impacts=0
+            V.revealed[a.id]=true
             if U.screen=='dice' then
-                V.reveal_time=V.time; V.flash=reduced() and 0 or 1
+                V.reveal_time=V.time; V.flash=reduced() and 0 or 0.65;V.prize={x=reduced() and 1 or 0.55,v=0}
                 if BT.config.sounds then pcall(play_sound,a.roll.die=='gold' and 'timpani' or 'tarot1',a.roll.face==20 and 0.7 or 1.1,0.45) end
                 if not reduced() and BT.config.effects then
                     for i=1,a.roll.die=='boss' and 100 or 64 do local angle=i*2.39996; local speed=130+(i%7)*34
@@ -40,12 +57,14 @@ return function(U,h)
         end
     end
     function V.amount() return reduced() and 1 or V.opening.x end
-    local wheel_labels={'$35','FREE x3','HANDS +2','DISCARDS +3','CHIPS +100','MULT +25','LEVELS +1','MERCHANT','TOOLKIT','LUCKY ORBIT','HOT STREAK','DEEP POCKETS','FREE x6','LEVELS +2','GOLDEN','LIMIT BREAK','OVERDRIVE','COSMIC','ROYAL','CROWN','100'}
+    local wheel_labels={'$35','FREE x3','HANDS','DISCARDS','CHIPS','MULT','LEVELS','SHOP','TOOLKIT','LUCKY','HOT','RICH','FREE x6','LEVELS','GOLD','LIMIT','DRIVE','COSMIC','ROYAL','CROWN','100'}
     local wheel_colors={{0.12,0.54,0.48},{0.32,0.23,0.62},{0.15,0.39,0.56},{0.59,0.25,0.41}}
-    function V.wheel(angle,face,elapsed)
+    function V.wheel(angle,face)
         local cx,cy,radius=425,410,145
         h.col({0,0,0},0.35); g.ellipse('fill',cx,cy+158,164,12)
-        h.col({0.08,0.11,0.18}); g.circle('fill',cx,cy,161)
+        h.col({0.035,0.05,0.045}); g.circle('fill',cx,cy+7,167)
+        h.col({0.36,0.40,0.33}); g.circle('fill',cx,cy,166)
+        h.col({0.08,0.13,0.12}); g.circle('fill',cx,cy,161)
         h.col(violet); g.setLineWidth(4); g.circle('line',cx,cy,157)
         local low=1
         for i,reward in ipairs(BT.Session.Dice.Boss.tiers) do
@@ -60,7 +79,7 @@ return function(U,h)
             local middle=(first+last)/2
             g.push(); g.translate(cx+math.cos(middle)*98,cy+math.sin(middle)*98)
             local direction=middle%(2*math.pi); g.rotate(middle+(direction>math.pi/2 and direction<math.pi*1.5 and math.pi or 0))
-            h.txt(wheel_labels[i],-48,-7,i==21 and 10 or 12,i==21 and {0.14,0.09,0.02} or h.ink,96,'center'); g.pop()
+            h.txt(wheel_labels[i],-48,-7,i==21 and 10 or 14,i==21 and {0.14,0.09,0.02} or h.ink,96,'center'); g.pop()
             low=reward.max+1
         end
         for i=0,39 do
@@ -68,15 +87,15 @@ return function(U,h)
             h.col(face and gold or violet,0.55+0.45*pulse); g.circle('fill',cx+math.cos(a)*157,cy+math.sin(a)*157,2.5)
         end
         h.col({0.06,0.09,0.15}); g.circle('fill',cx,cy,49); h.col(gold); g.setLineWidth(3); g.circle('line',cx,cy,49)
-        h.txt(face and 'WON!' or 'BOSS',cx-46,cy-23,25,gold,92,'center')
+        h.txt(face and 'WON!' or 'ZERO',cx-46,cy-23,25,gold,92,'center')
         h.txt(face and tostring(face) or 'WHEEL',cx-46,cy+7,21,h.ink,92,'center')
-        local ticks=angle/(2*math.pi)*100; local flick=reduced() and 0 or math.sin((ticks%1)*math.pi)*0.20
-        g.push(); g.translate(cx,cy-radius-9); g.rotate(face and 0 or -flick)
+        local flick=reduced() and 0 or V.pointer.x
+        g.push(); g.translate(cx,cy-radius-9); g.rotate(flick)
         h.col({0,0,0},0.4); g.polygon('fill',-15,-14,15,-14,0,23)
         h.col(gold); g.polygon('fill',-12,-16,12,-16,0,17); g.pop()
     end
     function V.draw(w,height)
-        h.backdrop(w,height,'REWARD DICE','EARNED TOGETHER. ROLLED BY YOU.')
+        h.backdrop(w,height,'THE REWARD TABLE','YOUR SPOILS. YOUR MOMENT. SEND IT.')
         local s=BT.state; local p=s and s.players[tostring(BT.client.id)]
         if not p or not s.dice then h.txt('Start a party run to earn reward dice.',60,230,30,h.ink); return end
         renderer.warm()
@@ -84,24 +103,39 @@ return function(U,h)
         local a=BT.dice.animations[tostring(seat)]; local roll=a and a.roll
         local challenge=s.dice.rolls[tostring(seat)]
         challenge=challenge and challenge.status=='challenge' and challenge or nil
-        local color=roll and roll.die=='red' and red or roll and roll.die=='boss' and violet or gold
+        local busy=roll and a.elapsed<roll.duration
+        if V.preview and not busy and roll and V.preview~=roll.die then a=nil;roll=nil end
+        local kind=challenge and 'boss' or roll and roll.die or V.preview or ((player.dice_boss or 0)>0 and 'boss' or 'gold')
+        local color=kind=='red' and red or kind=='boss' and violet or gold
         button('WHEEL PRIZES',990,124,230,32,function() U.screen='boss_rewards' end,violet)
         h.rect(60,190,735,482,h.panel,18)
-        h.txt(player.name..' / '..(roll and (roll.die=='gold' and 'GOLD D6' or roll.die=='red' and 'RED D20' or 'BOSS WHEEL') or 'YOUR DICE TRAY'),85,207,28,color,685,'center')
+        h.rect(78,207,699,53,{0.10,0.16,0.14},9)
+        h.txt(kind=='gold' and 'GOLD D6 / CASH DROP' or kind=='red' and 'RED D20 / NEXT BLIND MULT' or 'BOSS WHEEL / ALL GOOD THINGS',93,217,28,color,669,'center')
+        h.txt(player.name,94,273,17,h.muted,170)
         local shake=reduced() and 0 or V.shake
         g.push(); g.translate(math.sin(V.time*100)*shake*2,math.cos(V.time*87)*shake*1.5)
         local pose=a and a.pose
         if challenge then
-            local c=challenge.challenge;local progress=c.hits/c.required
-            h.txt('FUCK THE TABLE',92,262,55,red,665,'center')
-            h.txt('SPAM SPACE',92,332,39,gold,665,'center')
-            h.txt(c.hits..' / '..c.required..' PRESSES',92,393,45,h.ink,665,'center')
-            h.rect(115,465,620,36,{0.08,0.10,0.10},8)
-            h.col(gold);g.rectangle('fill',122,472,606*progress,22,5,5)
-            h.txt(string.format('%.1fs',math.max(0,c.duration-c.elapsed)),92,522,42,red,665,'center')
-            h.txt('WIN: GUARANTEED JACKPOT\nMISS: YOUR NORMAL WHEEL SPIN',92,580,23,h.muted,665,'center')
-        elseif (roll and roll.die=='boss') or (not roll and (p.dice_boss or 0)>0) then
+            local c=challenge.challenge
+            local remaining=math.max(0,c.duration-c.elapsed)
+            h.txt('FUCK THE TABLE',92,296,49,red,665,'center')
+            h.txt('32 PRESSES. 5 SECONDS. ONE JACKPOT.',92,354,23,h.muted,665,'center')
+            local press=reduced() and 0 or V.space.x
+            g.push();g.translate(425,423+press*5);g.scale(1-press*0.035,1-press*0.06)
+            h.rect(-144,-32,288,63,gold,9);h.txt('SPACE',-136,-22,40,{0.10,0.13,0.10},272,'center');g.pop()
+            h.txt(c.hits..' / '..c.required,112,475,34,h.ink,620,'center')
+            for i=1,c.required do
+                local x=116+(i-1)*19.3
+                h.col(i<=c.hits and gold or {0.10,0.15,0.13});g.rectangle('fill',x,523,16,14,2,2)
+            end
+            h.rect(115,554,620,15,{0.08,0.12,0.10},4)
+            h.col(remaining<1.5 and red or gold);g.rectangle('fill',118,557,614*remaining/c.duration,7)
+            h.txt(string.format('%.1fs',remaining),100,576,34,remaining<1.5 and red or gold,650,'center')
+            h.txt('PRESS AND RELEASE / WIN = PERFECT HUNDRED',100,632,20,h.muted,650,'center')
+        elseif kind=='boss' then
+            g.push();g.translate(425,420);g.scale(V.launch.x*0.92);g.translate(-425,-410)
             V.wheel(pose and pose.angle or (reduced() and 0 or V.time*0.04),roll and a.elapsed>=roll.duration and roll.face or nil)
+            g.pop()
         else
             renderer.tray(425,478,48)
             if not pose then
@@ -113,12 +147,18 @@ return function(U,h)
             if a and a.elapsed<a.roll.duration and not reduced() and BT.config.effects then
                 for i=4,1,-1 do renderer.die(H.sample(a.frames,math.max(0,a.elapsed-i*0.035)),roll.die,425,478,48,0.055*(5-i)) end
             end
-            renderer.die(pose,roll and roll.die or 'gold',425,478,48)
+            local bounce=reduced() and 0 or V.impact.x
+            g.push();g.translate(425,478);g.scale(V.launch.x*(1+bounce*0.045),V.launch.x*(1-bounce*0.07));g.translate(-425,-478)
+            renderer.die(pose,kind,425,478,48);g.pop()
+            local age=V.impact_time and V.time-V.impact_time or 1
+            if not reduced() and BT.config.effects and age<0.45 then
+                h.col(color,(1-age/0.45)*0.32);g.setLineWidth(2);g.ellipse('line',425,479,70+age*125,25+age*35)
+            end
         end
         g.pop()
         if challenge then
         elseif roll and a.elapsed>=roll.duration then
-            local age=math.max(0,V.time-(V.reveal_time or V.time)); local pop=reduced() and 1 or 1+math.sin(age*19)*math.exp(-age*6)*0.17
+            local pop=reduced() and 1 or V.prize.x
             g.push(); g.translate(425,600); g.scale(pop)
             local headline=roll.die=='gold' and ('+$'..roll.payout) or roll.die=='red' and ('+'..roll.face..' MULT') or (roll.face==100 and 'JACKPOT / ' or '')..roll.reward.name
             h.txt(headline,-325,-23,roll.die=='boss' and 36 or 58,color,650,'center'); g.pop()
@@ -131,32 +171,38 @@ return function(U,h)
                 h.txt(table.concat(permanent,' / '),80,627,17,h.ink,695,'center')
                 h.txt(#nextblind>0 and ('NEXT BLIND: '..table.concat(nextblind,' / ')) or 'ALL GOOD. NO DOWNSIDES.',80,651,17,h.muted,695,'center')
             else h.txt(roll.die=='red' and (roll.face==20 and 'NATURAL 20 / NEXT BLIND POWERED UP' or 'EVERY HAND IN YOUR NEXT BLIND') or ('ROLLED '..roll.face..' / $5 PER PIP'),100,645,20,h.muted,650,'center') end
-        else h.txt(roll and (roll.die=='boss' and 'SPINNING... WATCH THE POINTER.' or 'TUMBLING... LET THE PHYSICS DECIDE.') or 'CHOOSE A DIE AND SEND IT FLYING.',100,620,24,h.muted,650,'center') end
+        else
+            h.txt(roll and (kind=='boss' and 'ROUND AND ROUND...' or 'LET IT BOUNCE.') or (kind=='boss' and 'EVERY SECTOR WINS.' or kind=='red' and '+1 TO +20 MULT / ONE BLIND' or '$5 PER PIP / NO BAD ROLLS'),100,605,29,color,650,'center')
+            h.txt(roll and 'THE RESULT IS LOCKED. ENJOY THE RIDE.' or 'Pick your reward on the right to roll.',100,644,19,h.muted,650,'center')
+        end
         local section=U.group or function(_,draw) draw() end
         section(0.04,function()
         h.rect(821,185,413,134,h.panel,12)
-        h.txt('GOLD D6  x'..(p.dice_gold or 0),835,195,29,gold,385)
+        h.txt('GOLD D6  x'..(p.dice_gold or 0),839,195,29,gold,277)
+        button('LOOK',1125,197,94,28,function() V.preview='gold' end,gold)
         h.txt('$5 x face / $5-$30 to your wallet',835,231,20,h.muted,385)
-        button('ROLL GOLD D6',835,265,385,43,function() V.selected=BT.client.id; V.impacts=0; BT.dice.roll('gold') end,gold,BT.dice.available('gold'))
+        button('ROLL GOLD D6',835,265,385,43,function() V.selected=BT.client.id; V.preview=nil; V.impacts=0; BT.dice.roll('gold') end,gold,BT.dice.available('gold'))
         end)
         section(0.085,function()
         h.rect(821,324,413,134,h.panel,12)
-        h.txt('RED D20  x'..(p.dice_red or 0),835,332,29,red,385)
+        h.txt('RED D20  x'..(p.dice_red or 0),839,334,29,red,277)
+        button('LOOK',1125,336,94,28,function() V.preview='red' end,red)
         h.txt('+1 to +20 Mult for the next blind',835,370,20,h.muted,385)
-        button('ROLL RED D20',835,402,385,43,function() V.selected=BT.client.id; V.impacts=0; BT.dice.roll('red') end,red,BT.dice.available('red'))
+        button('ROLL RED D20',835,402,385,43,function() V.selected=BT.client.id; V.preview=nil; V.impacts=0; BT.dice.roll('red') end,red,BT.dice.available('red'))
         end)
         section(0.13,function()
         h.rect(821,463,413,197,h.panel,12)
-        h.txt('BOSS WHEEL  x'..(p.dice_boss or 0),835,468,29,violet,385)
+        h.txt('BOSS WHEEL  x'..(p.dice_boss or 0),839,473,29,violet,277)
+        button('LOOK',1125,475,94,28,function() V.preview='boss' end,violet)
         h.txt('One spin per boss win / 21 good rewards',835,506,20,h.muted,385)
-        button('SPIN BOSS WHEEL',835,538,385,43,function() V.selected=BT.client.id; V.impacts=0; BT.dice.roll('boss') end,violet,BT.dice.available('boss'))
-        button('FUCK THE TABLE',835,591,385,43,function() V.selected=BT.client.id;V.impacts=0;BT.dice.roll('boss',true) end,red,BT.dice.available('boss'))
-        h.txt('32 Space presses / 8 seconds / uses 1 spin',835,641,17,h.muted,385)
+        button('SPIN BOSS WHEEL',835,538,385,43,function() V.selected=BT.client.id; V.preview=nil; V.impacts=0; BT.dice.roll('boss') end,violet,BT.dice.available('boss'))
+        button('FUCK THE TABLE',835,591,385,43,function() V.selected=BT.client.id;V.preview=nil;V.impacts=0;BT.dice.roll('boss',true) end,red,BT.dice.available('boss'))
+        h.txt('32 Space presses / 5 seconds / uses 1 spin',835,641,17,h.muted,385)
         end)
         h.txt('NEXT: +'..(p.dice_next_mult or 0)..' MULT / +'..(p.dice_next_chips or 0)..' CHIPS',835,666,18,violet,385)
         if not p.ready then h.txt('REFRESHES: '..(G.GAME.bt_boss_rerolls or 0)..' / H+'..(p.dice_next_hands or 0)..' D+'..(p.dice_next_discards or 0),835,688,17,gold,385) end
         for i=1,4 do local q=s.players[tostring(i)]; if q then
-            button((i==BT.client.id and 'YOU' or q.name),60+(i-1)*186,688,174,34,function() V.selected=i; V.impacts=0 end,seat==i and color or h.muted)
+            button((i==BT.client.id and 'YOU' or q.name),60+(i-1)*186,688,174,34,function() V.selected=i; V.preview=nil; V.impacts=0 end,seat==i and color or h.muted)
         end end
         if p.ready and (s.phase=='prepare' or s.phase=='shop') then button('UNREADY TO ROLL',835,688,385,34,BT.client.ready,red) end
         h.txt(BT.dice.busy() and 'YOUR DIE IS RESOLVING. KEEP THIS GAME OPEN.' or 'Free rewards. Roll while unready in the shop or between blinds.',60,730,20,h.muted,870)

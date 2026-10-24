@@ -1,5 +1,5 @@
 -- Host-timed Space challenge. A failure keeps the ordinary wheel reward.
-local Q={DURATION=8,REQUIRED=32,MAX_RATE=20,BURST=2}
+local Q={DURATION=5,REQUIRED=32,MAX_RATE=20,BURST=2}
 function Q.begin(m,roll)
     roll.status='challenge'
     roll.challenge={started=m.now or 0,duration=Q.DURATION,required=Q.REQUIRED,hits=0,taps=0,elapsed=0}

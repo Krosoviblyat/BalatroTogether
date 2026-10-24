@@ -1,5 +1,14 @@
 # Test results
 
+## 0.7.1-dev — Windows invite ABI and reward presentation — 2026-10-23
+
+196 Lua checks pass with syntax for 64 Lua files. New coverage dispatches invitation payloads through both Windows callback vtable overloads, checks exact 64-bit lobby IDs and failure filtering, and verifies the five-second host deadline immediately before and exactly at expiration.
+
+The old Windows vtable was reproduced through Steam's actual dispatcher: one real LobbyEnter_t event called slot 1 and never slot 0. With the repaired production registration, that real Steam-dispatched event delivered the exact QA lobby ID. No real friends were invited. Seven native invitation checks additionally verify OS cold-launch recovery, registration and accepted lobby/rich-presence fixtures routed from the main menu through the vtable; these fixtures intercept the final join transport. This corrects the earlier direct-handler test, which bypassed the faulty ABI. Cross-account invitation receipt and closed-game launch still require a second account/device.
+
+Six reward checks passed in two isolated native game copies: gold face-to-cash, red d20, a host-owned five-second timer, 32 separate Space presses securing Perfect Hundred, a missed deadline resolving normally, and rendering at 960x600/1920x1080 with Reduced Motion. The native lobby BETA badge, wheel, rolling dice, payout, Space challenge and prize list were visually reviewed. All live game files stayed unchanged; no live install or saves were edited. Existing package signatures and pinned dependencies are preserved; installer/update validation is recorded in the setup package.
+
+
 ## 0.7.0-dev — party features and Cryptid transition repair — 2026-10-23
 
 193 Lua checks pass with syntax for 64 Lua files. New coverage includes native tutorial/menu-wipe start guards, local held-key repeat and UTF-8 editing, majority vote ties/expiry/bots/stale positions, native skip acknowledgements, data-only checkpoint/chunk validation, large escaped-string parsing, stopped native GC, original saved seats and authorized absent-seat retirement. Existing account authorization, Steam invite dispatch, pots, rewards, Cryptid and Amulet regressions also pass.

@@ -56,7 +56,8 @@ test('winning Space challenge deterministically lands on jackpot and pays once',
 end)
 test('missed challenge expires on the host and retains a normal wheel payout',function()
     local m,r=challenge();local expected=S.Dice.Wheel.spin(1).face;assert(expected~=100)
-    S.Dice.QTE.tick(m,8.01);assert(r.status=='rolling' and r.face==expected and not r.force and not r.challenge.won)
+    assert(r.challenge.duration==5)
+    S.Dice.QTE.tick(m,5.01);assert(r.status=='rolling' and r.face==expected and not r.force and not r.challenge.won)
     assert(act(m,1,'dice_finish',{roll=r.id}));assert(not m.players[1].dice_rolling)
 end)
 test('repeated, cross-seat and too-fast taps cannot manufacture a QTE win',function()
@@ -66,7 +67,17 @@ test('repeated, cross-seat and too-fast taps cannot manufacture a QTE win',funct
     for tap=2,100 do assert(act(m,1,'dice_qte_tap',{roll=r.id,tap=tap})) end
     assert(r.challenge.hits<=6 and r.status=='challenge')
     m.players[1].ready=false;assert(not act(m,1,'ready',{ready=true,round=0,ante=1,index=1}))
-    assert(not m:restart('AGAIN'));S.Dice.QTE.tick(m,9);assert(r.status=='rolling')
+    assert(not m:restart('AGAIN'));S.Dice.QTE.tick(m,5.01);assert(r.status=='rolling')
+end)
+
+test('jackpot accepts the last press before five seconds and rejects the exact deadline',function()
+    for _,last in ipairs({4.99,5}) do
+        local m,r=challenge()
+        for tap=1,31 do m.now=tap*0.15;assert(act(m,1,'dice_qte_tap',{roll=r.id,tap=tap})) end
+        m.now=last;act(m,1,'dice_qte_tap',{roll=r.id,tap=32})
+        assert(r.status=='rolling' and r.challenge.won==(last<5))
+        assert((r.force==100)==(last<5))
+    end
 end)
 test('forced jackpot spins retain ordinary wheel physics and correct final pointer across seeds',function()
     for seed=1,200 do local r=S.Dice.Wheel.spin(seed,100);assert(r.face==100 and r.settled and r.duration>5 and r.travel>6*math.pi*2) end

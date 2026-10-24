@@ -1,6 +1,6 @@
 # Balatro Together — four-player cooperative testing build
 
-**0.7.0-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
+**0.7.1-dev. Endless Cryptid co-op development build.** Read KNOWN_ISSUES.md and TEST_RESULTS.md before using it. No public hosting or paid services are required.
 
 This build bundles Cryptid 0.5.17c with Amulet 3.6.1. Large native scores, Cryptid decks and card donations use the pinned compatibility layer. Read [CRYPTID.md](CRYPTID.md) for co-op rule adaptations and limits.
 
@@ -14,7 +14,7 @@ The UI uses the native pixel font, cream lettering, stepped raised borders, soft
 
 **F8 -> Reward Dice** gives each player a gold d6 and red d20 after every two won team blinds, plus a **Boss Reward Wheel spin after every won boss blind**. Gold pays $5 per pip; red adds +1 to +20 Mult for the next blind. The spinning wheel has 21 positive reward packages, including cash, poker-hand levels, free shop refreshes and powerful next-blind bonuses. Save your rewards and redeem them while unready. Dice tumble; the wheel spins, ticks, slows down and celebrates its winning sector. See [DICE.md](DICE.md).
 
-**Fuck the Table:** spend one earned boss spin on a Space challenge. Press and release Space 32 times within eight seconds for a guaranteed Perfect Hundred jackpot; holding the key does not count. Missing the challenge gives the normal wheel spin. **Endless is on by default:** clearing the ante-eight boss continues into ante nine with your current builds, pots and rewards.
+**Fuck the Table:** spend one earned boss spin on a Space challenge. Press and release Space 32 times within five seconds for a guaranteed Perfect Hundred jackpot; holding the key does not count. Missing the challenge gives the normal wheel spin. **Endless is on by default:** clearing the ante-eight boss continues into ante nine with your current builds, pots and rewards.
 
 **Owner admin panel:** press **/** to open the account-locked controls for cash, dice/wheel spins, hand levels, next-blind bonuses and run recovery. The host verifies your Steam identity for each command. Select a recipient; grants require them to be unready between blinds. Sync retry, disconnected-seat retirement and a confirmed same-seed restart are included. See [ADMIN.md](ADMIN.md).
 

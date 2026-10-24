@@ -1,4 +1,4 @@
-BALATRO TOGETHER + CRYPTID 0.7.0-dev — WINDOWS x64
+BALATRO TOGETHER + CRYPTID 0.7.1-dev — WINDOWS x64
 
 EASY INSTALL
 1. Everyone closes Balatro.
@@ -11,7 +11,7 @@ EASY INSTALL
    Everyone Ready Up; the host clicks Start Run.
 
 The installer includes Lovely 0.10.0, Steamodded 26.1002.0, Amulet 3.6.1,
-Cryptid 0.5.17c and Together 0.7.0-dev. No extra downloads are needed.
+Cryptid 0.5.17c and Together 0.7.1-dev. No extra downloads are needed.
 You need your own Steam copy of Balatro 1.0.1o-FULL on Windows x64.
 If the game is not found, click Find game and select Balatro.exe.
 Install the SAME bundle on every player's computer. Keep Steam online.
@@ -70,7 +70,7 @@ A loss burns the pending bets in each pot, preserving saved winnings.
 F8 -> Reward Dice: each two won blinds earns a gold d6 ($5 per pip) and
 red d20 (+Mult on hands in the next blind). Boss wins earn a wheel spin.
 FUCK THE TABLE uses one earned spin: press/release Space 32 times within
-eight seconds to guarantee the jackpot. Holding Space does not count.
+five seconds to guarantee the jackpot. Holding Space does not count.
 Missing the QTE gives your ordinary wheel spin.
 Endless is automatic: after the ante-eight boss, the party continues to
 ante nine with its builds, rewards and pots. Start fresh after updating.

@@ -1,3 +1,11 @@
+# 0.7.1-dev — Steam invitation repair and reward-table polish
+
+- Repair the Windows Steam callback vtable: normal accepted invitations were calling the empty call-result slot. Preserve exact 64-bit IDs and route accepted lobby/rich-presence events from the main menu.
+- Add regression checks through the Windows vtable slots, plus a real Steam-dispatched lobby event in the private QA lab.
+- Refresh the reward table with native cut-corner panels, separate die previews, spring roll entrances, impact squash and landing rings, a beveled wheel rim, spring pointer ticks and payout stamps. Existing physics and authoritative reward outcomes stay the same.
+- Fuck the Table now requires 32 separate Space presses in **five seconds**, timed by the host. Add a tactile Space keycap, press meter and countdown. Reduced Motion remains supported.
+- Clearly mark the lobby as **BETA** beside its version.
+
 # 0.7.0-dev — saved parties, table codes and skip votes
 
 - Fix Cryptid Jimbo nil crashes by waiting for native tutorials/menu wipes instead of clearing their pending construction events. Native onboarding retains its screen and input.

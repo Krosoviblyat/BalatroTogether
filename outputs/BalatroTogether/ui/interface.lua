@@ -311,6 +311,8 @@ end
 local function lobby(w,h)
     local s=BT.state
     backdrop(w,h,s and s.phase=='resuming' and 'WELCOME BACK.' or 'YOUR TABLE',s and s.phase=='resuming' and 'ORIGINAL PLAYERS JOIN WITH THE NEW CODE. EVERY BUILD RETURNS.' or s and 'GET READY. YOUR NEXT RUN STARTS TOGETHER.' or 'FINDING YOUR FRIEND\'S TABLE...')
+    rect(w-271,87,214,40,colors[2],7)
+    txt('BETA / '..BT.version,w-263,94,23,bg,198,'center')
     local start=math.max(190,h*0.24); local gap=18; local width=math.min((w-130)/4,264); local x=(w-width*4-gap*3)/2
     for i=1,4 do
         local p=s and s.players[tostring(i)]; local px=x+(i-1)*(width+gap); local c=palette(i)
