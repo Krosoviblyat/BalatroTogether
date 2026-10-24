@@ -96,9 +96,16 @@ local function write_archive(archive)
     local key=assert(Catalog.key(archive.model)):gsub('%-','%%-');local files={}
     for _,file in ipairs(fs.getDirectoryItems(S.directory)) do
         local serial=file:match('^%d+%-'..key..'%-(%d+)%.btparty$')
-        if serial then files[#files+1]={name=file,serial=tonumber(serial)} end
+        if serial then
+            -- A damaged generation is not a recovery copy. Otherwise saving
+            -- again after a bad disk write could prune the last good fallback.
+            local candidate=S.directory..'/'..file;local info=fs.getInfo(candidate)
+            local text=info and info.size<=22000000 and fs.read(candidate)
+            local digest,body;if type(text)=='string' then digest,body=text:match('^BTPARTY1\n([0-9a-f]+)\n(.*)$') end
+            if digest and #digest==64 and hash(body)==digest then files[#files+1]={name=file,serial=tonumber(serial)} end
+        end
     end
-    table.sort(files,function(a,b) return a.serial>b.serial end)
+    table.sort(files,function(a,b) if a.serial~=b.serial then return a.serial>b.serial end;return a.name>b.name end)
     for i=3,#files do fs.remove(S.directory..'/'..files[i].name);S.catalog_cache[S.directory..'/'..files[i].name]=nil end
     S.refresh()
 end
