@@ -208,8 +208,9 @@ namespace TogetherSetup {
         }
     }
     internal class GitHubUpdates {
-        readonly string token;
-        public GitHubUpdates(string credential) { token=credential; }
+        // Public releases never read or transmit a saved token. Keep the constructor
+        // shape for existing test fixtures and source compatibility.
+        public GitHubUpdates(string credential) { }
         public static bool AssetHost(Uri uri) {
             return uri.Scheme=="https"&&uri.Port==443&&String.IsNullOrEmpty(uri.UserInfo)&&
                 (uri.Host=="api.github.com"||uri.Host=="release-assets.githubusercontent.com"||uri.Host=="objects.githubusercontent.com");
@@ -221,7 +222,7 @@ namespace TogetherSetup {
                 if(!AssetHost(uri))throw new Exception("Unexpected update download host.");
                 var request=(HttpWebRequest)WebRequest.Create(uri); request.AllowAutoRedirect=false; request.Timeout=20000; request.ReadWriteTimeout=30000;
                 request.UserAgent="BalatroTogether-Updater/"+Build.Version; request.Accept=api.Contains("/assets/")?"application/octet-stream":"application/vnd.github+json";
-                if(uri.Host=="api.github.com") { request.Headers["X-GitHub-Api-Version"]="2026-03-10"; if(token.Length>0)request.Headers["Authorization"]="Bearer "+token; }
+                if(uri.Host=="api.github.com") { request.Headers["X-GitHub-Api-Version"]="2026-03-10"; }
                 try {
                     using(var response=(HttpWebResponse)request.GetResponse()) {
                         if((int)response.StatusCode>=300&&(int)response.StatusCode<400) { string location=response.Headers["Location"]; if(String.IsNullOrEmpty(location))throw new Exception("Missing update redirect."); uri=new Uri(uri,location); continue; }
@@ -236,8 +237,8 @@ namespace TogetherSetup {
                 } catch(WebException e) {
                     var response=e.Response as HttpWebResponse;
                     if(response!=null)using(response) {
-                        if(response.StatusCode==HttpStatusCode.Unauthorized||response.StatusCode==HttpStatusCode.NotFound)throw new Exception("Private updates need GitHub access. Use GitHub access below with a token that can read this repository.");
-                        if(response.StatusCode==HttpStatusCode.Forbidden)throw new Exception("GitHub refused this request. Check token permissions or try again after the API rate limit resets.");
+                        if(response.StatusCode==HttpStatusCode.Unauthorized||response.StatusCode==HttpStatusCode.NotFound)throw new Exception("The public release could not be found. Open Releases to check availability; no GitHub login is required.");
+                        if(response.StatusCode==HttpStatusCode.Forbidden)throw new Exception("GitHub is rate-limiting downloads or refused the request. Try again later or download setup from Releases. No token is needed.");
                     }
                     throw new Exception("Update check could not connect. You can still play the installed build.");
                 }
@@ -295,8 +296,8 @@ namespace TogetherSetup {
             Progress.SetBounds(16,103,486,9);activity.Controls.Add(Progress);
             automatic.Text="Keep Together up to date before playing";automatic.Checked=settings.automatic;automatic.SetBounds(354,403,510,27);automatic.ForeColor=Studio.Cream;automatic.CheckedChanged+=(sender,e)=>{settings.automatic=automatic.Checked;UpdateStorage.Save(user,settings);};Controls.Add(automatic);
             versions.Text="Launcher "+Build.Version+" / installed mod: not checked";versions.SetBounds(350,440,520,22);versions.ForeColor=Studio.Cream;versions.Font=new Font("Segoe UI",9);Controls.Add(versions);
-            Controls.Add(Studio.Label("Private updates need your own GitHub repository access.",350,469,520,25,9,Studio.Muted,false));
-            access=AddButton("GitHub access",350,516,150,false,()=>ConfigureAccess());
+            Controls.Add(Studio.Label("Public signed updates / no GitHub account or token needed.",350,469,520,25,9,Studio.Muted,false));
+            access=AddButton("Releases",350,516,150,false,()=>Process.Start(new ProcessStartInfo("https://github.com/"+UpdatePolicy.Repository+"/releases"){UseShellExecute=true}));
             check=AddButton("Check updates",510,516,162,false,async()=>await RunUpdate(false));
             play=AddButton("Play Together",682,516,188,true,async()=>await Play());AcceptButton=play;
             ReducedMotion=settings.reduced_motion;MotionChanged+=value=>{settings.reduced_motion=value;UpdateStorage.Save(user,settings);};
@@ -324,9 +325,6 @@ namespace TogetherSetup {
                 Process.Start(new ProcessStartInfo(exe,"--disable-console"){WorkingDirectory=game});Close();
             }catch(Exception error){Report(error.Message);}
             finally{busy=false;if(!IsDisposed){play.Enabled=true;check.Enabled=true;}}
-        }
-        void ConfigureAccess() {
-            if(GitHubAccess.Show(this,user,ReducedMotion))Report("GitHub access updated. Click Check updates to test access.");
         }
         async Task RunUpdate(bool launchAfter,bool online=true) {
             if(busy)return;

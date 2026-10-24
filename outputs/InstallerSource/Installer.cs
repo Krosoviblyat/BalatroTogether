@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Zero Crew")]
-[assembly: AssemblyVersion("0.8.3.0")]
-[assembly: AssemblyFileVersion("0.8.3.0")]
+[assembly: AssemblyVersion("0.8.4.0")]
+[assembly: AssemblyFileVersion("0.8.4.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -281,9 +281,9 @@ namespace TogetherSetup {
             activity.Controls.Add(Studio.Label("INSTALLATION",16,12,450,18,8,Studio.Red,true));
             status.SetBounds(16,36,484,43);status.Font=new Font("Segoe UI",10,FontStyle.Bold);status.ForeColor=Studio.Cream;status.BackColor=Studio.Panel;status.Text=String.IsNullOrEmpty(selected)?"Find Balatro to get started.":"Balatro found. Ready when you are.";activity.Controls.Add(status);
             bar=Progress;bar.SetBounds(16,82,486,9);activity.Controls.Add(bar);
-            result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Setup "+Build.Version+" / bundled gameplay "+InstalledBuild.GameplayVersion+". Close Balatro first.";Controls.Add(result);
-            play=AddButton("GitHub access",350,516,251,false,()=>{
-                if(!done){if(GitHubAccess.Show(this,user,ReducedMotion))Report("Access saved. Click Check & install latest.");return;}
+            result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Setup "+Build.Version+" / bundled gameplay "+InstalledBuild.GameplayVersion+". Public updates; no login needed.";Controls.Add(result);
+            play=AddButton("Releases",350,516,251,false,()=>{
+                if(!done){Process.Start(new ProcessStartInfo("https://github.com/"+UpdatePolicy.Repository+"/releases"){UseShellExecute=true});return;}
                 if(Detection.Running()){MessageBox.Show(this,"Balatro is already open.");return;}
                 if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)){MessageBox.Show(this,"Close setup and open Play Balatro Together normally from your desktop.");return;}
                 string launcher=Path.Combine(UpdateStorage.Root(user),"Launcher","Play Balatro Together.exe");Process.Start(new ProcessStartInfo(launcher,"--play"){WorkingDirectory=Path.GetDirectoryName(launcher)});Close();
@@ -347,6 +347,7 @@ namespace TogetherSetup {
             Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
             try {
                 if(args.Length==4 && args[0]=="--setup-flow-self-test") return SetupFlowTests.Run(args[1],args[2],args[3]);
+                if(args.Length==2 && args[0]=="--public-update-self-test") return SetupFlowTests.PublicUpdateProbe(args[1]);
                 if(args.Length==2 && args[0]=="--network-self-test") return SetupFlowTests.NetworkProbe(args[1]);
                 if(args.Length>0 && args[0]=="--self-test") return SelfTests.Run(args[1]);
                 if(args.Length==2 && args[0]=="--updater-self-test")return UpdaterTests.Run(args[1]);

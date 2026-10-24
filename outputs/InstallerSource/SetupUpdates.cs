@@ -24,7 +24,7 @@ namespace TogetherSetup {
         }
         public static Result Check(UserPaths user,string stage) {
             var installed=InstalledBuild.Inspect(user);string current=TestCurrentVersion??Build.Version;
-            string floor=Floor(user,installed,current);var client=ClientFactory(UpdateStorage.Token(user));
+            string floor=Floor(user,installed,current);var client=ClientFactory("");
             return new Result {Client=client,Offer=client.Find(stage,current,floor),Floor=floor};
         }
         public static void CanInstallBundle(UserPaths user) {

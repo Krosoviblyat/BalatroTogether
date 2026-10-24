@@ -1,46 +1,25 @@
-# Together setup / launcher 0.8.3-dev
+# Together public setup / launcher 0.8.4-dev
 
-Gameplay stays **0.8.2-dev**. The executable version and installed gameplay
-version are shown separately. This is an installer/update-flow repair.
+Public updates without GitHub login
 
-The old 0.8.0 setup installs its own embedded 0.8.0 bundle. Signature checks
-showed it could accept a signed update; they did not prove its install button
-fetched a later release. Old downloaded EXEs cannot gain the repair retroactively.
-Get the 0.8.3 full setup once, then use its desktop launcher.
+The repository is public. Setup and the desktop launcher now use anonymous
+release downloads, ignore old stored tokens, and show Releases instead of a
+GitHub-access dialog. No account or token is required to install/update.
 
-**Check & install latest** checks published signed releases before installation.
-A newer setup is downloaded, hash/signature verified, and handed off to install.
-GitHub access is available in setup. This repository is private: each player
-needs their own account access/token. Browser login alone is not updater access.
-The encrypted token stays under that Windows account; no owner token is bundled.
+Use Check & install latest with Balatro closed, then the desktop Play Together
+shortcut. Existing 0.7+ launchers can receive the signed update; very old setup
+EXEs still only install their original bundle, so download this setup once.
 
-If verification or access fails, setup does not silently install an old local
-bundle. It offers a separate offline link labelled **latest NOT checked**. The
-launcher performs a new check on Play when automatic updates are enabled. A
-failed check offers **Play installed** explicitly. Opening the launcher checks
-without launching the game. Local bundle installation respects version floors.
+Installer/launcher: 0.8.4-dev. Bundled gameplay: unchanged 0.8.2-dev.
+Different Cryptid gamesets still cannot join the same party. Match the host's
+gameset and custom/experimental rules. Profile choices are intentionally preserved.
 
-Setup bundles Lovely, Steamodded, Cryptid, Amulet and Together gameplay 0.8.2.
-It refuses to change a running game and backs up/rolls back recognized replaced
-mods and saves. No owned game executable or runtime files are distributed.
-Signatures on update metadata are separate from Windows Authenticode.
+Integrity checks, signed manifests, backups and running-game protection remain.
+Real anonymous-network production-button tests download the published signed
+installer and execute its engine only inside isolated test game/profile folders.
+No live game, profile, Steam lobby or save is modified by those tests.
 
-The top manual/source export contains Manual Install.zip and InstallerSource.
-Build.cmd compiles Installer.cs, SelfTests.cs, Updater.cs, UpdaterTests.cs,
-UpdateKey.cs, StudioUI.cs, UIShowcase.cs, Build.cs, SetupUpdates.cs,
-GitHubAccess.cs and SetupFlowTests.cs with .NET Framework 4.8. It regenerates
-the user-supplied icon and source resource. No Python is required by players.
-The private publisher signing key is never included.
-
-Setup-flow checks drive the actual Windows buttons using fixture HTTP responses
-with real signed releases, and execute the downloaded installer's production
-engine/shortcut commit in isolated paths. Authenticated internet downloading
-is not claimed by those fixtures. A separate real unauthenticated GitHub API
-probe confirms private-access refusal. Reports state these limits explicitly.
-
-Original code MIT. AI-assisted development with Codex. Dependencies retain
-their included licenses and exact upstream sources. See LICENSE.txt and notices.
-
+Download the newest full EXE from [Releases](https://github.com/Krosoviblyat/BalatroTogether/releases).
 
 ## Gameplay source
 

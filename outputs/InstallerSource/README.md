@@ -1,42 +1,34 @@
-# Together setup / launcher 0.8.3-dev
+# Public Zero Crew setup / launcher 0.8.4-dev
 
-Gameplay stays **0.8.2-dev**. The executable version and installed gameplay
-version are shown separately. This is an installer/update-flow repair.
+BALATRO TOGETHER SETUP 0.8.4 / GAMEPLAY 0.8.2 BETA
 
-The old 0.8.0 setup installs its own embedded 0.8.0 bundle. Signature checks
-showed it could accept a signed update; they did not prove its install button
-fetched a later release. Old downloaded EXEs cannot gain the repair retroactively.
-Get the 0.8.3 full setup once, then use its desktop launcher.
+1. Close Balatro.
+2. Open BalatroTogether-Setup-0.8.4-dev.exe.
+3. Click Check & install latest. The game is normally found automatically.
+4. Use Play Balatro Together on your desktop after installation.
 
-**Check & install latest** checks published signed releases before installation.
-A newer setup is downloaded, hash/signature verified, and handed off to install.
-GitHub access is available in setup. This repository is private: each player
-needs their own account access/token. Browser login alone is not updater access.
-The encrypted token stays under that Windows account; no owner token is bundled.
+PUBLIC UPDATES: no GitHub account, token or invitation is required.
+Setup checks published signed releases before installing. The desktop launcher
+checks on opening and again before Play when automatic updates are enabled.
+Old saved tokens are ignored. The Releases button opens the public download page.
+RSA-SHA256 signatures, package hashes, downgrade protection, backups and the
+running-game guard remain enabled. If a download/check fails, setup offers an
+explicit OFFLINE install and does not claim the latest version was checked.
 
-If verification or access fails, setup does not silently install an old local
-bundle. It offers a separate offline link labelled **latest NOT checked**. The
-launcher performs a new check on Play when automatic updates are enabled. A
-failed check offers **Play installed** explicitly. Opening the launcher checks
-without launching the game. Local bundle installation respects version floors.
+This installer update keeps gameplay 0.8.2, so 0.8.2 in the lobby is expected.
+All party members must have the same gameplay version and Cryptid gameset/rules.
+Installing the same package does not reset each player's personal Cryptid profile.
+The public-repository change fixes download access, not different gameset rules.
 
-Setup bundles Lovely, Steamodded, Cryptid, Amulet and Together gameplay 0.8.2.
-It refuses to change a running game and backs up/rolls back recognized replaced
-mods and saves. No owned game executable or runtime files are distributed.
-Signatures on update metadata are separate from Windows Authenticode.
+Includes Lovely 0.10.0, Steamodded 26.1002.0, Cryptid 0.5.17c, Amulet 3.6.1.
+Manual Saved Runs hub, native Harbinger and pack/scoring fixes are included.
+Saves and existing gameset choices are preserved. No owned game files bundled.
+No administrator access is needed for normal play. Installation requests Windows
+permission only if necessary to install the loader into the selected game folder.
+Original code MIT. AI-assisted development with Codex. Upstream component sources
+and licenses are included. Update signatures are separate from Windows signing.
 
-The top manual/source export contains Manual Install.zip and InstallerSource.
-Build.cmd compiles Installer.cs, SelfTests.cs, Updater.cs, UpdaterTests.cs,
-UpdateKey.cs, StudioUI.cs, UIShowcase.cs, Build.cs, SetupUpdates.cs,
-GitHubAccess.cs and SetupFlowTests.cs with .NET Framework 4.8. It regenerates
-the user-supplied icon and source resource. No Python is required by players.
-The private publisher signing key is never included.
-
-Setup-flow checks drive the actual Windows buttons using fixture HTTP responses
-with real signed releases, and execute the downloaded installer's production
-engine/shortcut commit in isolated paths. Authenticated internet downloading
-is not claimed by those fixtures. A separate real unauthenticated GitHub API
-probe confirms private-access refusal. Reports state these limits explicitly.
-
-Original code MIT. AI-assisted development with Codex. Dependencies retain
-their included licenses and exact upstream sources. See LICENSE.txt and notices.
+Build.cmd rebuilds using .NET Framework 4.8 and the exported Manual Install.zip.
+No player Python dependency. Use --public-update-self-test only with a fresh isolated
+test output directory; it downloads a release and tests its engine using a private
+copy of the owned supported executable. It never installs into the live game.

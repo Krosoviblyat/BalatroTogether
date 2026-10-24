@@ -10,14 +10,14 @@ using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 namespace TogetherSetup {
-    internal static class SetupFlowTests {
+    internal static partial class SetupFlowTests {
         public static int NetworkProbe(string parent) {
             System.Net.ServicePointManager.SecurityProtocol=System.Net.SecurityProtocolType.Tls12;
-            Directory.CreateDirectory(parent);bool refused=false;string message=null;
-            try{new GitHubUpdates("").Find(parent,"0.8.0-dev","0.8.0-dev");}
-            catch(Exception e){message=e.Message;refused=message.Contains("Private updates need GitHub access");}
-            File.WriteAllText(Path.Combine(parent,"unauthenticated-network-result.json"),new JavaScriptSerializer().Serialize(new {private_access_required=refused,message=message,network="Real unauthenticated GitHub API request; no token read or transmitted",game_files_changed=false}));
-            return refused?0:1;
+            Directory.CreateDirectory(parent);bool success=false;string message=null,version=null;
+            try{var offer=new GitHubUpdates("").Find(parent,"0.8.0-dev","0.8.0-dev");success=offer!=null;if(success)version=offer.manifest.version;}
+            catch(Exception e){message=e.Message;}
+            File.WriteAllText(Path.Combine(parent,"unauthenticated-network-result.json"),new JavaScriptSerializer().Serialize(new {public_release_verified=success,version=version,message=message,network="Real unauthenticated GitHub API and signed release manifest requests; no token read or transmitted",game_files_changed=false}));
+            return success?0:1;
         }
         sealed class FixtureClient:GitHubUpdates {
             readonly string list;readonly Dictionary<string,string> assets=new Dictionary<string,string>();
@@ -31,7 +31,7 @@ namespace TogetherSetup {
                 list=new JavaScriptSerializer().Serialize(new[]{new {tag_name="v"+m.version,draft=false,prerelease=true,assets=entries}});
             }
             public override void Download(string api,string target,long limit,Action<long> progress) {
-                Requests++;if(Fail)throw new Exception("Private updates need GitHub access. No latest-version check completed.");
+                Requests++;if(Fail)throw new Exception("Public update download unavailable. No latest-version check completed.");
                 if(api.EndsWith("/releases?per_page=100"))File.WriteAllText(target,list,UpdatePolicy.Utf8);
                 else {string source;if(!assets.TryGetValue(api,out source))throw new Exception("Unexpected fixture request");File.Copy(source,target,false);}
                 long length=new FileInfo(target).Length;if(length>limit)throw new Exception("Oversized fixture response");if(progress!=null)progress(length);
@@ -89,7 +89,7 @@ namespace TogetherSetup {
                     Show(form);((Button)All(form).Single(c=>c is Button&&c.Text=="Check & install latest")).PerformClick();Wait(()=>!Field<bool>(form,"busy"),"authentication refusal");
                     Check(blocked.Version=="0.8.0-dev"&&Field<LinkLabel>(form,"offline").Visible&&Field<Label>(form,"status").Text.Contains("Update check failed"),"Failed check silently installed or claimed latest");
                     using(var bitmap=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(bitmap,new Rectangle(0,0,form.Width,form.Height));bitmap.Save(Path.Combine(parent,"access-required.png"));}
-                    checks.Add("Private-access failure leaves old gameplay untouched and shows an explicit offline choice instead of false update success");
+                    checks.Add("Failed public download leaves old gameplay untouched and shows an explicit offline choice instead of false update success");
                     typeof(SetupForm).GetMethod("Start",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(form,new object[]{false});Wait(()=>Field<bool>(form,"done"),"explicit offline install");
                     Check(Field<Label>(form,"result").Text.Contains("OFFLINE")&&Field<Label>(form,"result").Text.Contains("NOT checked")&&Field<Label>(form,"result").Text.Contains(InstalledBuild.GameplayVersion),"Offline install falsely claimed latest or hid gameplay version");blocked.Preserved();
                     checks.Add("Explicit offline choice installs the verified bundle and visibly says the latest release was not checked");form.Close();
@@ -103,7 +103,7 @@ namespace TogetherSetup {
                 var failedLaunch=new Fixture(parent,"launchfail");SetupUpdates.ClientFactory=_=>new FixtureClient(release){Fail=true};SetupUpdates.Handoff=(exe,game)=>{throw new Exception("Failed online check repaired silently");};
                 using(var form=new LauncherForm(failedLaunch.User,failedLaunch.Game)) {
                     Show(form);((Button)All(form).Single(c=>c is Button&&c.Text=="Check updates")).PerformClick();Wait(()=>!Field<bool>(form,"busy"),"launcher authentication refusal");
-                    Check(failedLaunch.Version=="0.8.0-dev"&&Field<Label>(form,"status").Text.Contains("Private updates")&&Field<Button>(form,"play").Text=="Play installed","Launcher hid check failure behind offline repair");form.Close();
+                    Check(failedLaunch.Version=="0.8.0-dev"&&Field<Label>(form,"status").Text.Contains("Public update download unavailable")&&Field<Button>(form,"play").Text=="Play installed","Launcher hid check failure behind offline repair");form.Close();
                 }
                 checks.Add("A failed launcher check cannot silently repair from an old embedded bundle");
                 var settings=UpdateStorage.Load(blocked.User);settings.highest_version="9.0.0";UpdateStorage.Save(blocked.User,settings);bool refused=false;
