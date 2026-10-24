@@ -1,3 +1,19 @@
+# 0.8.2-dev — Saved Runs hub and free pack tags
+
+- Add a paginated Saved Runs hub. Save once per run; later saves replace that
+  visible checkpoint. Different parties and fast restarts keep separate entries
+  even with the same seed. Legacy archives are grouped by party/run identity.
+- Keep one verified fallback per run, never globally prune another run, and
+  scan/catalog archives incrementally so the hub remains responsive.
+- Let native tag packs open during prepare/skip/shop transitions and let their
+  native card choices resolve between blinds. Previously the use_card action
+  guard silently consumed the tag without opening its materialized pack.
+- Retain the skip barrier until every player's pack is closed and native blind
+  selection is settled. Clear obsolete ready flags before pack interactions.
+- Cover Spectral/Ethereal, Arcana/Charm, Celestial/Meteor, Standard and Buffoon
+  packs plus consecutive pack tags. Do not unlock checkpoint mutation or banned
+  individual progression effects. No replacement pack art or generated rewards.
+
 # 0.8.1-dev — Chromatic scoring and in-game credits
 
 - Accept finite signed native hand deltas, including The Chromatic's negative

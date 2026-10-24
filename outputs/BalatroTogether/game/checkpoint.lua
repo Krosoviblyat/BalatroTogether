@@ -1,5 +1,6 @@
-local S={clock=0,outgoing={},buffers={},directory='together/party-saves'}
+local S={clock=0,outgoing={},buffers={},directory='together/party-saves',entries={},catalog_cache={}}
 local Codec=assert(SMODS.load_file('core/save_codec.lua',BT.id))()
+local Catalog=assert(SMODS.load_file('core/save_catalog.lua',BT.id))()
 local json=assert(SMODS.load_file('core/save_json.lua',BT.id))()
 local ledger=BT.Session.Save
 local function hash(data) return love.data.encode('string','hex',love.data.hash('sha256',data)) end
@@ -37,23 +38,39 @@ local function restore_cursor(packet)
     BT.donation.counter=packet.donation_counter or 0;BT.donation.received=packet.donation_received or {}
 end
 function S.refresh()
-    local fs=love.filesystem;S.summary=nil;S.saved_file=nil
+    local fs=love.filesystem
     if not fs or not fs.getDirectoryItems then return end
     local candidates={}
     for _,name in ipairs(fs.getDirectoryItems(S.directory) or {}) do if name:match('^%d+%-[0-9a-f%-]+%.btparty$') then candidates[#candidates+1]=name end end
     table.sort(candidates,function(a,b) return a>b end)
-    for _,name in ipairs(candidates) do
-        local path=S.directory..'/'..name;local info=fs.getInfo(path)
-        if info and info.size<=22000000 then
-            local data=fs.read(path);local digest,body
-            if type(data)=='string' then digest,body=data:match('^BTPARTY1\n([0-9a-f]+)\n(.*)$') end
-            if digest and #digest==64 and hash(body)==digest then
-                local ok,value=pcall(decode,body,22000000)
-                if ok and type(value)=='table' and value.schema==1 and value.model and value.builds and value.at then
-                    S.summary={ante=value.model.ante,index=value.model.blind_index,players=value.model.intended,deck=value.model.deck,at=value.at,version=value.version,compatible=value.compat==stamp()}
-                    S.saved_file=path;return
-                end
-            end
+    S.scan={names=candidates,index=1,groups={},compat=stamp()}
+end
+function S.select(path)
+    for _,entry in ipairs(S.entries) do if entry.path==path then S.summary=entry;S.saved_file=path;return true end end
+end
+function S.scan_step()
+    local scan=S.scan;if not scan then return end
+    local name=scan.names[scan.index]
+    if not name then
+        S.entries=Catalog.list(scan.groups);S.scan=nil
+        if not S.select(S.saved_file) then S.summary=S.entries[1];S.saved_file=S.summary and S.summary.path end
+        return
+    end
+    scan.index=scan.index+1
+    local fs=love.filesystem;local path=S.directory..'/'..name;local info=fs.getInfo(path)
+    if not info or info.size>22000000 then return end
+    local cached=S.catalog_cache[path]
+    if cached and cached.size==info.size and cached.modified==info.modtime and cached.compat==scan.compat then
+        Catalog.add(scan.groups,cached.entry);return
+    end
+    local data=fs.read(path);local digest,body
+    if type(data)=='string' then digest,body=data:match('^BTPARTY1\n([0-9a-f]+)\n(.*)$') end
+    if digest and #digest==64 and hash(body)==digest then
+        local ok,value=pcall(decode,body,22000000)
+        local entry=ok and type(value)=='table' and Catalog.entry(value,path,value.compat==scan.compat)
+        if entry then
+            S.catalog_cache[path]={size=info.size,modified=info.modtime,compat=scan.compat,entry=entry}
+            Catalog.add(scan.groups,entry)
         end
     end
 end
@@ -73,11 +90,17 @@ local function write_archive(archive)
     assert(fs.write(path..'.part',bytes),'Cannot write party checkpoint')
     local folder=fs.getSaveDirectory();assert(os.rename(folder..'/'..path..'.part',folder..'/'..path),'Cannot commit party checkpoint')
     assert(fs.read(path)==bytes,'Party save verification failed')
-    S.saved_file=path;S.summary={ante=archive.model.ante,index=archive.model.blind_index,players=archive.model.intended,deck=archive.model.deck,at=archive.at,version=archive.version,compatible=true}
-    -- Retain three complete generations. Partial files are never considered.
-    local files={};for _,file in ipairs(fs.getDirectoryItems(S.directory)) do if file:match('^%d+%-[0-9a-f%-]+%.btparty$') then files[#files+1]=file end end
-    table.sort(files,function(a,b) return a>b end)
-    for i=4,#files do fs.remove(S.directory..'/'..files[i]) end
+    S.saved_file=path;S.summary=assert(Catalog.entry(archive,path,true),'Invalid saved-run identity')
+    -- Replace this run's visible checkpoint only after the new generation is
+    -- committed and verified. Keep one hidden fallback; never prune other runs.
+    local key=assert(Catalog.key(archive.model)):gsub('%-','%%-');local files={}
+    for _,file in ipairs(fs.getDirectoryItems(S.directory)) do
+        local serial=file:match('^%d+%-'..key..'%-(%d+)%.btparty$')
+        if serial then files[#files+1]={name=file,serial=tonumber(serial)} end
+    end
+    table.sort(files,function(a,b) return a.serial>b.serial end)
+    for i=3,#files do fs.remove(S.directory..'/'..files[i].name);S.catalog_cache[S.directory..'/'..files[i].name]=nil end
+    S.refresh()
 end
 function S.request(leave)
     if not BT.client.model then BT.notice('The host saves the whole party.');return end
@@ -85,8 +108,9 @@ function S.request(leave)
         if ok then BT.notice(leave and 'Save & Leave requested. Everyone finishes their shop first.' or 'Saving when everyone reaches blind selection.') end
     end)
 end
-function S.resume()
+function S.resume(path)
     if BT.state then BT.notice('Leave the current table before resuming a saved party.');return end
+    if path and (type(path)~='string' or not S.select(path)) then BT.notice('That saved run is no longer available. Refresh the Saved Runs hub.');return end
     local ok,archive=pcall(read_archive);if not ok then BT.notice(tostring(archive));return end
     if BT.compat then BT.compat.register_decks() end
     local identity=BT.steam.available();local host=archive.model.players[1]
@@ -170,6 +194,7 @@ end
 function S.update(dt)
     S.clock=S.clock+dt
     if not S.scanned then S.scanned=true;S.refresh() end
+    S.scan_step()
     local s=BT.state;local c=BT.client;local m=c.model
     if not s then S.upload_id=nil;S.restore_id=nil;S.native_started=nil;S.restore_sent=nil;S.restore_packet=nil;S.restore_error=nil;S.outgoing={};S.leave_at=nil;return end
     if S.was_resuming and s.phase~='resuming' then BT.ui.navigate(nil);BT.notice('Every saved build is restored. Ready when you are.');S.was_resuming=nil end

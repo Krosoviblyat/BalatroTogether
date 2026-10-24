@@ -72,3 +72,22 @@ Reports are local, bounded, fixed-name files in the active separate-save identit
 The friend's unspecified crash cannot be retrospectively diagnosed from a HUD
 screenshot. Test with two isolated native clients and deliberate crash capture.
 Do not modify the user's running game or personal saves.
+
+## 0.8.2 free pack tags
+Ethereal Tag invokes native G.FUNCS.use_card with card.from_tag=true from its
+new_blind_choice event, while party phase is skipping or prepare. The adapter
+previously returned without invoking native use_card unless phase was blind or
+shop. Tag code then materialized its orphan pack and removed the tag. Preserve
+native opening/choice execution for actual tag Boosters and G.pack_cards while
+between blinds, with the original compatibility guards and skip barrier intact.
+Private QA uses exact native majority skips and real pinned loader/card code;
+no live install, player saves or external friend sessions are modified.
+
+## Saved Runs hub (0.8.2)
+Catalog key is model.party_id + model.run_id, never the seed. Legacy immutable
+archives are validated and grouped incrementally, one file per update, then
+sorted by timestamp and numeric checkpoint serial. Saving commits/verifies a
+new generation before pruning only this run to two physical copies. The hub
+shows its latest valid copy; distinct runs survive repeated saves of any other
+run. Selection is restricted to catalog entries and resume revalidates checksums,
+compatibility and original Steam host. No implicit autosaves are introduced.

@@ -154,6 +154,21 @@ local function wrap_action(name,activity,event)
         if name=='use_card' and BT.compat and not BT.compat.allowed(e and e.config and e.config.ref_table and e.config.ref_table.config.center) then
             BT.notice('That card changes individual run progression and is unavailable in co-op.'); return
         end
+        if name=='use_card' then
+            local card=e and e.config and e.config.ref_table
+            local phase=BT.state.phase
+            local between=phase=='prepare' or phase=='skipping' or phase=='shop'
+            local tag_pack=card and card.from_tag and card.ability and card.ability.set=='Booster'
+            local pack_card=G.booster_pack and G.pack_cards and card and card.area==G.pack_cards
+            -- Native pack tags call use_card from their queued animation while
+            -- the party is still preparing/skipping. Dropping that call consumes
+            -- the tag and strands its materialized pack. Pack choices must also
+            -- retain their native path until every player finishes their pack.
+            if between and (tag_pack or pack_card) then
+                if me() and me().ready then BT.client.action('ready',{ready=false}) end
+                return ref(e,...)
+            end
+        end
         if B.pending_play then return end
         if BT.state.phase=='blind' then
             if BT.Session.Harbinger.blocks(BT.state) then return end

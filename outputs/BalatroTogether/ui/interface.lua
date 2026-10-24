@@ -200,17 +200,19 @@ local function home(w,h)
     end)
     group(0.09,function()
         local saved=BT.save and BT.save.summary
-        rect(690,212,526,saved and 498 or 432,panel)
+        rect(690,212,526,498,panel)
         txt('TAKE YOUR SEAT',721,235,30,ink,464)
         input('DISPLAY NAME','username',722,316,462,48)
         button('HOST A TABLE',722,393,462,54,function() U.navigate('host') end)
         button('JOIN FRIENDS',722,461,462,49,function() U.navigate('join') end,muted)
+        button('SAVED RUNS / '..#(BT.save.entries or {}),722,528,462,46,function() BT.save.refresh();U.saves_page=1;U.navigate('saves') end,colors[2])
         if saved then
-            button('CONTINUE SAVED PARTY',722,528,462,46,BT.save.resume,colors[2],saved.compatible)
             txt('ANTE '..saved.ante..' / '..saved.players..' BUILDS / '..os.date('%b %d %H:%M',saved.at),722,583,18,muted,462,'center')
             if not saved.compatible then txt('Save needs its original Cryptid pack/settings.',722,583,17,colors[4],462,'center') end
+        else
+            txt('MANUAL CHECKPOINTS / EVERY RUN HAS ITS OWN SEAT',722,583,17,muted,462,'center')
         end
-        local sy=saved and 620 or 544
+        local sy=620
         button('OPTIONS',722,sy,145,39,function() U.return_to='home';U.navigate('settings') end,muted)
         button('CREDITS',880,sy,145,39,function() U.credits_return='home';U.navigate('credits') end,colors[3])
         button('BACK',1038,sy,146,39,close,muted)
@@ -416,6 +418,38 @@ local function settings(w,h)
     button('−',x+width+265,py+105,50,36,function() BT.config.motion=math.max(0,(BT.config.motion or 1)-0.1); BT.persist() end,muted)
     button('+',x+width+325,py+105,50,36,function() BT.config.motion=math.min(1.5,(BT.config.motion or 1)+0.1); BT.persist() end,muted)
     button('BACK',w/2-130,math.min(h-76,py+162),260,46,function() U.screen=U.return_to; BT.persist() end)
+end
+local function saved_runs(w,h)
+    backdrop(w,h,'SAVED RUNS','ONE CHECKPOINT PER RUN / SAVE AGAIN TO REPLACE THAT RUN\'S CHECKPOINT')
+    local entries=BT.save.entries or {};local pages=math.max(1,math.ceil(#entries/4))
+    U.saves_page=math.max(1,math.min(pages,U.saves_page or 1))
+    if #entries==0 then
+        rect(160,250,960,265,panel)
+        diamond(w/2,299,24,colors[2]);txt(BT.save.scan and 'FINDING YOUR SAVED RUNS...' or 'YOUR NEXT RUN BELONGS HERE.',190,355,35,ink,900,'center')
+        txt('Host a table, then choose Save Checkpoint or Save & Leave\nbetween blinds. Each different run keeps its own checkpoint.',190,420,24,muted,900,'center')
+    end
+    for row=1,4 do
+        local entry=entries[(U.saves_page-1)*4+row]
+        if entry then
+            local y=200+(row-1)*107;local item=entry
+            group(0.02+row*0.035,function()
+                rect(60,y,1160,94,panel);diamond(84,y+27,8,colors[(row-1)%4+1])
+                txt(BT.Session.deck_name(item.deck)..' / '..item.seed,107,y+11,29,ink,830)
+                local blind=({'SMALL BLIND','BIG BLIND','BOSS BLIND'})[item.index] or 'NEXT BLIND'
+                txt('ANTE '..item.ante..' / '..blind..' / '..item.players..' BUILDS / '..os.date('%b %d %H:%M',item.at),83,y+50,21,muted,850)
+                if item.compatible then
+                    button('CONTINUE',976,y+24,216,43,function() BT.save.resume(item.path) end,colors[1],not BT.state)
+                else
+                    txt('NEEDS ORIGINAL\nPACK / SETTINGS',965,y+24,20,colors[4],232,'center')
+                end
+            end)
+        end
+    end
+    button('PREVIOUS',60,650,160,36,function() U.saves_page=U.saves_page-1 end,muted,U.saves_page>1)
+    txt(U.saves_page..' / '..pages..'  /  '..#entries..' SAVED RUNS',238,657,22,muted,800,'center')
+    button('NEXT',1060,650,160,36,function() U.saves_page=U.saves_page+1 end,muted,U.saves_page<pages)
+    button('BACK',w/2-130,h-93,260,43,function() U.navigate('home') end)
+    if BT.save.scan then txt('CHECKING SAVES...',60,716,18,colors[2],360) end
 end
 local function credits(w,h)
     backdrop(w,h,'THE ZERO CREW','MADE BY THE ZERO CREW FOR THE ZERO CREW / VIVAT NIHIL')
@@ -668,6 +702,7 @@ function U.draw()
         elseif U.screen=='boss_lab' then boss_view.rules(1280,800)
         elseif U.screen=='settings' then settings(1280,800)
         elseif U.screen=='credits' then credits(1280,800)
+        elseif U.screen=='saves' then saved_runs(1280,800)
         elseif U.screen=='pin' then pin_screen(1280,800)
         elseif U.screen=='name' then name_screen(1280,800)
         elseif U.screen=='steam_invite' then steam_invite(1280,800)
@@ -694,7 +729,7 @@ function U.draw()
     end
     U.opacity=1
     if BT.message and love.timer.getTime()-(BT.message_time or 0)<8 then
-        local compact=U.screen=='admin' or U.screen=='boss_rewards' or U.screen=='dice' or U.screen=='pot' or U.screen=='donations' or U.screen=='steam_friends'
+        local compact=U.screen=='admin' or U.screen=='boss_rewards' or U.screen=='dice' or U.screen=='pot' or U.screen=='donations' or U.screen=='steam_friends' or U.screen=='saves' or U.screen=='credits'
         local top=compact and h-35 or h-85
         g.origin(); rect(w/2-math.min(w-30,800)/2,top,math.min(w-30,800),compact and 28 or 48,bg)
         txt(BT.message,w/2-math.min(w-50,780)/2,top+(compact and 4 or 11),compact and 16 or 22,ink,math.min(w-50,780),'center')

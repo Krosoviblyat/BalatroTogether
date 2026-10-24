@@ -1,3 +1,13 @@
+# 0.8.2 verification
+
+227 Lua/Amulet checks cover native pack opening in prepare/skip/shop, card
+selection, readiness and checkpoint/progression protection. Real two-client
+Ethereal-tag skips and native Spectral choices verify the original failure.
+Other pack families and consecutive tags are checked in the same isolated run.
+See NATIVE-PACK-TEST-RESULTS.json and NATIVE-SAVE-HUB-TEST-RESULTS.json for
+observed native pack and save-hub checks, including repeated saves, distinct
+runs with the same seed, selected older builds, and corrupted-file fallback.
+
 # 0.8.1 verification
 
 Six isolated two-client native checks pass: real Chromatic Ante 7 round 21,
