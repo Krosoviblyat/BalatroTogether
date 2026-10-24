@@ -1,3 +1,22 @@
+## 0.8.3 setup repair — gameplay stays 0.8.2
+
+The 0.8.0 setup installs its embedded bundle. Previous signature checks did not prove it fetched the newest release. This installer fixes that flow; an already downloaded old EXE cannot gain the fix retroactively. Download this setup once.
+
+- **Check & install latest** checks GitHub before installing. A newer signed setup is downloaded, verified and handed off before local files are installed.
+- **GitHub access** is available in setup as well as the launcher. The repository is private: each player needs their own repository access/token. Signing into GitHub in a browser does not configure the Windows updater. No owner credential is bundled.
+- Failed authentication/network checks leave the installed build unchanged. Setup offers an explicit **offline bundled install**, labelled **latest NOT checked**, rather than pretending an old bundle is current.
+- Play checks again when automatic updates are enabled; opening the launcher checks without launching the game. A failed check offers **Play installed** as an explicit choice.
+- Recorded newer installations cannot be silently downgraded by the local bundle.
+
+**Installer/launcher 0.8.3-dev bundles gameplay 0.8.2-dev.** It keeps Saved Runs, manual checkpoints, the native Harbinger, free tag pack fixes and the existing gameplay network version. All dependency versions remain pinned.
+
+Verification drives the production Windows buttons with fixture GitHub responses carrying real signed release files, applies the actual downloaded installer engine, checks real gameplay files, save preservation, shortcut creation and the high-water mark. This is distinguished from authenticated internet downloading. The separate network probe uses a real unauthenticated GitHub API request without a token. See attached reports.
+
+No game binaries distributed. Setup source and dependency licenses are bundled. AI-assisted development with Codex.
+
+
+Historical updater design follows.
+
 # Automatic updates (launcher/setup 0.8.2-dev)
 
 Run the standalone setup EXE once, with Balatro closed. No extraction is needed. Then use **Play Balatro Together** on your desktop. The shortcut opens the launcher, checks for a newer signed release, downloads and verifies it, and starts installation automatically. After installation, click Play (or use the desktop shortcut if Windows requested administrator access). The launcher never opens the game during a failed update.

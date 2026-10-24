@@ -1,27 +1,42 @@
-# Native Windows setup and updating launcher
+# Together setup / launcher 0.8.3-dev
 
-**Download BalatroTogether-Setup-0.8.2-dev.exe and open it. No ZIP extraction is needed.** It contains the full pinned game-mod bundle, licenses and dependency sources, plus the current installer source/artwork notice. Close Balatro and click Install / update. Afterwards use Play Balatro Together on your desktop for automatic updates.
+Gameplay stays **0.8.2-dev**. The executable version and installed gameplay
+version are shown separately. This is an installer/update-flow repair.
 
-Branding: made by the zero crew for the zero crew. Vivat nihil. By Mind_the_assassin. The welcome copy and release-frequency note use the wording supplied by the user.
+The old 0.8.0 setup installs its own embedded 0.8.0 bundle. Signature checks
+showed it could accept a signed update; they did not prove its install button
+fetched a later release. Old downloaded EXEs cannot gain the repair retroactively.
+Get the 0.8.3 full setup once, then use its desktop launcher.
 
-The setup and launcher share an original animated black, white and red Zero Crew interface: floating/tilting monochrome and red card art, hover lift and press feedback, animated progress, custom window controls, keyboard defaults and a persisted Reduced Motion option. The EXE, launcher and shortcut use the image supplied by the user as a multi-resolution icon; its rights remain with its original rights holder (ICON-NOTICE.txt). The MIT code license does not license that artwork.
+**Check & install latest** checks published signed releases before installation.
+A newer setup is downloaded, hash/signature verified, and handed off to install.
+GitHub access is available in setup. This repository is private: each player
+needs their own account access/token. Browser login alone is not updater access.
+The encrypted token stays under that Windows account; no owner token is bundled.
 
-The top link **Manual install, licenses & source** exports an offline rebuild/manual bundle. Extract it; Manual Install.zip contains all component files, licenses and exact third-party sources. InstallerSource contains this source and the icon. Build.cmd beside that Manual Install.zip regenerates the icon/source resource and rebuilds the EXE using the .NET Framework compiler. No Python is needed. No private publisher key is included.
+If verification or access fails, setup does not silently install an old local
+bundle. It offers a separate offline link labelled **latest NOT checked**. The
+launcher performs a new check on Play when automatic updates are enabled. A
+failed check offers **Play installed** explicitly. Opening the launcher checks
+without launching the game. Local bundle installation respects version floors.
 
-Setup/launcher **0.8.2-dev** contains gameplay **0.7.1-dev**. The launcher shows both versions and checks the installed Together metadata and every bundled Together file before claiming verification or opening the game. An old, incomplete or modified Together install uses the verified embedded full installer to repair, including offline and without a GitHub token. The normal backup/rollback and running-game guards apply. Newer gameplay and the committed launcher rollback floor are preserved.
+Setup bundles Lovely, Steamodded, Cryptid, Amulet and Together gameplay 0.8.2.
+It refuses to change a running game and backs up/rolls back recognized replaced
+mods and saves. No owned game executable or runtime files are distributed.
+Signatures on update metadata are separate from Windows Authenticode.
 
-New launchers download signed standalone EXE updates using Update-v2.json/Update-v2.sig. A legacy Easy Installer ZIP and Update.json/Update.sig keep the original 0.6.2 launcher update path working. See UPDATES.md. These package signatures are separate from Windows Authenticode; this build still has no Windows publisher certificate and can display Unknown publisher.
+The top manual/source export contains Manual Install.zip and InstallerSource.
+Build.cmd compiles Installer.cs, SelfTests.cs, Updater.cs, UpdaterTests.cs,
+UpdateKey.cs, StudioUI.cs, UIShowcase.cs, Build.cs, SetupUpdates.cs,
+GitHubAccess.cs and SetupFlowTests.cs with .NET Framework 4.8. It regenerates
+the user-supplied icon and source resource. No Python is required by players.
+The private publisher signing key is never included.
 
-This is the original, AI-assisted Balatro Together installer and updating launcher, released under the included MIT license. It embeds the full install package, verifies its SHA256, and copies only its four Mods components and the pinned Lovely DLL. Initial installation is offline. The desktop launcher separately downloads signed updates before play; read [UPDATES.md](UPDATES.md) for access setup, verification and publishing instructions.
+Setup-flow checks drive the actual Windows buttons using fixture HTTP responses
+with real signed releases, and execute the downloaded installer's production
+engine/shortcut commit in isolated paths. Authenticated internet downloading
+is not claimed by those fixtures. A separate real unauthenticated GitHub API
+probe confirms private-access refusal. Reports state these limits explicitly.
 
-Setup 8 (launcher/installer 0.8.2.0; gameplay payload 0.7.1-dev) installs the endless Cryptid co-op build with repaired deck setup, typed exact-amount personal/team bets, physical reward dice and the boss wheel Space jackpot challenge. It automatically moves old Together, Steamodded/smods, Cryptid, Amulet and Talisman folders into the backup, including incomplete/older layouts, release-name variants, GitHub extraction wrappers, legacy Lua headers, and named Lua/JSON/TOML/ZIP files. Bounded nested detection preserves each item's original relative path and avoids scanning the libraries of unrelated identified mods. No old mod is permanently deleted. The bundled Steamodded, Amulet, Cryptid and Together are then installed and verified; failures roll back moved files and folders.
-
-The normal application locates Steam libraries, checks the owned game's supported build, refuses installation while Balatro is open, and backs up profiles and replaced components. Other conflicting mod IDs are also moved into the backup. Unrelated mods remain. Unknown DLLs, unknown Together destinations and linked paths still require review. Windows can request administrator access when Steam's game folder is protected; that continuation validates and retains the original user's profile paths. No security policy or Steam libraries are modified. The desktop shortcut starts the updating launcher, which uses the owned game with `--disable-console`.
-
-Backups are under `%AppData%\BalatroTogether\Backups`. Their `PreviousMods` folders contain replaced components; `Saves` contains the original profiles/settings, excluding Mods and bot caches. The installer does not perform in-place live-run recovery. Close the game first and start a fresh party after updating every player to this version.
-
-To rebuild on Windows with .NET Framework 4.8 development tools, extract the easy-installer ZIP, keep `Manual Install.zip` beside the executable, and run `InstallerSource\Build.cmd`. `Build.cs` pins the embedded payload/DLL/game hashes. The normal user does not need to rebuild, run scripts or install Python.
-
-`Install Balatro Together.exe --self-test <empty test directory>` exercises only synthetic game/profile fixtures created below that directory. It never installs into the real Steam or AppData paths. `results.json` records the results; the test fixtures remain available for inspection. `--preview <image.png>` renders the installer briefly off-screen without activating it or launching the game.
-
-Validation: 23 installer scenarios passed. They cover fresh/update installs, incomplete and multiple old loader layouts, legacy scripts/metadata, Cryptid variants, nested wrappers, archive copies, preserved unrelated mod libraries, rollback of moved files and folders, running-game refusal, unknown DLLs, paths, original-user context and the updating shortcut. The updater has 34 separate passing fixtures, including signature/hash/expiry rejection, prerelease selection, version replay barriers, redirect host rules and DPAPI storage. UI was rendered and inspected. Real administrator-prompt and every Windows/Steam-folder configuration are not certified. This locally compiled executable is unsigned. If Windows refuses to run it, the complete manual installation package is also included; do not disable Windows security features.
+Original code MIT. AI-assisted development with Codex. Dependencies retain
+their included licenses and exact upstream sources. See LICENSE.txt and notices.

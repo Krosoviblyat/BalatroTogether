@@ -123,6 +123,7 @@ namespace TogetherSetup {
             if(meta==null||!meta.ContainsKey("id")||Convert.ToString(meta["id"])!="BalatroTogether"||!meta.ContainsKey("version"))throw new Exception("Unrecognized Together metadata.");
             string version=Convert.ToString(meta["version"]);UpdatePolicy.Number(version);return version;
         }
+        public static string GameplayVersion { get {ReadBundle();return bundled;} }
         public static InstalledBuild Inspect(UserPaths user) {
             ReadBundle();
             var result=new InstalledBuild {BundledVersion=bundled};
@@ -284,7 +285,7 @@ namespace TogetherSetup {
         protected override bool ShowWithoutActivation {get{return PreviewMode;}}
         readonly UserPaths user; readonly UpdateSettings settings;
         readonly Label status=new Label(),versions=new Label(); readonly Button play,check,access; readonly CheckBox automatic=new StudioCheckBox();
-        bool busy,handoff; readonly string game;
+        bool busy,handoff,offlineAvailable; readonly string game;
         public LauncherForm(UserPaths context,string selected) : base(PreviewMode) {
             user=context;settings=UpdateStorage.Load(user);game=selected;Text="Zero Crew | Play Balatro Together";
             SetHeading("by Mind_the_assassin", "come join the retard fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
@@ -299,7 +300,7 @@ namespace TogetherSetup {
             check=AddButton("Check updates",510,516,162,false,async()=>await RunUpdate(false));
             play=AddButton("Play Together",682,516,188,true,async()=>await Play());AcceptButton=play;
             ReducedMotion=settings.reduced_motion;MotionChanged+=value=>{settings.reduced_motion=value;UpdateStorage.Save(user,settings);};
-            FormClosing+=(sender,e)=>{if(busy&&!handoff)e.Cancel=true;};Shown+=async(sender,e)=>{if(!PreviewMode&&settings.automatic)await RunUpdate(true);};
+            FormClosing+=(sender,e)=>{if(busy&&!handoff)e.Cancel=true;};Shown+=async(sender,e)=>{if(!PreviewMode&&settings.automatic)await RunUpdate(false);};
         }
         void Report(string message) {if(InvokeRequired){BeginInvoke(new Action<string>(Report),message);return;}status.Text=message; var percent=Regex.Match(message,@" (\d+)%$");if(percent.Success)Progress.Target=Int32.Parse(percent.Groups[1].Value);}
         void ShowInstalled(InstalledBuild installed) {
@@ -307,7 +308,11 @@ namespace TogetherSetup {
         }
         async Task Play() {
             if(busy)return;
-            if(Detection.Running()){Report("Balatro is already open. No update was installed.");return;}
+            if(settings.automatic&&!offlineAvailable)await RunUpdate(true);else await LaunchInstalled();
+        }
+        async Task LaunchInstalled() {
+            if(busy)return;
+            if(SetupUpdates.Running()){Report("Balatro is already open. No update was installed.");return;}
             string exe=Path.Combine(game,"Balatro.exe");
             if(!File.Exists(exe)||Paths.Hash(exe)!=Build.GameHash){Report("Game not found or unsupported. Run the installer and choose your Steam game.");return;}
             try {
@@ -315,61 +320,46 @@ namespace TogetherSetup {
                 var installed=await Task.Run(()=>InstalledBuild.Inspect(user));ShowInstalled(installed);
                 busy=false;
                 if(installed.NeedsRepair){await RunUpdate(true,false);return;}
-                if(Detection.Running()){Report("Balatro was opened. No game files were changed.");return;}
+                if(SetupUpdates.Running()){Report("Balatro was opened. No game files were changed.");return;}
                 Process.Start(new ProcessStartInfo(exe,"--disable-console"){WorkingDirectory=game});Close();
             }catch(Exception error){Report(error.Message);}
             finally{busy=false;if(!IsDisposed){play.Enabled=true;check.Enabled=true;}}
         }
         void ConfigureAccess() {
-            using(var form=new Form {Text="Connect GitHub",BackColor=Studio.Ink,ForeColor=Studio.Cream,Font=new Font("Segoe UI",10),ClientSize=new Size(600,370),StartPosition=FormStartPosition.CenterParent,FormBorderStyle=FormBorderStyle.FixedDialog,MaximizeBox=false,MinimizeBox=false}) {
-                var label=new Label {Text="Use your own GitHub token with read access to Krosoviblyat/BalatroTogether. Your GitHub account must already have repository access.\n\nOwner: fine-grained token, select this repository, Contents: Read-only. Invited collaborators may need a classic token with repo scope; that grants broader access. Never share an owner's token.\n\nSaved encrypted for this Windows account. Leave empty to forget it.",Location=new Point(24,24),Size=new Size(552,200),ForeColor=Studio.Cream};form.Controls.Add(label);
-                var token=new TextBox {UseSystemPasswordChar=true,Location=new Point(24,238),Size=new Size(552,30),MaxLength=255,BackColor=Studio.Panel,ForeColor=Studio.Cream,BorderStyle=BorderStyle.FixedSingle};form.Controls.Add(token);
-                var help=new LinkLabel {Text="Open GitHub token settings",Location=new Point(24,309),AutoSize=true,LinkColor=Studio.Red,ActiveLinkColor=Studio.Cream};help.LinkClicked+=(s,e)=>Process.Start(new ProcessStartInfo("https://github.com/settings/tokens"){UseShellExecute=true});form.Controls.Add(help);
-                var save=new StudioButton {Text="Save access",Primary=true,Location=new Point(413,292),Size=new Size(163,52)};save.Click+=(s,e)=>{try{UpdateStorage.SaveToken(user,token.Text);form.DialogResult=DialogResult.OK;form.Close();}catch(Exception error){MessageBox.Show(form,error.Message);}};form.Controls.Add(save);
-                form.AcceptButton=save;
-                using(var animation=new Timer {Interval=16}) {
-                    animation.Tick+=(sender,e)=>save.Animate(.016f,ReducedMotion);animation.Start();
-                    if(form.ShowDialog(this)==DialogResult.OK)Report("GitHub access updated. Click Check updates to test access.");
-                }
-            }
+            if(GitHubAccess.Show(this,user,ReducedMotion))Report("GitHub access updated. Click Check updates to test access.");
         }
         async Task RunUpdate(bool launchAfter,bool online=true) {
             if(busy)return;
-            if(Detection.Running()){Report("Balatro is open. Close it before checking or installing updates.");return;}
-            busy=true;play.Enabled=false;check.Enabled=false;access.Enabled=false;automatic.Enabled=false;Progress.Busy=true;Progress.Target=5;
+            if(SetupUpdates.Running()){Report("Balatro is open. Close it before checking or installing updates.");return;}
+            busy=true;offlineAvailable=false;play.Text="Play Together";play.Enabled=false;check.Enabled=false;access.Enabled=false;automatic.Enabled=false;Progress.Busy=true;Progress.Target=5;
             string stage=null;
             try {
                 Report("Checking the installed mod and signed releases...");
                 string root=Path.Combine(UpdateStorage.Root(user),"Updates");Paths.NoLinks(root);Directory.CreateDirectory(root);
                 stage=Path.Combine(root,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
-                string floor=Build.Version;
-                if(!String.IsNullOrEmpty(settings.highest_version)&&UpdatePolicy.Number(settings.highest_version)>UpdatePolicy.Number(floor))floor=settings.highest_version;
                 var installed=await Task.Run(()=>InstalledBuild.Inspect(user));ShowInstalled(installed);
-                GitHubUpdates client=null;GitHubUpdates.Offer offer=null;Exception onlineError=null;
-                if(online)try{client=new GitHubUpdates(UpdateStorage.Token(user));offer=await Task.Run(()=>client.Find(stage,Build.Version,floor));}catch(Exception error){onlineError=error;}
+                // A failed online check must never silently repair/install an
+                // old embedded copy and present it as the latest release.
+                var selection=online?await Task.Run(()=>SetupUpdates.Check(user,stage)):null;
+                string floor=selection!=null?selection.Floor:SetupUpdates.Floor(user,installed,Build.Version);
                 string installer;
-                if(offer==null) {
+                if(selection==null||selection.Offer==null) {
                     if(installed.NeedsRepair) {
-                        Report("Repairing installed Together from the verified embedded bundle...");
+                        Report(online?"Latest check succeeded. Repairing the verified bundled gameplay...":"Offline repair only; latest version was not checked.");
                         installer=await Task.Run(()=>installed.StageRepair(stage,floor));
                     } else {
-                        if(onlineError!=null)throw onlineError;
-                        Report("Together "+installed.Version+(installed.NewerMod?" is newer than this launcher's bundle.":" files verified. No newer signed release is published."));
-                        busy=false;if(launchAfter)await Play();return;
+                        Report(online?"Latest check succeeded. Gameplay "+installed.Version+" is verified.":"Online updates are off. Gameplay "+installed.Version+" is verified locally.");
+                        busy=false;if(launchAfter)await LaunchInstalled();return;
                     }
-                } else {
-                    if(Detection.Running())throw new Exception("Balatro was opened. The update will wait until your next launch.");
-                    string zip=Path.Combine(stage,"update.zip");
-                    Report("Downloading "+offer.manifest.version+"...");
-                    int last=-1;
-                    await Task.Run(()=>client.Download(offer.packageApi,zip,offer.manifest.size,n=>{int percent=(int)(n*100/offer.manifest.size);if(percent!=last){last=percent;Report("Downloading "+offer.manifest.version+"  "+percent+"%");}}));
-                    installer=await Task.Run(()=>UpdatePolicy.PrepareInstaller(zip,Path.Combine(stage,"Verified"),offer.manifest));
-                }
-                if(Detection.Running())throw new Exception("Balatro was opened. No game files were changed. Close it and check updates again.");
+                } else installer=await Task.Run(()=>SetupUpdates.Download(selection,stage,Report));
+                if(SetupUpdates.Running())throw new Exception("Balatro was opened. No game files were changed. Close it and check updates again.");
                 // High-water mark is committed only after successful installation by the new installer.
-                Process.Start(new ProcessStartInfo(installer,"--update "+Paths.Quote(game)){UseShellExecute=true,WorkingDirectory=Path.GetDirectoryName(installer)});
+                SetupUpdates.StartVerified(installer,game);
                 handoff=true;Close();
-            } catch(Exception e) {Report(e is IOException?"Update download or staging failed. Your installed build is unchanged; you can still play.":e.Message);}
+            } catch(Exception e) {
+                offlineAvailable=true;play.Text="Play installed";
+                Report((e is IOException?"Update staging failed; installed build unchanged.":e.Message)+" Play installed skips the update check.");
+            }
             finally {
                 if(stage!=null&&!handoff)try{Paths.RemoveOwned(stage,Path.GetDirectoryName(stage));}catch{}
                 busy=false;if(!IsDisposed){Progress.Busy=false;Progress.Target=0;play.Enabled=true;check.Enabled=true;access.Enabled=true;automatic.Enabled=true;}

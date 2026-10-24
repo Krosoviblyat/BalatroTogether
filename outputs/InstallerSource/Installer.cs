@@ -1,5 +1,5 @@
 // Original Balatro Together installer. MIT; see LICENSE.txt.
-// C# 5 / .NET Framework 4.8. Installs only the embedded, checksummed payload.
+// C# 5 / .NET Framework 4.8. Checks signed updates before installing the bundle.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Zero Crew")]
-[assembly: AssemblyVersion("0.8.2.0")]
-[assembly: AssemblyFileVersion("0.8.2.0")]
+[assembly: AssemblyVersion("0.8.3.0")]
+[assembly: AssemblyFileVersion("0.8.3.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -267,9 +267,11 @@ namespace TogetherSetup {
         protected override bool ShowWithoutActivation { get { return PreviewMode; } }
         readonly UserPaths user; readonly TextBox path=new TextBox(); readonly Label status=new Label(); readonly Label result=new Label();
         readonly Button install, browse, play; readonly StudioProgress bar;
-        bool busy, elevate, done;
+        bool busy, elevate, done, handoff;
+        readonly bool handoffInstall;
+        readonly LinkLabel offline=new LinkLabel();
         public SetupForm(UserPaths context,string selected,bool auto) : base(PreviewMode) {
-            user=context; Text="Zero Crew | Install Balatro Together";
+            user=context;handoffInstall=auto; Text="Zero Crew | Install Balatro Together";
             SetHeading("by Mind_the_assassin", "come join the retard fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
             var location=new StudioPanel();location.SetBounds(350,266,520,92);Controls.Add(location);
             location.Controls.Add(Studio.Label("YOUR STEAM GAME",16,12,450,19,8,Studio.Red,true));
@@ -279,20 +281,24 @@ namespace TogetherSetup {
             activity.Controls.Add(Studio.Label("INSTALLATION",16,12,450,18,8,Studio.Red,true));
             status.SetBounds(16,36,484,43);status.Font=new Font("Segoe UI",10,FontStyle.Bold);status.ForeColor=Studio.Cream;status.BackColor=Studio.Panel;status.Text=String.IsNullOrEmpty(selected)?"Find Balatro to get started.":"Balatro found. Ready when you are.";activity.Controls.Add(status);
             bar=Progress;bar.SetBounds(16,82,486,9);activity.Controls.Add(bar);
-            result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Close Balatro first. Saves and replaced mods are backed up.";Controls.Add(result);
-            play=AddButton("Play Together",350,516,251,false,()=>{
+            result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Setup "+Build.Version+" / bundled gameplay "+InstalledBuild.GameplayVersion+". Close Balatro first.";Controls.Add(result);
+            play=AddButton("GitHub access",350,516,251,false,()=>{
+                if(!done){if(GitHubAccess.Show(this,user,ReducedMotion))Report("Access saved. Click Check & install latest.");return;}
                 if(Detection.Running()){MessageBox.Show(this,"Balatro is already open.");return;}
-                if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)){MessageBox.Show(this,"Installation is complete. Close this window and use the Play Balatro Together shortcut on your desktop under your normal Windows account.");return;}
+                if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)){MessageBox.Show(this,"Close setup and open Play Balatro Together normally from your desktop.");return;}
                 string launcher=Path.Combine(UpdateStorage.Root(user),"Launcher","Play Balatro Together.exe");Process.Start(new ProcessStartInfo(launcher,"--play"){WorkingDirectory=Path.GetDirectoryName(launcher)});Close();
-            });play.Enabled=!PreviewMode&&File.Exists(Path.Combine(UpdateStorage.Root(user),"Launcher","Play Balatro Together.exe"));
-            install=AddButton("Install / update",613,516,257,true,()=>Start());AcceptButton=install;
+            });
+            install=AddButton("Check & install latest",613,516,257,true,()=>Start());AcceptButton=install;
+            offline.Text="Install gameplay "+InstalledBuild.GameplayVersion+" only (offline; latest NOT checked)";
+            offline.SetBounds(350,483,520,28);offline.LinkColor=Studio.Red;offline.ActiveLinkColor=Studio.Cream;offline.Font=new Font("Segoe UI",8);offline.Visible=false;
+            offline.LinkClicked+=(sender,e)=>Start(false);Controls.Add(offline);
             var manual=new LinkLabel {Text="Manual install, licenses & source",Location=new Point(350,48),Size=new Size(385,22),LinkColor=Studio.Muted,ActiveLinkColor=Studio.Red,VisitedLinkColor=Studio.Muted,Font=new Font("Segoe UI",8)};manual.LinkClicked+=(sender,e)=>Studio.ExportManual(this);Controls.Add(manual);
             try{ReducedMotion=UpdateStorage.Load(user).reduced_motion;}catch{}
             MotionChanged+=value=>{try{var settings=UpdateStorage.Load(user);settings.reduced_motion=value;UpdateStorage.Save(user,settings);}catch{}};
-            FormClosing+=(sender,e)=>{if(busy)e.Cancel=true;};if(auto)Shown+=(sender,e)=>Start();
+            FormClosing+=(sender,e)=>{if(busy&&!handoff)e.Cancel=true;};if(auto)Shown+=(sender,e)=>Start();
         }
         void Report(string text) { if(InvokeRequired) { BeginInvoke(new Action<string>(Report),text); return; } status.Text=text; if(text.StartsWith("Checking"))bar.Target=8;else if(text.StartsWith("Backing"))bar.Target=22;else if(text.StartsWith("Installing"))bar.Target=Math.Min(86,bar.Target+14);else if(text.StartsWith("Installation complete"))bar.Target=100; }
-        async void Start() {
+        async void Start(bool online=true) {
             if(busy)return;
             if(done) { Close(); return; }
             if(String.IsNullOrWhiteSpace(path.Text)) { MessageBox.Show(this,"Click Find game and choose Balatro.exe from your Steam library.","Find Balatro"); return; }
@@ -301,24 +307,47 @@ namespace TogetherSetup {
                     Process.Start(new ProcessStartInfo(Assembly.GetExecutingAssembly().Location,"--continue "+Paths.Quote(path.Text)+" "+context) {UseShellExecute=true,Verb="runas"}); Close();
                 } catch { Report("Permission was not granted. No installation changes were made."); } return;
             }
-            busy=true; install.Enabled=false; browse.Enabled=false; bar.Busy=true;bar.Target=4;
-            var engine=new Installer(path.Text,Path.Combine(user.Roaming,"Balatro"),Path.Combine(user.Roaming,@"BalatroTogether\Backups"),Path.Combine(user.Local,@"BalatroTogether\InstallerStaging"),Build.GameHash,Detection.Running,Report);
+            busy=true; install.Enabled=false; browse.Enabled=false;play.Enabled=false;offline.Visible=false;result.Visible=true;bar.Busy=true;bar.Target=4;
+            string updateStage=null;bool checking=false;
+            var engine=new Installer(path.Text,Path.Combine(user.Roaming,"Balatro"),Path.Combine(user.Roaming,@"BalatroTogether\Backups"),Path.Combine(user.Local,@"BalatroTogether\InstallerStaging"),Build.GameHash,SetupUpdates.Running,Report);
             try {
+                if(SetupUpdates.Running())throw new Exception("Balatro is open. Close it before installing or updating.");
+                if(online&&!handoffInstall) {
+                    checking=true;Report("Checking the latest signed release before installation...");
+                    string stageRoot=Path.Combine(UpdateStorage.Root(user),"SetupUpdates");Paths.NoLinks(stageRoot);Directory.CreateDirectory(stageRoot);
+                    updateStage=Path.Combine(stageRoot,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(updateStage);
+                    var selection=await Task.Run(()=>SetupUpdates.Check(user,updateStage));
+                    if(selection.Offer!=null) {
+                        string verified=await Task.Run(()=>SetupUpdates.Download(selection,updateStage,Report));
+                        SetupUpdates.StartVerified(verified,path.Text);handoff=true;Close();return;
+                    }
+                    checking=false;
+                }
+                SetupUpdates.CanInstallBundle(user);
                 await Task.Run(()=>engine.Install());
                 Detection.Shortcut(user,path.Text,engine.Backup);
-                result.Text="Installed. Your desktop shortcut keeps Together up to date."; play.Enabled=true; done=true; install.Text="Done"; install.Enabled=true;
+                result.Text="Gameplay "+InstalledBuild.GameplayVersion+(handoffInstall?" installed from verified setup update.":online?" installed. Latest setup check succeeded.":" installed OFFLINE. Latest setup was NOT checked.");play.Text="Play Together";play.Enabled=true;done=true;install.Text="Done";install.Enabled=true;
             } catch(UnauthorizedAccessException) {
                 if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)) MessageBox.Show(this,"Windows denied access. Use the manual guide for this folder.","Installation stopped");
                 else { elevate=true; install.Text="Continue"; result.Text="Windows needs administrator access to the game folder. Continue opens the normal Windows permission prompt and keeps your original user profile."; }
                 install.Enabled=true; browse.Enabled=true; Report("No installation was completed.");
-            } catch(Exception e) { Report("Installation stopped."); install.Enabled=true; browse.Enabled=true; MessageBox.Show(this,e.Message,"Balatro Together",MessageBoxButtons.OK,MessageBoxIcon.Information); }
-            finally {busy=false;bar.Busy=false;bar.Target=play.Enabled?100:0;}
+            } catch(Exception e) {
+                if(checking){Report("Update check failed: "+e.Message);offline.Visible=true;result.Visible=false;}
+                else {Report("Installation stopped.");MessageBox.Show(this,e.Message,"Balatro Together",MessageBoxButtons.OK,MessageBoxIcon.Information);}
+                install.Enabled=true;browse.Enabled=true;
+            }
+            finally {
+                if(updateStage!=null&&!handoff)try{Paths.RemoveOwned(updateStage,Path.GetDirectoryName(updateStage));}catch{}
+                busy=false;play.Enabled=true;bar.Busy=false;bar.Target=done?100:0;
+            }
         }
     }
     internal static class Program {
         [STAThread] static int Main(string[] args) {
             Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
             try {
+                if(args.Length==4 && args[0]=="--setup-flow-self-test") return SetupFlowTests.Run(args[1],args[2],args[3]);
+                if(args.Length==2 && args[0]=="--network-self-test") return SetupFlowTests.NetworkProbe(args[1]);
                 if(args.Length>0 && args[0]=="--self-test") return SelfTests.Run(args[1]);
                 if(args.Length==2 && args[0]=="--updater-self-test")return UpdaterTests.Run(args[1]);
                 if(args.Length==2 && args[0]=="--verify-update")return UpdaterTests.VerifyRelease(args[1]);
