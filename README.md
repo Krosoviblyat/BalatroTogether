@@ -1,4 +1,14 @@
-# Together public setup / launcher 0.8.6-dev
+# Together public setup / launcher 0.8.7-dev
+
+THUNDRCK curated seed
+
+Enter THUNDRCK on a fresh run. Beat Small and Big without skips, buy/open
+the second shop Buffoon Pack, then reroll for The Soul. That Soul summons
+Government Man. First shop: $1 Negative Abstract. Later shop starts: Negative
+Blueprint. Opening shuffles arrange an existing straight flush where available;
+normal boss effects still apply. This is an explicit scripted seed mode, not
+a naturally discovered RNG seed. Ordinary seeds stay native. Save/restore
+preserves the once-per-run reward flags. All players need 0.8.7-dev.
 
 Government Man and the coop fest
 
@@ -12,7 +22,7 @@ Supplied art is preserved in the native 1x/2x atlas.
 The installer and launcher welcome now reads:
 come on in and join the coop fest!
 
-Everyone must update to gameplay 0.8.6-dev. The normal installer updates the
+Everyone must update to gameplay 0.8.7-dev. The normal installer updates the
 main mod only when Balatro is closed. No live game was changed during QA.
 
 Missing game-file and wrong-folder protection
@@ -36,7 +46,7 @@ Use Check & install latest with Balatro closed, then the desktop Play Together
 shortcut. Existing 0.7+ launchers can receive the signed update; very old setup
 EXEs still only install their original bundle, so download this setup once.
 
-Installer/launcher and bundled gameplay: 0.8.6-dev. Update every player.
+Installer/launcher and bundled gameplay: 0.8.7-dev. Update every player.
 Different Cryptid gamesets still cannot join the same party. Match the host's
 gameset and custom/experimental rules. Profile choices are intentionally preserved.
 
@@ -49,7 +59,7 @@ Download the newest full EXE from [Releases](https://github.com/Krosoviblyat/Bal
 
 ## Gameplay source
 
-# Balatro Together 0.8.6-dev
+# Balatro Together 0.8.2-dev
 
 Saved Runs is the hub for every manual party checkpoint. Saving again updates
 that run's entry; a different party or Fast Restart keeps a separate entry,
@@ -80,7 +90,7 @@ between blinds. Continue Saved Party opens a new joinable lobby/code; the origin
 players recover their builds. The host presses Continue Saved Run when all builds
 are restored. No automatic checkpoint interrupts a new run or blind transition.
 
-Use the full 0.8.6 setup with Balatro closed. The normal desktop launcher can
+Use the full 0.8.2 setup with Balatro closed. The normal desktop launcher can
 receive this signed update from 0.7 once published. Private-repository access is
 still required for online updates. Every player must use the same gameplay build.
 Native saves remain in the ordinary Balatro profile; the Harbinger Lab is separate.

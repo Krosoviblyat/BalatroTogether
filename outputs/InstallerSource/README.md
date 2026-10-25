@@ -1,9 +1,9 @@
-# Public Zero Crew setup / launcher 0.8.6-dev
+# Public Zero Crew setup / launcher 0.8.7-dev
 
-BALATRO TOGETHER SETUP 0.8.6 / GAMEPLAY 0.8.2 BETA
+BALATRO TOGETHER SETUP 0.8.7 / GAMEPLAY 0.8.7 BETA
 
 1. Close Balatro.
-2. Open BalatroTogether-Setup-0.8.6-dev.exe.
+2. Open BalatroTogether-Setup-0.8.7-dev.exe.
 3. Click Check & install latest. The game is normally found automatically.
 4. Use Play Balatro Together on your desktop after installation.
 
@@ -15,7 +15,7 @@ RSA-SHA256 signatures, package hashes, downgrade protection, backups and the
 running-game guard remain enabled. If a download/check fails, setup offers an
 explicit OFFLINE install and does not claim the latest version was checked.
 
-This setup installs gameplay 0.8.6 with the Government Man Legendary Joker.
+This setup installs gameplay 0.8.7 with the Government Man Legendary Joker.
 All party members must have the same gameplay version and Cryptid gameset/rules.
 Installing the same package does not reset each player's personal Cryptid profile.
 The public-repository change fixes download access, not different gameset rules.
@@ -42,9 +42,15 @@ GOVERNMENT MAN: native Legendary Joker, base $20, starts at X2 Mult.
 Every acquired Negative Joker adds X0.5; every second acquisition turns an
 owned non-Negative Joker Negative. Existing cards changing edition do not
 count as acquisitions. Donation and manual saves preserve its full state.
-All players need gameplay 0.8.6-dev. Uses the supplied artwork.
+All players need gameplay 0.8.7-dev. Uses the supplied artwork.
 
 Installer welcome: come on in and join the coop fest!
+
+THUNDRCK: curated fun seed. Beat Small and Big, open the second shop Buffoon,
+then reroll for The Soul. Use that Soul to summon Government Man.
+Native opening Royal Flushes where the deck permits; $1 Negative Abstract
+in shop 1 and Negative Blueprint in later shop openings. See THUNDRCK.md.
+This is scripted seed behavior, not a natural RNG discovery.
 
 Build.cmd rebuilds using .NET Framework 4.8 and the exported Manual Install.zip.
 No player Python dependency. Use --public-update-self-test only with a fresh isolated
