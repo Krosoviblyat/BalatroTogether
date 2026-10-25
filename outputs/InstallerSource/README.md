@@ -1,9 +1,9 @@
-# Public Zero Crew setup / launcher 0.8.4-dev
+# Public Zero Crew setup / launcher 0.8.5-dev
 
-BALATRO TOGETHER SETUP 0.8.4 / GAMEPLAY 0.8.2 BETA
+BALATRO TOGETHER SETUP 0.8.5 / GAMEPLAY 0.8.2 BETA
 
 1. Close Balatro.
-2. Open BalatroTogether-Setup-0.8.4-dev.exe.
+2. Open BalatroTogether-Setup-0.8.5-dev.exe.
 3. Click Check & install latest. The game is normally found automatically.
 4. Use Play Balatro Together on your desktop after installation.
 
@@ -27,6 +27,16 @@ No administrator access is needed for normal play. Installation requests Windows
 permission only if necessary to install the loader into the selected game folder.
 Original code MIT. AI-assisted development with Codex. Upstream component sources
 and licenses are included. Update signatures are separate from Windows signing.
+
+INSTALL LOCATIONS: only winmm.dll goes next to the original Balatro.exe.
+Together, Cryptid, Amulet and Steamodded go in %AppData%\Balatro\Mods.
+This split is normal. The game executable must stay in its full Steam folder.
+
+Setup and Play now refuse an EXE-only folder or missing/invalid x64 game DLLs,
+including SDL2.dll, love.dll and lua51.dll, before installing or launching.
+Repair missing owned files through Steam > Properties > Installed Files >
+Verify integrity of game files. Use Browse to select that full game folder.
+The mod installer does not include or download Balatro's own runtime files.
 
 Build.cmd rebuilds using .NET Framework 4.8 and the exported Manual Install.zip.
 No player Python dependency. Use --public-update-self-test only with a fresh isolated

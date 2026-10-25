@@ -43,6 +43,7 @@ namespace TogetherSetup {
                 Root=Path.Combine(parent,name);Directory.CreateDirectory(Root);Game=Path.Combine(Root,"Game");Directory.CreateDirectory(Game);
                 string owned=Path.Combine(Detection.Find(),"Balatro.exe");if(!File.Exists(owned)||Paths.Hash(owned)!=Build.GameHash)throw new Exception("Owned supported game unavailable for private fixture copy");
                 File.Copy(owned,Path.Combine(Game,"Balatro.exe"),false);
+                foreach(string runtime in GameFiles.Required)File.Copy(Path.Combine(Path.GetDirectoryName(owned),runtime),Path.Combine(Game,runtime),false);
                 User=new UserPaths {Sid=System.Security.Principal.WindowsIdentity.GetCurrent().User.Value,Profile=Root,Local=Path.Combine(Root,"Local"),Roaming=Path.Combine(Root,"Roaming"),Desktop=Path.Combine(Root,"Desktop")};Directory.CreateDirectory(User.Desktop);
                 string saves=Path.Combine(User.Roaming,"Balatro");Directory.CreateDirectory(Path.Combine(saves,"1"));Save=Path.Combine(saves,"1","save.jkr");File.WriteAllText(Save,"preserve unfinished party fixture");
                 Metadata=Path.Combine(saves,"Mods","BalatroTogether","BalatroTogether.json");Directory.CreateDirectory(Path.GetDirectoryName(Metadata));File.WriteAllText(Metadata,"{\"id\":\"BalatroTogether\",\"version\":\"0.8.0-dev\"}");File.WriteAllText(Path.Combine(Path.GetDirectoryName(Metadata),"main.lua"),"OLD FIXTURE");

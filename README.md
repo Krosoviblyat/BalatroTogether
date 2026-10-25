@@ -1,4 +1,15 @@
-# Together public setup / launcher 0.8.4-dev
+# Together public setup / launcher 0.8.5-dev
+
+Missing game-file and wrong-folder protection
+
+Setup now checks the original game's required Windows x64 runtime DLLs,
+including SDL2.dll, love.dll and lua51.dll. An EXE-only or incomplete folder
+stops before downloads, backups, mod installation or launch and shows the
+selected folder, missing filenames and Steam verification instructions.
+The game folder gets Lovely's winmm.dll; the separate AppData mod destination
+is now shown in setup and opens on click after installation.
+The launcher validates the same game and explicitly uses its directory when
+starting Balatro. No owned game DLLs are bundled.
 
 Public updates without GitHub login
 
@@ -10,7 +21,7 @@ Use Check & install latest with Balatro closed, then the desktop Play Together
 shortcut. Existing 0.7+ launchers can receive the signed update; very old setup
 EXEs still only install their original bundle, so download this setup once.
 
-Installer/launcher: 0.8.4-dev. Bundled gameplay: unchanged 0.8.2-dev.
+Installer/launcher: 0.8.5-dev. Bundled gameplay: unchanged 0.8.2-dev.
 Different Cryptid gamesets still cannot join the same party. Match the host's
 gameset and custom/experimental rules. Profile choices are intentionally preserved.
 

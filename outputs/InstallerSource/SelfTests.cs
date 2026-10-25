@@ -13,6 +13,11 @@ namespace TogetherSetup {
                 Root=Path.Combine(parent,Guid.NewGuid().ToString("N")); Game=Path.Combine(Root,"Steam library with spaces","Balatro"); Saves=Path.Combine(Root,"Roaming","Balatro"); Backups=Path.Combine(Root,"Roaming","BalatroTogether","Backups"); Stage=Path.Combine(Root,"Local","Staging");
                 Directory.CreateDirectory(Game); Directory.CreateDirectory(Path.Combine(Saves,"1"));
                 File.WriteAllText(Path.Combine(Game,"Balatro.exe"),"Synthetic owned-game fixture; never distributed as a game."); Hash=Paths.Hash(Path.Combine(Game,"Balatro.exe"));
+                foreach(string name in GameFiles.Required) {
+                    using(var stream=File.Create(Path.Combine(Game,name)))using(var writer=new BinaryWriter(stream)) {
+                        stream.SetLength(512);writer.Write((ushort)0x5a4d);stream.Position=0x3c;writer.Write(128);stream.Position=128;writer.Write(0x4550);writer.Write((ushort)0x8664);stream.Position=152;writer.Write((ushort)0x20b);
+                    }
+                }
                 File.WriteAllText(Path.Combine(Saves,"1","save.jkr"),"preserve this unfinished run");
                 Directory.CreateDirectory(Path.Combine(Saves,"Mods","UnrelatedMod")); File.WriteAllText(Path.Combine(Saves,"Mods","UnrelatedMod","keep.txt"),"untouched");
             }

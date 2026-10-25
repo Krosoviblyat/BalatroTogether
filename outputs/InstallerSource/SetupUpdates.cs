@@ -13,6 +13,8 @@ namespace TogetherSetup {
         internal static Func<bool> Running=Detection.Running;
         internal static Action<string,string> Handoff=(installer,game)=>Process.Start(new ProcessStartInfo(installer,"--update "+Paths.Quote(game)){UseShellExecute=true,WorkingDirectory=Path.GetDirectoryName(installer)});
         internal static string TestCurrentVersion;
+        internal static Action<ProcessStartInfo> LaunchGame=info=>Process.Start(info);
+        internal static Action<IWin32Window,string> ShowGameError=(owner,message)=>MessageBox.Show(owner,message,"Repair Balatro in Steam",MessageBoxButtons.OK,MessageBoxIcon.Information);
         internal sealed class Result { public GitHubUpdates Client; public GitHubUpdates.Offer Offer; public string Floor; }
         public static string Floor(UserPaths user,InstalledBuild installed,string current) {
             string floor=current;var settings=UpdateStorage.Load(user);

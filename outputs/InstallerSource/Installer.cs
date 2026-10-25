@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Zero Crew")]
-[assembly: AssemblyVersion("0.8.4.0")]
-[assembly: AssemblyFileVersion("0.8.4.0")]
+[assembly: AssemblyVersion("0.8.5.0")]
+[assembly: AssemblyFileVersion("0.8.5.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -179,9 +179,7 @@ namespace TogetherSetup {
                 progress("Checking the game and package...");
                 if (running()) throw new Exception("Close Balatro and its bot windows, then click Install again. Your current game has not been changed.");
                 Paths.NoLinks(Game); Paths.NoLinks(Saves); Paths.NoLinks(BackupRoot); Paths.NoLinks(StageRoot);
-                string exe=Path.Combine(Game,"Balatro.exe");
-                if (!File.Exists(exe)) throw new Exception("Choose the Steam folder containing Balatro.exe.");
-                if (Paths.Hash(exe)!=expectedGame) throw new Exception("This package supports Balatro 1.0.1o-FULL for Windows x64. The selected game build differs; automatic installation stopped.");
+                GameFiles.Validate(Game,expectedGame);
                 string dll=Path.Combine(Game,"winmm.dll");
                 if (File.Exists(Path.Combine(Game,"version.dll"))) throw new Exception("An older loader or another version.dll is already installed. Use the manual guide to identify and back it up before installing.");
                 if (File.Exists(dll) && Paths.Hash(dll)!=Build.LovelyHash) throw new Exception("A different winmm.dll is already present. It has not been overwritten. Identify it using the manual guide first.");
@@ -249,8 +247,9 @@ namespace TogetherSetup {
                 string vdf=Path.Combine(root,@"steamapps\libraryfolders.vdf");
                 if (File.Exists(vdf)) foreach (Match m in Regex.Matches(File.ReadAllText(vdf),"\"path\"\\s+\"([^\"]+)\"")) roots.Add(m.Groups[1].Value.Replace(@"\\",@"\"));
             }
-            foreach (string root in roots) { string path=Path.Combine(root,@"steamapps\common\Balatro"); if (File.Exists(Path.Combine(path,"Balatro.exe"))) return path; }
-            return "";
+            string incomplete="";
+            foreach (string root in roots) { string path=Path.Combine(root,@"steamapps\common\Balatro"); if(GameFiles.Complete(path))return path;if(incomplete==""&&File.Exists(Path.Combine(path,"Balatro.exe")))incomplete=path; }
+            return incomplete;
         }
         public static void Shortcut(UserPaths user,string game,string backup) {
             string launcher=UpdateStorage.InstallLauncher(user,game);
@@ -273,14 +272,16 @@ namespace TogetherSetup {
         public SetupForm(UserPaths context,string selected,bool auto) : base(PreviewMode) {
             user=context;handoffInstall=auto; Text="Zero Crew | Install Balatro Together";
             SetHeading("by Mind_the_assassin", "come join the retard fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
-            var location=new StudioPanel();location.SetBounds(350,266,520,92);Controls.Add(location);
-            location.Controls.Add(Studio.Label("YOUR STEAM GAME",16,12,450,19,8,Studio.Red,true));
+            var location=new StudioPanel();location.SetBounds(350,266,520,120);Controls.Add(location);
+            location.Controls.Add(Studio.Label("GAME FOLDER / LOVELY LOADER",16,12,450,19,8,Studio.Red,true));
             path.SetBounds(16,40,366,31);path.Text=selected;path.ReadOnly=true;path.BorderStyle=BorderStyle.None;path.BackColor=Studio.Panel;path.ForeColor=Studio.Cream;path.Font=new Font("Segoe UI",9);path.AccessibleName="Balatro game folder";location.Controls.Add(path);
             browse=new StudioButton {Text="Browse"};browse.SetBounds(394,29,109,47);browse.Click+=(sender,e)=>{using(var f=new OpenFileDialog {Filter="Balatro|Balatro.exe",Title="Choose Balatro.exe in your Steam library"})if(f.ShowDialog()==DialogResult.OK)path.Text=Path.GetDirectoryName(f.FileName);};location.Controls.Add(browse);
-            var activity=new StudioPanel();activity.SetBounds(350,374,520,102);Controls.Add(activity);
+            var mods=new LinkLabel {Text="Mods: "+Path.Combine(user.Roaming,"Balatro","Mods"),Location=new Point(16,81),Size=new Size(487,27),AutoEllipsis=true,LinkColor=Studio.Muted,ActiveLinkColor=Studio.Red,Font=new Font("Segoe UI",8)};
+            mods.LinkClicked+=(s,e)=>{string folder=Path.Combine(user.Roaming,"Balatro","Mods");if(Directory.Exists(folder))Process.Start(new ProcessStartInfo(folder){UseShellExecute=true});else MessageBox.Show(this,"The mods folder is created after installation:\n"+folder,"Mod location");};location.Controls.Add(mods);
+            var activity=new StudioPanel();activity.SetBounds(350,398,520,78);Controls.Add(activity);
             activity.Controls.Add(Studio.Label("INSTALLATION",16,12,450,18,8,Studio.Red,true));
-            status.SetBounds(16,36,484,43);status.Font=new Font("Segoe UI",10,FontStyle.Bold);status.ForeColor=Studio.Cream;status.BackColor=Studio.Panel;status.Text=String.IsNullOrEmpty(selected)?"Find Balatro to get started.":"Balatro found. Ready when you are.";activity.Controls.Add(status);
-            bar=Progress;bar.SetBounds(16,82,486,9);activity.Controls.Add(bar);
+            status.SetBounds(16,31,484,31);status.Font=new Font("Segoe UI",10,FontStyle.Bold);status.ForeColor=Studio.Cream;status.BackColor=Studio.Panel;status.Text=String.IsNullOrEmpty(selected)?"Find Balatro to get started.":"Balatro found. Ready when you are.";activity.Controls.Add(status);
+            bar=Progress;bar.SetBounds(16,63,486,9);activity.Controls.Add(bar);
             result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Setup "+Build.Version+" / bundled gameplay "+InstalledBuild.GameplayVersion+". Public updates; no login needed.";Controls.Add(result);
             play=AddButton("Releases",350,516,251,false,()=>{
                 if(!done){Process.Start(new ProcessStartInfo("https://github.com/"+UpdatePolicy.Repository+"/releases"){UseShellExecute=true});return;}
@@ -312,6 +313,7 @@ namespace TogetherSetup {
             var engine=new Installer(path.Text,Path.Combine(user.Roaming,"Balatro"),Path.Combine(user.Roaming,@"BalatroTogether\Backups"),Path.Combine(user.Local,@"BalatroTogether\InstallerStaging"),Build.GameHash,SetupUpdates.Running,Report);
             try {
                 if(SetupUpdates.Running())throw new Exception("Balatro is open. Close it before installing or updating.");
+                GameFiles.Validate(path.Text,Build.GameHash);
                 if(online&&!handoffInstall) {
                     checking=true;Report("Checking the latest signed release before installation...");
                     string stageRoot=Path.Combine(UpdateStorage.Root(user),"SetupUpdates");Paths.NoLinks(stageRoot);Directory.CreateDirectory(stageRoot);
@@ -327,6 +329,10 @@ namespace TogetherSetup {
                 await Task.Run(()=>engine.Install());
                 Detection.Shortcut(user,path.Text,engine.Backup);
                 result.Text="Gameplay "+InstalledBuild.GameplayVersion+(handoffInstall?" installed from verified setup update.":online?" installed. Latest setup check succeeded.":" installed OFFLINE. Latest setup was NOT checked.");play.Text="Play Together";play.Enabled=true;done=true;install.Text="Done";install.Enabled=true;
+            } catch(GameFilesException e) {
+                Report("Balatro game files need repair. No installation changes were made.");
+                result.Text="Use Steam > Properties > Installed Files > Verify integrity, then Browse.";
+                SetupUpdates.ShowGameError(this,e.Message);install.Enabled=true;browse.Enabled=true;
             } catch(UnauthorizedAccessException) {
                 if(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)) MessageBox.Show(this,"Windows denied access. Use the manual guide for this folder.","Installation stopped");
                 else { elevate=true; install.Text="Continue"; result.Text="Windows needs administrator access to the game folder. Continue opens the normal Windows permission prompt and keeps your original user profile."; }
@@ -347,6 +353,7 @@ namespace TogetherSetup {
             Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
             try {
                 if(args.Length==4 && args[0]=="--setup-flow-self-test") return SetupFlowTests.Run(args[1],args[2],args[3]);
+                if(args.Length==2 && args[0]=="--game-files-self-test") return GameFilesTests.Run(args[1]);
                 if(args.Length==2 && args[0]=="--public-update-self-test") return SetupFlowTests.PublicUpdateProbe(args[1]);
                 if(args.Length==2 && args[0]=="--network-self-test") return SetupFlowTests.NetworkProbe(args[1]);
                 if(args.Length>0 && args[0]=="--self-test") return SelfTests.Run(args[1]);

@@ -314,16 +314,16 @@ namespace TogetherSetup {
         async Task LaunchInstalled() {
             if(busy)return;
             if(SetupUpdates.Running()){Report("Balatro is already open. No update was installed.");return;}
-            string exe=Path.Combine(game,"Balatro.exe");
-            if(!File.Exists(exe)||Paths.Hash(exe)!=Build.GameHash){Report("Game not found or unsupported. Run the installer and choose your Steam game.");return;}
             try {
+                var launch=GameFiles.Launch(game);
                 busy=true;play.Enabled=false;check.Enabled=false;Report("Verifying installed Together files...");
                 var installed=await Task.Run(()=>InstalledBuild.Inspect(user));ShowInstalled(installed);
                 busy=false;
                 if(installed.NeedsRepair){await RunUpdate(true,false);return;}
                 if(SetupUpdates.Running()){Report("Balatro was opened. No game files were changed.");return;}
-                Process.Start(new ProcessStartInfo(exe,"--disable-console"){WorkingDirectory=game});Close();
-            }catch(Exception error){Report(error.Message);}
+                SetupUpdates.LaunchGame(launch);Close();
+            }catch(GameFilesException error){Report("Balatro game files need repair in Steam. No game was launched.");SetupUpdates.ShowGameError(this,error.Message);}
+            catch(Exception error){Report(error.Message);}
             finally{busy=false;if(!IsDisposed){play.Enabled=true;check.Enabled=true;}}
         }
         async Task RunUpdate(bool launchAfter,bool online=true) {
@@ -332,6 +332,7 @@ namespace TogetherSetup {
             busy=true;offlineAvailable=false;play.Text="Play Together";play.Enabled=false;check.Enabled=false;access.Enabled=false;automatic.Enabled=false;Progress.Busy=true;Progress.Target=5;
             string stage=null;
             try {
+                GameFiles.Validate(game,Build.GameHash);
                 Report("Checking the installed mod and signed releases...");
                 string root=Path.Combine(UpdateStorage.Root(user),"Updates");Paths.NoLinks(root);Directory.CreateDirectory(root);
                 stage=Path.Combine(root,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
@@ -354,6 +355,8 @@ namespace TogetherSetup {
                 // High-water mark is committed only after successful installation by the new installer.
                 SetupUpdates.StartVerified(installer,game);
                 handoff=true;Close();
+            } catch(GameFilesException e) {
+                offlineAvailable=false;Report("Balatro game files need repair in Steam. No update was installed.");SetupUpdates.ShowGameError(this,e.Message);
             } catch(Exception e) {
                 offlineAvailable=true;play.Text="Play installed";
                 Report((e is IOException?"Update staging failed; installed build unchanged.":e.Message)+" Play installed skips the update check.");
