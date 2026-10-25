@@ -25,7 +25,7 @@ function C.profile()
     local p=G and G.PROFILES and G.PROFILES[G.SETTINGS.profile] or {}
     return {gameset=p.cry_gameset or 'mainline',overrides=p.cry_gameset_overrides or {}}
 end
-function C.run_choices(deck)
+function C.run_choices(deck,configured)
     local choices={};local rs=SMODS.RunSelect
     local profile=G.PROFILES[G.SETTINGS.profile]
     profile.last_choices=profile.last_choices or {}
@@ -39,10 +39,19 @@ function C.run_choices(deck)
     end
     choices.cry_antimatter=choices.cry_antimatter or {}
     choices.deck_choice=deck;choices.stake_choice='stake_white'
+    if BT.deck_choices then
+        if configured then
+            for key,value in pairs(configured) do
+                for _,def in ipairs(BT.deck_choices.definitions) do if key==def[1] then choices[key]=BT.Session.copy(value) end end
+            end
+        end
+        choices=BT.deck_choices.normalize(deck,choices)
+    end
     return choices
 end
 function C.prepare_run(deck,seed)
     local choices=BT.Session.copy(BT.state.setup_choices or C.run_choices(deck))
+    if BT.deck_choices then choices=BT.deck_choices.normalize(deck,choices,true) end
     choices.deck_choice=deck;choices.seed=seed;choices.enable_seed=true;choices.stake_choice='stake_white'
     choices.cry_antimatter=choices.cry_antimatter or {}
     if SMODS.RunSelect then SMODS.RunSelect.Setup.choices=BT.Session.copy(choices) end

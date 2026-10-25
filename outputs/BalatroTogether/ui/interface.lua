@@ -168,6 +168,9 @@ local function close()
     BT.persist()
 end
 U.close=close
+local deck_view=assert(SMODS.load_file('ui/deck_options.lua',BT.id))()(U,{txt=txt,button=button,backdrop=backdrop,
+    ink=ink,muted=muted,colors=colors})
+U.deck_options=deck_view
 local donation_view=assert(SMODS.load_file('ui/donations.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,diamond=diamond,
     backdrop=backdrop,ink=ink,muted=muted,panel=panel,colors=colors})
 pot_view=assert(SMODS.load_file('ui/pot.lua',BT.id))()(U,{col=col,txt=txt,rect=rect,button=button,hit=hit,field_text=field_text,
@@ -243,6 +246,11 @@ local function connect_screen(w,h,is_host)
         button('<',x,y+247,52,40,function() BT.config.deck=decks[(selected-2)%#decks+1][1]; BT.persist() end,muted)
         txt(BT.Session.deck_name(BT.config.deck),x+68,y+253,28,ink,456,'center')
         button('>',x+548,y+247,52,40,function() BT.config.deck=decks[selected%#decks+1][1]; BT.persist() end,muted)
+        local choices=BT.compat.run_choices(BT.config.deck,(BT.config.deck_options or {})[BT.config.deck])
+        if #BT.deck_choices.pages(BT.config.deck,choices)>0 then
+            button('DECK OPTIONS',985,y+247,230,40,function() deck_view.open(false) end,colors[3])
+            txt(BT.deck_choices.summary(BT.config.deck,choices),985,y+301,22,muted,230)
+        end
         button(steam and 'STEAM - SELECTED' or 'USE STEAM',x,y+365,292,36,function() BT.config.transport='steam'; U.focus=nil; BT.persist() end,steam and colors[1] or muted)
         button(not steam and 'DIRECT IP - SELECTED' or 'USE DIRECT IP',x+308,y+365,292,36,function() BT.config.transport='tcp'; U.focus=nil; BT.persist() end,not steam and colors[2] or muted)
         txt(steam and 'No IP, PIN or port forwarding. Add bots in the lobby.' or 'Direct IP requires a reachable host port and room PIN.',x,y+414,21,muted,600)
@@ -388,7 +396,10 @@ local function lobby(w,h)
     button('LEAVE',w-160,h-73,120,35,function() BT.client.stop(); U.navigate('home') end,colors[4],not (s and s.phase=='saving'))
     button('SETTINGS',w-320,h-73,145,35,function() U.return_to='lobby'; U.screen='settings' end,muted)
     button('CREDITS',w-480,h-73,145,35,function() U.credits_return='lobby';U.navigate('credits') end,colors[3])
-    if s then txt('PARTY / '..BT.Session.deck_name(s.deck),60,h-65,21,muted,570) end
+    if s then
+        txt('PARTY / '..BT.Session.deck_name(s.deck),60,h-65,21,muted,570)
+        if #BT.deck_choices.pages(s.deck,s.setup_choices,true)>0 then button('DECK SETTINGS',60,h-107,240,32,function() deck_view.open(true) end,colors[3]) end
+    end
 end
 local setting_list={
     {'Show player panels','panels'},{'HUD at top','hud_top'}, {'Feed on right','feed_right'},
@@ -697,6 +708,7 @@ function U.draw()
         U.opacity=math.max(0,math.min(1,p))
         if U.screen=='home' then home(1280,800)
         elseif U.screen=='host' then connect_screen(1280,800,true)
+        elseif U.screen=='deck_options' then deck_view.draw(1280,800)
         elseif U.screen=='join' then connect_screen(1280,800,false)
         elseif U.screen=='lobby' then lobby(1280,800)
         elseif U.screen=='boss_lab' then boss_view.rules(1280,800)
@@ -797,7 +809,7 @@ function U.install()
             local shift=love.keyboard.isDown('lshift') or love.keyboard.isDown('rshift')
             local editor=U.ensure_editor()
             if editor and editor:key(k,ctrl,shift,isrepeat) then return end
-            if k=='escape' then close()
+            if k=='escape' then if U.screen=='deck_options' then deck_view.back() else close() end
             elseif k=='tab' then
                 local index=0; for i,f in ipairs(U.fields) do if f==U.focus then index=i end end
                 U.focus=U.fields[(index+(shift and -2 or 0))%math.max(1,#U.fields)+1];U.editor=nil;U.ensure_editor(true)

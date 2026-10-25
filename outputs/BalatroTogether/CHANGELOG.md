@@ -1,3 +1,16 @@
+# 0.8.9-dev — Special deck setup
+
+- Add a Deck Options menu before opening a table for Cryptid Edition,
+  Enhancement, Sticker, Suit and Seal decks, plus Antimatter combinations.
+- Read choices, names, defaults and eligibility from the pinned native mod.
+  Antimatter reveals extra pages for its selected component decks.
+- Remember each deck's host settings separately. Replicate the chosen setup
+  to every client and companion; retain it for fast restart and manual saves.
+- Add a read-only Deck Settings view in the party lobby, pagination, tactile
+  buttons, selected states and the existing reduced-motion option.
+- Ship as a signed data update for the permanent launcher; no new installer.
+  All players must use the same gameplay version.
+
 # Government Man — 0.8.6-dev
 
 Native Legendary Joker, base cost $20, starting X2 Mult. Every newly acquired

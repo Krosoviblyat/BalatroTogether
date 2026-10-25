@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.8.8-dev'
+BT.version='0.8.9-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
@@ -8,6 +8,7 @@ BT.Session=load('core/session.lua')
 BT.Session.Harbinger=load('core/harbinger.lua')
 BT.Session.Harbinger.Strategy=load('bots/strategy.lua')
 BT.Session.Numbers=BT.numbers
+BT.deck_choices=load('game/deck_choices.lua')
 BT.compat=load('game/compat.lua')
 BT.compat.install()
 BT.Session.Donations=load('core/donations.lua')

@@ -109,7 +109,7 @@ function C.host(transport)
     C.compat=BT.compat and BT.compat.signature()
     C.resume=token(); C.id=1; C.sequence=0
     C.model=BT.Session.new{intended=BT.config.intended_players,scaling=BT.config.scaling,name=BT.config.username,token=C.resume,seed=seed,boss_stake=BT.config.boss_stake,boss_mode=BT.config.boss_mode,quick_duel=BT.config.quick_duel,deck=BT.config.deck or 'b_red',party_id=token():sub(1,32),save_autos=false}
-    C.model.setup_choices=BT.compat and BT.compat.run_choices(C.model.deck)
+    C.model.setup_choices=BT.compat and BT.compat.run_choices(C.model.deck,(BT.config.deck_options or {})[C.model.deck])
     C.model.players[1].steam_name=BT.steam.name()
     local identity=BT.steam.available and BT.steam.available()
     if type(identity)=='table' then C.model.players[1].steam_id=identity.id end

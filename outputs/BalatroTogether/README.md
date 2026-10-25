@@ -1,4 +1,4 @@
-# Balatro Together v0.8.8-dev - Government Man & Co-op Fest!
+# Balatro Together v0.8.9-dev - Government Man & Co-op Fest!
 
 ### Heyo! I'm Kross!
 
@@ -27,6 +27,13 @@ Well, here we are.
 - **Teammate inspection**, so you can keep track of what your friends are working with.
 - **AI companions!** You can fill empty seats with bots that actually play hands, shop, discard, and contribute to the run.
 - **Blind skip voting**, because sometimes nobody wants to deal with another Small Blind.
+
+### Special Deck Options
+- When hosting, choose a deck and click **Deck Options** for its extra setup.
+- Choose editions, enhancements, stickers, suits, or seals using Cryptid's available choices.
+- Antimatter lets you select which compatible decks to combine, with extra options for those decks too.
+- Everyone uses the host's choices. Teammates can inspect them through **Deck Settings** in the lobby.
+- Choices are remembered per deck and retained through fast restarts and manual party checkpoints.
 
 ### Donation Box
 - Donate Jokers and consumables to your friends!
