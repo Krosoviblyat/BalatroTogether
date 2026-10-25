@@ -1,56 +1,24 @@
-# Public signed updates
+# Permanent Balatro Together installer / launcher
 
+Download BalatroTogether.exe once from the permanent launcher release.
+Close Balatro and click Check & install latest. Future gameplay updates are
+signed ZIP bundles applied by the same launcher, without a new installer EXE.
+The interface shows installed and GitHub gameplay versions, not an installer
+build number. Internal build identifiers are retained for signature and
+legacy-upgrade compatibility only.
 
-Government Man and the coop fest
+Every opening and Play checks the newest published versioned GitHub release,
+including beta/dev releases. Missing metadata on the newest release is an
+error; an older release is never silently installed. Failed checks leave the
+installed build untouched. Play installed is explicit and verifies its signed
+cached receipt. The permanent launcher tag is excluded from gameplay selection.
 
-Native Legendary Joker, base $20, starting X2 Mult. Each newly acquired
-Negative Joker adds X0.5. Every second acquisition turns one random owned
-non-Negative Joker Negative, including native slot bonuses and animation.
-Legendary pool/collection, Blueprint scoring, donations and native manual
-saves are supported. Blueprint/debuff/rejected donations cannot farm growth.
-Supplied art is preserved in the native 1x/2x atlas.
+Signed bundles include the supported Lovely, Steamodded, Cryptid, Amulet and
+Together files, sources and licenses. The owned game/runtime DLLs are never
+distributed. Backups, rollback, actual-file verification, anti-downgrade and
+running-game guards remain. Requires the supported Windows Steam Balatro.
 
-The installer and launcher welcome now reads:
-come on in and join the coop fest!
-
-Everyone must update to gameplay 0.8.7-dev. The normal installer updates the
-main mod only when Balatro is closed. No live game was changed during QA.
-
-Missing game-file and wrong-folder protection
-
-Setup now checks the original game's required Windows x64 runtime DLLs,
-including SDL2.dll, love.dll and lua51.dll. An EXE-only or incomplete folder
-stops before downloads, backups, mod installation or launch and shows the
-selected folder, missing filenames and Steam verification instructions.
-The game folder gets Lovely's winmm.dll; the separate AppData mod destination
-is now shown in setup and opens on click after installation.
-The launcher validates the same game and explicitly uses its directory when
-starting Balatro. No owned game DLLs are bundled.
-
-Public updates without GitHub login
-
-The repository is public. Setup and the desktop launcher now use anonymous
-release downloads, ignore old stored tokens, and show Releases instead of a
-GitHub-access dialog. No account or token is required to install/update.
-
-Use Check & install latest with Balatro closed, then the desktop Play Together
-shortcut. Existing 0.7+ launchers can receive the signed update; very old setup
-EXEs still only install their original bundle, so download this setup once.
-
-Installer/launcher and bundled gameplay: 0.8.7-dev. Update every player.
-Different Cryptid gamesets still cannot join the same party. Match the host's
-gameset and custom/experimental rules. Profile choices are intentionally preserved.
-
-Integrity checks, signed manifests, backups and running-game protection remain.
-Real anonymous-network production-button tests download the published signed
-installer and execute its engine only inside isolated test game/profile folders.
-No live game, profile, Steam lobby or save is modified by those tests.
-
-The app never reads or transmits the old DPAPI token. No credential is embedded.
-UpdateKey.cs is the unchanged public verification key. The private signing key
-stays in the maintainer Windows account and is never packaged. No Authenticode
-certificate is included. --network-self-test verifies a real anonymous manifest
-check; --public-update-self-test additionally drives production Install/Play
-buttons, downloads real release bytes, verifies them, and invokes the actual
-installer engine inside isolated paths. Source fixtures still verify failures,
-offline choice, signature rejection and downgrade handling.
+Build.cmd rebuilds the final engine from its exported source and full package.
+Normal future releases only run the data-bundle builder and signing utility.
+The publisher private key stays protected in the maintainer Windows account.
+No token or GitHub account is needed for player updates.

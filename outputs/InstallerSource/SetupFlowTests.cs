@@ -14,7 +14,7 @@ namespace TogetherSetup {
         public static int NetworkProbe(string parent) {
             System.Net.ServicePointManager.SecurityProtocol=System.Net.SecurityProtocolType.Tls12;
             Directory.CreateDirectory(parent);bool success=false;string message=null,version=null;
-            try{var offer=new GitHubUpdates("").Find(parent,"0.8.0-dev","0.8.0-dev");success=offer!=null;if(success)version=offer.manifest.version;}
+            try{var offer=new GitHubUpdates("").Latest(parent,"0.8.0-dev");success=offer!=null;if(success)version=offer.Version;}
             catch(Exception e){message=e.Message;}
             File.WriteAllText(Path.Combine(parent,"unauthenticated-network-result.json"),new JavaScriptSerializer().Serialize(new {public_release_verified=success,version=version,message=message,network="Real unauthenticated GitHub API and signed release manifest requests; no token read or transmitted",game_files_changed=false}));
             return success?0:1;
@@ -88,16 +88,17 @@ namespace TogetherSetup {
                 var blocked=new Fixture(parent,"blocked");var denied=new FixtureClient(release){Fail=true};SetupUpdates.ClientFactory=_=>denied;SetupUpdates.Handoff=(exe,game)=>{throw new Exception("A failed check attempted handoff");};
                 using(var form=new SetupForm(blocked.User,blocked.Game,false)) {
                     Show(form);((Button)All(form).Single(c=>c is Button&&c.Text=="Check & install latest")).PerformClick();Wait(()=>!Field<bool>(form,"busy"),"authentication refusal");
-                    Check(blocked.Version=="0.8.0-dev"&&Field<LinkLabel>(form,"offline").Visible&&Field<Label>(form,"status").Text.Contains("Update check failed"),"Failed check silently installed or claimed latest");
+                    Check(blocked.Version=="0.8.0-dev"&&!Field<LinkLabel>(form,"offline").Visible&&Field<Label>(form,"status").Text.Contains("Update check failed"),"Failed check silently installed or claimed latest");
                     using(var bitmap=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(bitmap,new Rectangle(0,0,form.Width,form.Height));bitmap.Save(Path.Combine(parent,"access-required.png"));}
-                    checks.Add("Failed public download leaves old gameplay untouched and shows an explicit offline choice instead of false update success");
-                    typeof(SetupForm).GetMethod("Start",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(form,new object[]{false});Wait(()=>Field<bool>(form,"done"),"explicit offline install");
-                    Check(Field<Label>(form,"result").Text.Contains("OFFLINE")&&Field<Label>(form,"result").Text.Contains("NOT checked")&&Field<Label>(form,"result").Text.Contains(InstalledBuild.GameplayVersion),"Offline install falsely claimed latest or hid gameplay version");blocked.Preserved();
-                    checks.Add("Explicit offline choice installs the verified bundle and visibly says the latest release was not checked");form.Close();
+                    checks.Add("Failed public download leaves old gameplay untouched and offers no stale offline install");
+                    denied.Fail=false;SetupUpdates.Handoff=(exe,game)=>Engine(exe,blocked,"Retry",false);
+                    ((Button)All(form).Single(c=>c is Button&&c.Text=="Check & install latest")).PerformClick();Wait(()=>form.IsDisposed,"retry latest install");
+                    Check(blocked.Version=="0.8.2-dev","Retry installed an embedded build instead of the selected signed release");blocked.Preserved();
+                    checks.Add("Retry after network failure fetches the selected signed release instead of installing the old embedded bundle");
                 }
                 var l=new Fixture(parent,"play");var playClient=new FixtureClient(release);SetupUpdates.ClientFactory=_=>playClient;SetupUpdates.Handoff=(exe,game)=>{Engine(exe,l,"Play",false);applied++;};
                 using(var form=new LauncherForm(l.User,l.Game)) {
-                    Show(form);((CheckBox)All(form).Single(c=>c is CheckBox&&c.Text.StartsWith("Keep Together"))).Checked=true;
+                    Show(form);
                     ((Button)All(form).Single(c=>c is Button&&c.Text=="Play Together")).PerformClick();Wait(()=>form.IsDisposed,"Play update check");
                 }
                 Check(playClient.Requests>=4&&l.Version=="0.8.2-dev","Play did not check and apply newer gameplay");checks.Add("Production Play button performs its own online update check when automatic updates are enabled");

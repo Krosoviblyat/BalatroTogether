@@ -120,7 +120,7 @@ namespace TogetherSetup {
             var close=new StudioButton {Text="×",AccessibleName="Close window"};close.SetBounds(863,18,35,37);close.Click+=(s,e)=>Close();Controls.Add(close);
             var minimize=new StudioButton {Text="−",AccessibleName="Minimize window"};minimize.SetBounds(821,18,35,37);minimize.Click+=(s,e)=>WindowState=FormWindowState.Minimized;Controls.Add(minimize);
             motion.Text="Reduced motion";motion.SetBounds(32,571,160,25);motion.ForeColor=Studio.Muted;motion.BackColor=Studio.Ink;motion.Font=new Font("Segoe UI",9);motion.CheckedChanged+=(s,e)=>{reduce=motion.Checked;if(MotionChanged!=null)MotionChanged(reduce);Invalidate(true);};Controls.Add(motion);
-            Controls.Add(Studio.Label("SETUP + UPDATES   /   "+Build.Version,350,576,440,20,8,Studio.Muted,false));
+            Controls.Add(Studio.Label("ZERO CREW   /   INSTALL + UPDATE + PLAY",350,576,440,20,8,Studio.Muted,false));
             clock.Tick+=(s,e)=>{double now=elapsed.Elapsed.TotalSeconds;Animate((float)Math.Min(.05,Math.Max(0,now-previous)));previous=now;};
             Shown+=(s,e)=>{if(!preview){elapsed.Start();clock.Start();}};
         }

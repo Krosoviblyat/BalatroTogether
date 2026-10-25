@@ -1,4 +1,4 @@
-# Balatro Together v0.8.7-dev - Government Man & Co-op Fest!
+# Balatro Together v0.8.8-dev - Government Man & Co-op Fest!
 
 ### Heyo! I'm Kross!
 
@@ -128,12 +128,12 @@ The installer includes the compatible versions of:
 
 1. Make sure you own Balatro on Steam and have it installed on Windows.
 2. Close Balatro completely.
-3. Download **BalatroTogether-Setup-0.8.7-dev.exe** from this release.
+3. Download the permanent **[BalatroTogether.exe](https://github.com/Krosoviblyat/BalatroTogether/releases/download/launcher/BalatroTogether.exe)** installer / launcher.
 4. Run the installer and follow the instructions.
 5. Launch the game normally through steam, the play together shortcut is a backup.
 6. Invite your friends and enjoy!
 
-The launcher also supports automatic signed updates, so you can check for newer releases without downloading everything manually each time.
+The same permanent launcher checks GitHub every time it opens and before Play. Future releases use signed update ZIPs, so you do not need a new installer for each patch.
 
 **IMPORTANT:** Everyone in your party needs to be on the same gameplay version, with compatible Cryptid settings. I recommend madness because... funny-
 

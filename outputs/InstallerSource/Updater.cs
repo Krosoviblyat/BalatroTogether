@@ -85,7 +85,7 @@ namespace TogetherSetup {
     // The launcher EXE version is not evidence that its mod was installed.
     // Check the original user's Mods against this EXE's embedded payload.
     internal sealed class InstalledBuild {
-        public string Version, BundledVersion, Problem;
+        public string Version, BundledVersion, Problem, ReleaseVersion, BundleHash;
         public bool NewerMod;
         public bool NeedsRepair {get{return Problem!=null;}}
         public bool CanRepair(string floor) {
@@ -125,6 +125,7 @@ namespace TogetherSetup {
         }
         public static string GameplayVersion { get {ReadBundle();return bundled;} }
         public static InstalledBuild Inspect(UserPaths user) {
+            var received=BundleUpdates.Inspect(user);if(received!=null)return received;
             ReadBundle();
             var result=new InstalledBuild {BundledVersion=bundled};
             string folder=Path.Combine(user.Roaming,"Balatro","Mods","BalatroTogether"),meta=Path.Combine(folder,"BalatroTogether.json");
@@ -137,7 +138,7 @@ namespace TogetherSetup {
              catch(InvalidOperationException){result.Problem="Together metadata needs repair.";return result;}
              catch(Exception error){if(error is IOException||error is UnauthorizedAccessException)throw;result.Problem="Together metadata needs repair.";return result;}
             result.NewerMod=UpdatePolicy.Number(result.Version)>UpdatePolicy.Number(bundled);
-            if(result.NewerMod)return result; // Never replace a newer mod with an older embedded one.
+            if(result.NewerMod){result.Problem="A newer mod has no signed installation receipt. Check updates to verify it.";return result;} // Never replace a newer mod with an older embedded one.
             if(result.Version!=bundled){result.Problem="Installed Together "+result.Version+" differs from bundled "+bundled+".";return result;}
             foreach(var file in expected) {
                 string target=Path.Combine(folder,file.Key.Replace('/',Path.DirectorySeparatorChar));Paths.Within(target,folder);Paths.NoLinks(target);
@@ -221,6 +222,8 @@ namespace TogetherSetup {
             for(int redirect=0;redirect<=5;redirect++) {
                 if(!AssetHost(uri))throw new Exception("Unexpected update download host.");
                 var request=(HttpWebRequest)WebRequest.Create(uri); request.AllowAutoRedirect=false; request.Timeout=20000; request.ReadWriteTimeout=30000;
+                request.CachePolicy=new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+                request.Headers[HttpRequestHeader.CacheControl]="no-cache, no-store";
                 request.UserAgent="BalatroTogether-Updater/"+Build.Version; request.Accept=api.Contains("/assets/")?"application/octet-stream":"application/vnd.github+json";
                 if(uri.Host=="api.github.com") { request.Headers["X-GitHub-Api-Version"]="2026-03-10"; }
                 try {
@@ -248,7 +251,38 @@ namespace TogetherSetup {
         public byte[] Bytes(string url,long limit,string stage) {
             string path=Path.Combine(stage,Guid.NewGuid().ToString("N")+".download"); Download(url,path,limit,null);return File.ReadAllBytes(path);
         }
-        public sealed class Offer { public UpdateManifest manifest; public string packageApi; }
+        public sealed class Offer {
+            public UpdateManifest manifest;public DataManifest bundle;public byte[] metadata,signature;public string packageApi;
+            public string Version {get{return bundle!=null?bundle.version:manifest.version;}}
+        }
+        internal static Dictionary<string,object> Newest(Dictionary<string,object>[] releases,string floor) {
+            var candidates=releases.Where(r=>!Convert.ToBoolean(r["draft"])).Where(r=>{try{UpdatePolicy.Number(Convert.ToString(r["tag_name"]));return true;}catch{return false;}}).OrderByDescending(r=>UpdatePolicy.Number(Convert.ToString(r["tag_name"]))).ToArray();
+            if(candidates.Length==0)throw new Exception("GitHub has no published versioned update. No older build was installed.");
+            var latest=candidates[0];string tag=Convert.ToString(latest["tag_name"]);
+            if(UpdatePolicy.Number(tag)<UpdatePolicy.Number(floor))throw new Exception("GitHub's newest release is older than this installation. Downgrade refused.");
+            bool data=Asset(latest,"Update-v3.json")!=null&&Asset(latest,"Update-v3.sig")!=null;
+            bool direct=Asset(latest,"Update-v2.json")!=null&&Asset(latest,"Update-v2.sig")!=null;
+            bool legacy=Asset(latest,"Update.json")!=null&&Asset(latest,"Update.sig")!=null;
+            if(!data&&!direct&&!legacy)throw new Exception("Newest GitHub release "+tag+" is missing its signed update files. No older build was installed.");
+            return latest;
+        }
+        public Offer Latest(string stage,string floor) {
+            var bytes=Bytes("https://api.github.com/repos/"+UpdatePolicy.Repository+"/releases?per_page=100",4*1024*1024,stage);
+            var list=new JavaScriptSerializer{MaxJsonLength=4*1024*1024}.Deserialize<Dictionary<string,object>[]>(UpdatePolicy.Utf8.GetString(bytes));
+            var release=Newest(list,floor);string tag=Convert.ToString(release["tag_name"]);
+            if(Asset(release,"Update-v3.json")!=null&&Asset(release,"Update-v3.sig")!=null) {
+                byte[] data=Bytes(Asset(release,"Update-v3.json"),65536,stage),signature=Bytes(Asset(release,"Update-v3.sig"),2048,stage);
+                var manifest=BundleUpdates.Verify(data,signature,tag,DateTime.UtcNow,UpdateKey.PublicXml);
+                string package=Asset(release,manifest.asset);if(package==null)throw new Exception("Newest GitHub release is missing its signed data bundle. No older build was installed.");
+                return new Offer{bundle=manifest,metadata=data,signature=signature,packageApi=package};
+            }
+            bool direct=Asset(release,"Update-v2.json")!=null&&Asset(release,"Update-v2.sig")!=null;
+            byte[] oldData=Bytes(Asset(release,direct?"Update-v2.json":"Update.json"),65536,stage),oldSig=Bytes(Asset(release,direct?"Update-v2.sig":"Update.sig"),2048,stage);
+            var old=UpdatePolicy.Verify(oldData,oldSig,tag,DateTime.UtcNow,UpdateKey.PublicXml);
+            if(old.schema!=(direct?2:1))throw new Exception("Update metadata format does not match its asset name.");
+            string oldPackage=Asset(release,old.asset);if(oldPackage==null)throw new Exception("Newest signed update package is missing.");
+            return new Offer{manifest=old,packageApi=oldPackage};
+        }
         internal static string Asset(Dictionary<string,object> release,string name) {
             if(!release.ContainsKey("assets"))return null;
             var matches=((System.Collections.IEnumerable)release["assets"]).Cast<Dictionary<string,object>>().Where(a=>Convert.ToString(a["name"])==name&&Convert.ToString(a["state"])=="uploaded").ToArray();
@@ -285,8 +319,8 @@ namespace TogetherSetup {
         public static bool PreviewMode;
         protected override bool ShowWithoutActivation {get{return PreviewMode;}}
         readonly UserPaths user; readonly UpdateSettings settings;
-        readonly Label status=new Label(),versions=new Label(); readonly Button play,check,access; readonly CheckBox automatic=new StudioCheckBox();
-        bool busy,handoff,offlineAvailable; readonly string game;
+        readonly Label status=new Label(),versions=new Label(); readonly Button play,check,access;
+        bool busy,handoff,offlineAvailable; readonly string game;string latestVersion;
         public LauncherForm(UserPaths context,string selected) : base(PreviewMode) {
             user=context;settings=UpdateStorage.Load(user);game=selected;Text="Zero Crew | Play Balatro Together";
             SetHeading("by Mind_the_assassin", "come on in and join the coop fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
@@ -294,34 +328,34 @@ namespace TogetherSetup {
             activity.Controls.Add(Studio.Label("SIGNED UPDATES",16,15,450,20,8,Studio.Red,true));
             status.Text="Ready to play. We'll check your version before launching.";status.SetBounds(16,45,484,53);status.BackColor=Studio.Panel;status.ForeColor=Studio.Cream;status.Font=new Font("Segoe UI",11,FontStyle.Bold);activity.Controls.Add(status);
             Progress.SetBounds(16,103,486,9);activity.Controls.Add(Progress);
-            automatic.Text="Keep Together up to date before playing";automatic.Checked=settings.automatic;automatic.SetBounds(354,403,510,27);automatic.ForeColor=Studio.Cream;automatic.CheckedChanged+=(sender,e)=>{settings.automatic=automatic.Checked;UpdateStorage.Save(user,settings);};Controls.Add(automatic);
-            versions.Text="Launcher "+Build.Version+" / installed mod: not checked";versions.SetBounds(350,440,520,22);versions.ForeColor=Studio.Cream;versions.Font=new Font("Segoe UI",9);Controls.Add(versions);
+            Controls.Add(Studio.Label("Checks GitHub on opening and before Play.",354,403,510,27,10,Studio.Cream,false));
+            versions.Text="Installed mod: checking / Latest mod: checking GitHub";versions.SetBounds(350,440,520,22);versions.ForeColor=Studio.Cream;versions.Font=new Font("Segoe UI",9);Controls.Add(versions);
             Controls.Add(Studio.Label("Public signed updates / no GitHub account or token needed.",350,469,520,25,9,Studio.Muted,false));
             access=AddButton("Releases",350,516,150,false,()=>Process.Start(new ProcessStartInfo("https://github.com/"+UpdatePolicy.Repository+"/releases"){UseShellExecute=true}));
             check=AddButton("Check updates",510,516,162,false,async()=>await RunUpdate(false));
             play=AddButton("Play Together",682,516,188,true,async()=>await Play());AcceptButton=play;
             ReducedMotion=settings.reduced_motion;MotionChanged+=value=>{settings.reduced_motion=value;UpdateStorage.Save(user,settings);};
-            FormClosing+=(sender,e)=>{if(busy&&!handoff)e.Cancel=true;};Shown+=async(sender,e)=>{if(!PreviewMode&&settings.automatic)await RunUpdate(false);};
+            FormClosing+=(sender,e)=>{if(busy&&!handoff)e.Cancel=true;};Shown+=async(sender,e)=>{if(!PreviewMode)await RunUpdate(false);};
         }
         void Report(string message) {if(InvokeRequired){BeginInvoke(new Action<string>(Report),message);return;}status.Text=message; var percent=Regex.Match(message,@" (\d+)%$");if(percent.Success)Progress.Target=Int32.Parse(percent.Groups[1].Value);}
         void ShowInstalled(InstalledBuild installed) {
-            versions.Text="Launcher "+Build.Version+" / mod "+(installed.Version??"missing or unreadable")+(installed.NeedsRepair?" / REPAIR NEEDED":installed.NewerMod?" / newer than bundle":" / verified");
+            versions.Text="Installed mod: "+(installed.Version??"missing")+" / Latest mod: "+(latestVersion??"not checked")+(installed.NeedsRepair?" / repair needed":"");
         }
         async Task Play() {
             if(busy)return;
-            if(settings.automatic&&!offlineAvailable)await RunUpdate(true);else await LaunchInstalled();
+            if(!offlineAvailable)await RunUpdate(true);else await LaunchInstalled();
         }
-        async Task LaunchInstalled() {
-            if(busy)return;
-            if(SetupUpdates.Running()){Report("Balatro is already open. No update was installed.");return;}
+        async Task LaunchInstalled(bool fromUpdate=false) {
+            if(busy&&!fromUpdate)return;
+            busy=true;play.Enabled=false;check.Enabled=false;
             try {
+                if(SetupUpdates.Running()){Report("Balatro is already open. No update was installed.");return;}
                 var launch=GameFiles.Launch(game);
-                busy=true;play.Enabled=false;check.Enabled=false;Report("Verifying installed Together files...");
+                Report("Verifying installed Together files...");
                 var installed=await Task.Run(()=>InstalledBuild.Inspect(user));ShowInstalled(installed);
-                busy=false;
-                if(installed.NeedsRepair){await RunUpdate(true,false);return;}
+                if(installed.NeedsRepair)throw new Exception("Installed files need repair. Click Check updates while connected; no older bundled mod was installed.");
                 if(SetupUpdates.Running()){Report("Balatro was opened. No game files were changed.");return;}
-                SetupUpdates.LaunchGame(launch);Close();
+                SetupUpdates.LaunchGame(launch);busy=false;Close();
             }catch(GameFilesException error){Report("Balatro game files need repair in Steam. No game was launched.");SetupUpdates.ShowGameError(this,error.Message);}
             catch(Exception error){Report(error.Message);}
             finally{busy=false;if(!IsDisposed){play.Enabled=true;check.Enabled=true;}}
@@ -329,7 +363,7 @@ namespace TogetherSetup {
         async Task RunUpdate(bool launchAfter,bool online=true) {
             if(busy)return;
             if(SetupUpdates.Running()){Report("Balatro is open. Close it before checking or installing updates.");return;}
-            busy=true;offlineAvailable=false;play.Text="Play Together";play.Enabled=false;check.Enabled=false;access.Enabled=false;automatic.Enabled=false;Progress.Busy=true;Progress.Target=5;
+            busy=true;offlineAvailable=false;play.Text="Play Together";play.Enabled=false;check.Enabled=false;access.Enabled=false;Progress.Busy=true;Progress.Target=5;
             string stage=null;
             try {
                 GameFiles.Validate(game,Build.GameHash);
@@ -340,6 +374,20 @@ namespace TogetherSetup {
                 // A failed online check must never silently repair/install an
                 // old embedded copy and present it as the latest release.
                 var selection=online?await Task.Run(()=>SetupUpdates.Check(user,stage)):null;
+                if(selection!=null&&selection.Offer!=null) {
+                    latestVersion=selection.Offer.Version;ShowInstalled(installed);
+                    if(selection.Offer.bundle!=null) {
+                        if(installed.BundleHash==selection.Offer.bundle.sha256&&!installed.NeedsRepair) {
+                            Report("Latest mod "+latestVersion+" is installed and verified.");if(launchAfter)await LaunchInstalled(true);return;
+                        }
+                        Report("Installing latest mod "+latestVersion+" from GitHub...");
+                        await Task.Run(()=>SetupUpdates.InstallBundle(selection,stage,user,game,Report));
+                        installed=await Task.Run(()=>InstalledBuild.Inspect(user));ShowInstalled(installed);
+                        if(installed.NeedsRepair||installed.Version!=latestVersion)throw new Exception("Installed files did not match the latest release. Play was stopped.");
+                        Report("Latest mod "+latestVersion+" installed and verified.");if(launchAfter)await LaunchInstalled(true);return;
+                    }
+                    if(SetupUpdates.SameInstaller(selection.Offer))selection.Offer=null;
+                }
                 string floor=selection!=null?selection.Floor:SetupUpdates.Floor(user,installed,Build.Version);
                 string installer;
                 if(selection==null||selection.Offer==null) {
@@ -348,7 +396,7 @@ namespace TogetherSetup {
                         installer=await Task.Run(()=>installed.StageRepair(stage,floor));
                     } else {
                         Report(online?"Latest check succeeded. Gameplay "+installed.Version+" is verified.":"Online updates are off. Gameplay "+installed.Version+" is verified locally.");
-                        busy=false;if(launchAfter)await LaunchInstalled();return;
+                        if(launchAfter)await LaunchInstalled(true);return;
                     }
                 } else installer=await Task.Run(()=>SetupUpdates.Download(selection,stage,Report));
                 if(SetupUpdates.Running())throw new Exception("Balatro was opened. No game files were changed. Close it and check updates again.");
@@ -363,7 +411,7 @@ namespace TogetherSetup {
             }
             finally {
                 if(stage!=null&&!handoff)try{Paths.RemoveOwned(stage,Path.GetDirectoryName(stage));}catch{}
-                busy=false;if(!IsDisposed){Progress.Busy=false;Progress.Target=0;play.Enabled=true;check.Enabled=true;access.Enabled=true;automatic.Enabled=true;}
+                busy=false;if(!IsDisposed){Progress.Busy=false;Progress.Target=0;play.Enabled=true;check.Enabled=true;access.Enabled=true;}
             }
         }
     }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -30,6 +31,8 @@ namespace TogetherSetup {
         static void Capture(StudioForm form,string folder,string name,List<string> tests) {
             form.ShowInTaskbar=false;form.StartPosition=FormStartPosition.Manual;form.Location=new Point(-32000,-32000);form.Show();Application.DoEvents();
             Bounds(form);tests.Add(name+": all controls fit their panels at 100% scale");
+            if(form.Controls.Cast<Control>().Any(c=>c.Text.StartsWith("Launcher "+Build.Version)||c.Text.StartsWith("Setup "+Build.Version)||c.Text.Contains("SETUP + UPDATES   /")))throw new Exception("Launcher build version is exposed as a gameplay version");
+            tests.Add(name+": permanent launcher identity does not show an installer build number");
             foreach(Control child in form.Controls)if(child is Label&&child.Text=="come on in and join the coop fest!") {
                 if(TextRenderer.MeasureText(child.Text,child.Font,new Size(child.Width,child.Height),TextFormatFlags.SingleLine|TextFormatFlags.NoPadding).Width>child.Width)throw new Exception("Welcome line is truncated");
                 tests.Add(name+": complete coop fest welcome line fits without truncation");

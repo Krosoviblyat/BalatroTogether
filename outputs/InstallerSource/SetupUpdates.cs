@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,9 +26,19 @@ namespace TogetherSetup {
             return floor;
         }
         public static Result Check(UserPaths user,string stage) {
-            var installed=InstalledBuild.Inspect(user);string current=TestCurrentVersion??Build.Version;
+            var installed=InstalledBuild.Inspect(user);string current=TestCurrentVersion??installed.ReleaseVersion??installed.Version??"0.0.0";
             string floor=Floor(user,installed,current);var client=ClientFactory("");
-            return new Result {Client=client,Offer=client.Find(stage,current,floor),Floor=floor};
+            return new Result {Client=client,Offer=client.Latest(stage,floor),Floor=floor};
+        }
+        public static bool SameInstaller(GitHubUpdates.Offer offer) {return offer!=null&&offer.bundle==null&&offer.manifest.installer_sha256==Paths.Hash(Assembly.GetExecutingAssembly().Location);}
+        public static void InstallBundle(Result selection,string stage,UserPaths user,string game,Action<string> report) {
+            if(selection.Offer==null||selection.Offer.bundle==null)throw new Exception("No signed data bundle was selected.");
+            var offer=selection.Offer;var m=offer.bundle;
+            if(Running())throw new Exception("Balatro is open. No update was installed.");
+            string package=Path.Combine(stage,"update.zip");
+            selection.Client.Download(offer.packageApi,package,m.size,n=>report("Downloading mod "+m.version+"  "+(n*100/m.size)+"%"));
+            var verified=new VerifiedBundle{Manifest=m,Metadata=offer.metadata,Signature=offer.signature,Package=package};
+            BundleUpdates.Install(verified,user,game,report);
         }
         public static void CanInstallBundle(UserPaths user) {
             string floor=Floor(user,InstalledBuild.Inspect(user),Build.Version);

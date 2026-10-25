@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
 
 internal static class SignUpdate {
@@ -21,6 +22,22 @@ internal static class SignUpdate {
                     File.WriteAllText(args[1],"namespace TogetherSetup { internal static class UpdateKey { public const string PublicXml=@\""+rsa.ToXmlString(false).Replace("\"","\"\"")+"\"; } }\n",new UTF8Encoding(false));
                 }
                 Console.WriteLine("Public verification key exported; private key remains encrypted under this Windows account.");return 0;
+            }
+            if(args.Length==6&&args[0]=="--sign-bundle") {
+                string package=args[1],version=args[2],output=args[3],game=args[4],lovely=args[5];
+                if(Path.GetFileName(package)!="BalatroTogether-Update-"+version+".zip"||!Regex.IsMatch(game,"^[a-f0-9]{64}$")||!Regex.IsMatch(lovely,"^[a-f0-9]{64}$"))throw new Exception("Invalid bundle signing inputs.");
+                using(var zip=ZipFile.OpenRead(package)) {
+                    using(var reader=new StreamReader(zip.GetEntry("Mods/BalatroTogether/BalatroTogether.json").Open())) {
+                        var meta=new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string,object>>(reader.ReadToEnd());
+                        if(Convert.ToString(meta["version"])!=version)throw new Exception("Gameplay version differs from bundle version.");
+                    }
+                    using(var input=zip.GetEntry("Game Folder/winmm.dll").Open())using(var buffer=new MemoryStream()){input.CopyTo(buffer);if(Hash(buffer.ToArray())!=lovely)throw new Exception("Lovely loader differs from the signed hash.");}
+                    foreach(var entry in zip.Entries)if(entry.FullName.StartsWith("Game Folder/")&&!entry.FullName.EndsWith("/")&&entry.FullName!="Game Folder/winmm.dll")throw new Exception("Owned game files must not be packaged.");
+                }
+                var now=DateTime.UtcNow;
+                byte[] metadata=new UTF8Encoding(false).GetBytes(new JavaScriptSerializer().Serialize(new {schema=3,repository="Krosoviblyat/BalatroTogether",version=version,asset=Path.GetFileName(package),size=new FileInfo(package).Length,sha256=Hash(File.ReadAllBytes(package)),game_sha256=game,lovely_sha256=lovely,issued_utc=now.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'"),expires_utc=now.AddDays(90).ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")}));
+                using(var rsa=new RSACryptoServiceProvider()){rsa.PersistKeyInCsp=false;rsa.FromXmlString(Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(KeyFile),Entropy,DataProtectionScope.CurrentUser)));Directory.CreateDirectory(output);File.WriteAllBytes(Path.Combine(output,"Update-v3.json"),metadata);File.WriteAllBytes(Path.Combine(output,"Update-v3.sig"),rsa.SignData(metadata,CryptoConfig.MapNameToOID("SHA256")));}
+                Console.WriteLine("Signed data-only update bundle. No installer EXE is required for this release.");return 0;
             }
             if(args.Length==4&&args[0]=="--sign") {
                 string package=args[1],version=args[2],output=args[3];

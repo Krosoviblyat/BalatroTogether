@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Zero Crew")]
-[assembly: AssemblyVersion("0.8.7.0")]
-[assembly: AssemblyFileVersion("0.8.7.0")]
+[assembly: AssemblyVersion("0.8.8.0")]
+[assembly: AssemblyFileVersion("0.8.8.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -119,6 +119,8 @@ namespace TogetherSetup {
         public readonly string Game, Saves, BackupRoot, StageRoot;
         readonly string expectedGame; readonly Func<bool> running; readonly Action<string> progress;
         public Action AfterFirstReplacement;
+        public Action CommitInstallation;
+        public VerifiedBundle Bundle;
         public Installer(string game,string saves,string backupRoot,string stageRoot,string gameHash,Func<bool> busy,Action<string> report) {
             Game=Paths.Full(game); Saves=Paths.Full(saves); BackupRoot=Paths.Full(backupRoot); StageRoot=Paths.Full(stageRoot); expectedGame=gameHash; running=busy; progress=report;
         }
@@ -198,7 +200,8 @@ namespace TogetherSetup {
                     bool metadata=ext.Equals(".json",StringComparison.OrdinalIgnoreCase)||ext.Equals(".toml",StringComparison.OrdinalIgnoreCase);
                     if ((lua||archive||metadata) && (FamilyName(name,"Steamodded|smods|Cryptid|Amulet|Talisman") || (lua&&LegacyId(file,legacyIds)))) { Paths.NoLinks(file); targets.Add(file); }
                 }
-                stage=Payload.Extract(StageRoot);
+                stage=Bundle==null?Payload.Extract(StageRoot):BundleUpdates.Extract(Bundle,StageRoot);
+                string[] modNames=Bundle==null?new[]{"smods-26.1002.0","Amulet","Cryptid","BalatroTogether"}:BundleUpdates.ModNames(stage);
                 Backup=Path.Combine(BackupRoot,DateTime.Now.ToString("yyyyMMdd-HHmmss")+"-"+Guid.NewGuid().ToString("N").Substring(0,8)); Directory.CreateDirectory(Backup);
                 progress("Backing up your saves and existing mods...");
                 Paths.CopyTree(Saves,Path.Combine(Backup,"Saves"),n=>n.Equals("Mods",StringComparison.OrdinalIgnoreCase)||n.Equals("together-bots",StringComparison.OrdinalIgnoreCase));
@@ -210,7 +213,7 @@ namespace TogetherSetup {
                     Paths.Move(dir,dest); moved.Add(new KeyValuePair<string,string>(dir,dest));
                 }
                 Directory.CreateDirectory(mods);
-                foreach (string name in new[]{"smods-26.1002.0","Amulet","Cryptid","BalatroTogether"}) {
+                foreach (string name in modNames) {
                     progress("Installing "+(name=="BalatroTogether" ? "Balatro Together" : name.StartsWith("smods-") ? "Steamodded" : name)+"...");
                     string dest=Path.Combine(mods,name), temp=Path.Combine(mods,".bt-install-"+Guid.NewGuid().ToString("N"));
                     created.Add(temp); Paths.CopyTree(Path.Combine(stage,"Mods",name),temp,null); Paths.Move(temp,dest); created.Remove(temp); created.Add(dest);
@@ -219,11 +222,12 @@ namespace TogetherSetup {
                 progress("Installing Lovely and verifying every file...");
                 if (!File.Exists(dll)) { using (var input=File.OpenRead(Path.Combine(stage,@"Game Folder\winmm.dll"))) using (var output=new FileStream(dll,FileMode.CreateNew)) { dllCreated=true; input.CopyTo(output); } }
                 if (Paths.Hash(dll)!=Build.LovelyHash) throw new Exception("Lovely verification failed.");
-                foreach (string name in new[]{"smods-26.1002.0","Amulet","Cryptid","BalatroTogether"}) {
+                foreach (string name in modNames) {
                     string src=Path.Combine(stage,"Mods",name), dst=Path.Combine(mods,name);
                     foreach (string f in Directory.GetFiles(src,"*",SearchOption.AllDirectories)) { string rel=f.Substring(src.Length+1); if (Paths.Hash(f)!=Paths.Hash(Path.Combine(dst,rel))) throw new Exception("Installed file verification failed: "+rel); }
                 }
-                File.WriteAllText(Path.Combine(Backup,"INSTALLATION.json"),new JavaScriptSerializer().Serialize(new { version=Build.Version,game=Game,saves=Saves,previousMods=targets,verified=true }));
+                File.WriteAllText(Path.Combine(Backup,"INSTALLATION.json"),new JavaScriptSerializer().Serialize(new { version=Bundle==null?Build.Version:Bundle.Manifest.version,game=Game,saves=Saves,previousMods=targets,verified=true }));
+                if(CommitInstallation!=null)CommitInstallation();
                 progress("Installation complete.");
             } catch (Exception original) {
                 var errors=new List<string>();
@@ -282,7 +286,7 @@ namespace TogetherSetup {
             activity.Controls.Add(Studio.Label("INSTALLATION",16,12,450,18,8,Studio.Red,true));
             status.SetBounds(16,31,484,31);status.Font=new Font("Segoe UI",10,FontStyle.Bold);status.ForeColor=Studio.Cream;status.BackColor=Studio.Panel;status.Text=String.IsNullOrEmpty(selected)?"Find Balatro to get started.":"Balatro found. Ready when you are.";activity.Controls.Add(status);
             bar=Progress;bar.SetBounds(16,63,486,9);activity.Controls.Add(bar);
-            result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Setup "+Build.Version+" / bundled gameplay "+InstalledBuild.GameplayVersion+". Public updates; no login needed.";Controls.Add(result);
+            result.SetBounds(350,483,520,28);result.Font=new Font("Segoe UI",8);result.ForeColor=Studio.Muted;result.Text="Permanent installer / launcher. Downloads the latest mod from GitHub.";Controls.Add(result);
             play=AddButton("Releases",350,516,251,false,()=>{
                 if(!done){Process.Start(new ProcessStartInfo("https://github.com/"+UpdatePolicy.Repository+"/releases"){UseShellExecute=true});return;}
                 if(Detection.Running()){MessageBox.Show(this,"Balatro is already open.");return;}
@@ -309,26 +313,34 @@ namespace TogetherSetup {
                 } catch { Report("Permission was not granted. No installation changes were made."); } return;
             }
             busy=true; install.Enabled=false; browse.Enabled=false;play.Enabled=false;offline.Visible=false;result.Visible=true;bar.Busy=true;bar.Target=4;
-            string updateStage=null;bool checking=false;
+            string updateStage=null;bool checking=false,bundleInstalled=false;string selectedVersion=null;
             var engine=new Installer(path.Text,Path.Combine(user.Roaming,"Balatro"),Path.Combine(user.Roaming,@"BalatroTogether\Backups"),Path.Combine(user.Local,@"BalatroTogether\InstallerStaging"),Build.GameHash,SetupUpdates.Running,Report);
             try {
                 if(SetupUpdates.Running())throw new Exception("Balatro is open. Close it before installing or updating.");
                 GameFiles.Validate(path.Text,Build.GameHash);
-                if(online&&!handoffInstall) {
+                if(online) {
                     checking=true;Report("Checking the latest signed release before installation...");
                     string stageRoot=Path.Combine(UpdateStorage.Root(user),"SetupUpdates");Paths.NoLinks(stageRoot);Directory.CreateDirectory(stageRoot);
                     updateStage=Path.Combine(stageRoot,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(updateStage);
                     var selection=await Task.Run(()=>SetupUpdates.Check(user,updateStage));
+                    selectedVersion=selection.Offer==null?null:selection.Offer.Version;
                     if(selection.Offer!=null) {
-                        string verified=await Task.Run(()=>SetupUpdates.Download(selection,updateStage,Report));
-                        SetupUpdates.StartVerified(verified,path.Text);handoff=true;Close();return;
+                        result.Text="Latest mod on GitHub: "+selectedVersion;
+                        if(selection.Offer.bundle!=null) {
+                            checking=false;await Task.Run(()=>SetupUpdates.InstallBundle(selection,updateStage,user,path.Text,Report));bundleInstalled=true;
+                        } else if(!SetupUpdates.SameInstaller(selection.Offer)) {
+                            string verified=await Task.Run(()=>SetupUpdates.Download(selection,updateStage,Report));
+                            SetupUpdates.StartVerified(verified,path.Text);handoff=true;Close();return;
+                        }
                     }
                     checking=false;
                 }
-                SetupUpdates.CanInstallBundle(user);
-                await Task.Run(()=>engine.Install());
-                Detection.Shortcut(user,path.Text,engine.Backup);
-                result.Text="Gameplay "+InstalledBuild.GameplayVersion+(handoffInstall?" installed from verified setup update.":online?" installed. Latest setup check succeeded.":" installed OFFLINE. Latest setup was NOT checked.");play.Text="Play Together";play.Enabled=true;done=true;install.Text="Done";install.Enabled=true;
+                if(!bundleInstalled) {
+                    SetupUpdates.CanInstallBundle(user);await Task.Run(()=>engine.Install());Detection.Shortcut(user,path.Text,engine.Backup);
+                }
+                var installed=InstalledBuild.Inspect(user);
+                if(installed.NeedsRepair)throw new Exception("Installed Together did not pass verification.");
+                result.Text=online?"Installed mod: "+installed.Version+" / Latest mod: "+selectedVersion+" / verified":"Gameplay "+installed.Version+" installed OFFLINE. Latest setup was NOT checked.";play.Text="Play Together";play.Enabled=true;done=true;install.Text="Done";install.Enabled=true;
             } catch(GameFilesException e) {
                 Report("Balatro game files need repair. No installation changes were made.");
                 result.Text="Use Steam > Properties > Installed Files > Verify integrity, then Browse.";
@@ -338,7 +350,7 @@ namespace TogetherSetup {
                 else { elevate=true; install.Text="Continue"; result.Text="Windows needs administrator access to the game folder. Continue opens the normal Windows permission prompt and keeps your original user profile."; }
                 install.Enabled=true; browse.Enabled=true; Report("No installation was completed.");
             } catch(Exception e) {
-                if(checking){Report("Update check failed: "+e.Message);offline.Visible=true;result.Visible=false;}
+                if(checking){Report("Update check failed: "+e.Message);offline.Visible=false;result.Visible=true;result.Text="Latest version could not be confirmed. Nothing was installed. Retry when connected.";}
                 else {Report("Installation stopped.");MessageBox.Show(this,e.Message,"Balatro Together",MessageBoxButtons.OK,MessageBoxIcon.Information);}
                 install.Enabled=true;browse.Enabled=true;
             }
@@ -353,8 +365,10 @@ namespace TogetherSetup {
             Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
             try {
                 if(args.Length==4 && args[0]=="--setup-flow-self-test") return SetupFlowTests.Run(args[1],args[2],args[3]);
+                if(args.Length==4 && args[0]=="--bundle-self-test") return SetupFlowTests.BundleProbe(args[1],args[2],args[3]);
                 if(args.Length==2 && args[0]=="--game-files-self-test") return GameFilesTests.Run(args[1]);
-                if(args.Length==2 && args[0]=="--public-update-self-test") return SetupFlowTests.PublicUpdateProbe(args[1]);
+                if(args.Length==2 && args[0]=="--public-update-self-test") return SetupFlowTests.BundleNetworkProbe(args[1]);
+                if(args.Length==2 && args[0]=="--legacy-network-self-test") return SetupFlowTests.PublicUpdateProbe(args[1]);
                 if(args.Length==2 && args[0]=="--network-self-test") return SetupFlowTests.NetworkProbe(args[1]);
                 if(args.Length>0 && args[0]=="--self-test") return SelfTests.Run(args[1]);
                 if(args.Length==2 && args[0]=="--updater-self-test")return UpdaterTests.Run(args[1]);

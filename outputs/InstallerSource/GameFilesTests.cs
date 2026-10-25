@@ -50,11 +50,11 @@ namespace TogetherSetup {
                 }
                 checks.Add("Production Install button stops before any network call and explains Steam repair plus the separate AppData mod destination");
                 UpdateStorage.Save(user,new UpdateSettings {game=game,automatic=false,highest_version=Build.Version});
-                using(var form=new LauncherForm(user,game)) {Show(form);((Button)All(form).Single(c=>c is Button&&c.Text=="Play Together")).PerformClick();Wait(()=>!Field<bool>(form,"busy"));Check(launched==0&&dialogs==2&&Field<Label>(form,"status").Text.Contains("No game was launched"),"Launcher allowed broken native start");form.Close();}
+                using(var form=new LauncherForm(user,game)) {Show(form);((Button)All(form).Single(c=>c is Button&&c.Text=="Play Together")).PerformClick();Wait(()=>!Field<bool>(form,"busy"));Check(launched==0&&dialogs==2&&Field<Label>(form,"status").Text.Contains("No update was installed"),"Launcher allowed broken native start");form.Close();}
                 checks.Add("Production Play button refuses an EXE-only game without starting a native process");
                 foreach(string name in GameFiles.Required)File.Copy(Path.Combine(owned,name),Path.Combine(game,name));engine().Install();
                 System.Diagnostics.ProcessStartInfo info=null;SetupUpdates.LaunchGame=value=>{info=value;launched++;};
-                using(var form=new LauncherForm(user,game)){Show(form);((Button)All(form).Single(c=>c is Button&&c.Text=="Play Together")).PerformClick();Wait(()=>form.IsDisposed);}
+                using(var form=new LauncherForm(user,game)){Show(form);typeof(LauncherForm).GetField("offlineAvailable",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(form,true);((Button)All(form).Single(c=>c is Button&&c.Text=="Play Together")).PerformClick();Wait(()=>form.IsDisposed);}
                 Check(launched==1&&Paths.Equal(info.FileName,Path.Combine(game,"Balatro.exe"))&&Paths.Equal(info.WorkingDirectory,game)&&info.Arguments=="--disable-console","Wrong launch target/working directory");Check(File.ReadAllText(Path.Combine(saves,"1","save.jkr"))=="PRESERVE","Save changed");
                 checks.Add("With complete game and installed mods, production Play targets the original game folder and sets that folder as its working directory; native launch is intercepted");
                 File.WriteAllText(Path.Combine(root,"game-files-results.json"),new JavaScriptSerializer().Serialize(new {passed=checks.Count,failed=0,checks=checks,live_game_changed=false,game_launch="Intercepted; no native game process opened",redistribution="Runtime DLL copies stay inside private QA folders and are never packaged"}));return 0;

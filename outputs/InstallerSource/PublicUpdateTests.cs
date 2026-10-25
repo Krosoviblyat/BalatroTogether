@@ -33,7 +33,6 @@ namespace TogetherSetup {
                 var l=new Fixture(parent,"public-launcher");SetupUpdates.Handoff=(exe,game)=>{Check(Paths.Equal(game,l.Game),"Wrong launcher fixture");Check(Paths.Hash(exe)==downloadHash,"Different setup bytes selected");Engine(exe,l,"AnonymousPlay",false);applied++;};
                 using(var form=new LauncherForm(l.User,l.Game)) {
                     Show(form);Check(!All(form).Any(c=>c.Text=="GitHub access"),"Credential button remains in launcher");
-                    ((CheckBox)All(form).Single(c=>c is CheckBox&&c.Text.StartsWith("Keep Together"))).Checked=true;
                     ((Button)All(form).Single(c=>c is Button&&c.Text=="Play Together")).PerformClick();Wait(()=>form.IsDisposed||!Field<bool>(form,"busy"),"public launcher update",180);
                     Check(form.IsDisposed,"Public launcher failed: "+Field<Label>(form,"status").Text);
                 }
