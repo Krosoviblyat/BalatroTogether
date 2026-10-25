@@ -84,7 +84,7 @@ namespace TogetherSetup {
                 Func<UserPaths,string> metadata=context=>Path.Combine(context.Roaming,"Balatro","Mods","BalatroTogether","BalatroTogether.json");
                 Action<UserPaths,string> version=(context,value)=>File.WriteAllText(metadata(context),"{\"id\":\"BalatroTogether\",\"version\":\""+value+"\"}",Encoding.UTF8);
                 test("actual installed mod files are verified independently of launcher version",()=>{
-                    var context=fixture();var state=InstalledBuild.Inspect(context);Check(!state.NeedsRepair&&state.Version=="0.8.2-dev"&&state.BundledVersion=="0.8.2-dev","Current bundle not recognized");
+                    var context=fixture();var state=InstalledBuild.Inspect(context);Check(!state.NeedsRepair&&state.Version=="0.8.6-dev"&&state.BundledVersion=="0.8.6-dev","Current bundle not recognized");
                 });
                 test("new launcher plus old mod requires repair rather than reporting up to date",()=>{
                     var context=fixture();version(context,"0.6.1-dev");var state=InstalledBuild.Inspect(context);

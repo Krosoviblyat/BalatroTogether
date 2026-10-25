@@ -20,8 +20,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Balatro Together Installer")]
 [assembly: AssemblyProduct("Balatro Together")]
 [assembly: AssemblyCompany("Zero Crew")]
-[assembly: AssemblyVersion("0.8.5.0")]
-[assembly: AssemblyFileVersion("0.8.5.0")]
+[assembly: AssemblyVersion("0.8.6.0")]
+[assembly: AssemblyFileVersion("0.8.6.0")]
 
 namespace TogetherSetup {
     internal sealed class UserPaths {
@@ -271,7 +271,7 @@ namespace TogetherSetup {
         readonly LinkLabel offline=new LinkLabel();
         public SetupForm(UserPaths context,string selected,bool auto) : base(PreviewMode) {
             user=context;handoffInstall=auto; Text="Zero Crew | Install Balatro Together";
-            SetHeading("by Mind_the_assassin", "come join the retard fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
+            SetHeading("by Mind_the_assassin", "come on in and join the coop fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
             var location=new StudioPanel();location.SetBounds(350,266,520,120);Controls.Add(location);
             location.Controls.Add(Studio.Label("GAME FOLDER / LOVELY LOADER",16,12,450,19,8,Studio.Red,true));
             path.SetBounds(16,40,366,31);path.Text=selected;path.ReadOnly=true;path.BorderStyle=BorderStyle.None;path.BackColor=Studio.Panel;path.ForeColor=Studio.Cream;path.Font=new Font("Segoe UI",9);path.AccessibleName="Balatro game folder";location.Controls.Add(path);

@@ -129,7 +129,11 @@ namespace TogetherSetup {
         }
         protected void SetHeading(string eyebrow,string title,string subtitle) {
             Controls.Add(Studio.Label(eyebrow,350,104,515,22,9,Studio.Red,true));
-            Controls.Add(Studio.Label(title,346,130,530,50,24,Studio.Cream,true));
+            var heading=Studio.Label(title,346,130,530,50,24,Studio.Cream,true);
+            while(heading.Font.Size>12&&TextRenderer.MeasureText(title,heading.Font,new Size(heading.Width,heading.Height),TextFormatFlags.SingleLine|TextFormatFlags.NoPadding).Width>heading.Width) {
+                var previousFont=heading.Font;heading.Font=new Font(previousFont.FontFamily,previousFont.Size-0.5f,previousFont.Style);previousFont.Dispose();
+            }
+            Controls.Add(heading);
             Controls.Add(Studio.Label(subtitle,350,186,514,66,10,Studio.Muted,false));
         }
         public void Animate(float dt) {

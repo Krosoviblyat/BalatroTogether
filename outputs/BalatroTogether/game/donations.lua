@@ -25,7 +25,8 @@ function D.available()
 end
 function D.eligible(c)
     local center=c and c.config and c.config.center
-    if not center or (center.mod and center.mod.id~='Cryptid') or not ({Joker=true,Tarot=true,Planet=true,Spectral=true,Code=true})[center.set] then return false,'Only vanilla and Cryptid jokers/consumables.' end
+    local supported=center and (not center.mod or center.mod.id=='Cryptid' or BT.compat and BT.compat.center and BT.compat.center(center))
+    if not supported or not ({Joker=true,Tarot=true,Planet=true,Spectral=true,Code=true})[center.set] then return false,'Only Together, vanilla and Cryptid jokers/consumables.' end
     if c.cry_storage or c.edition and c.edition.cry_double_sided then return false,'Cards with attached storage or a second face stay with their owner.' end
     if c.config.cry_multiply then return false,'Wait for this card\'s temporary Multiply effect to expire before donating.' end
     if BT.compat and not BT.compat.allowed(center) then return false,'This progression effect is unavailable in co-op.' end
@@ -52,7 +53,9 @@ end
 local function restore(pending)
     local c=pending.original
     if c and not c.removed then
-        c.states.visible=pending.visible; c:add_to_deck(); pending.area:emplace(c)
+        c.states.visible=pending.visible
+        if BT.government then BT.government.restore(c) else c:add_to_deck() end
+        pending.area:emplace(c)
     end
 end
 local function notify(kind,card)
@@ -89,7 +92,8 @@ function D.receive(data,itemid)
     if D.received[itemid] then return true end
     local valid,err=schema.card(data); if not valid then return nil,err end
     local center=G.P_CENTERS[valid.center]
-    if not center or (center.mod and center.mod.id~='Cryptid') or center.set~=valid.kind or center.name~=valid.ability.name then return nil,'That card is unavailable or incompatible.' end
+    local supported=center and (not center.mod or center.mod.id=='Cryptid' or BT.compat and BT.compat.center and BT.compat.center(center))
+    if not supported or center.set~=valid.kind or center.name~=valid.ability.name then return nil,'That card is unavailable or incompatible.' end
     if valid.edition:match('^cry_') and not G.P_CENTERS['e_'..valid.edition] then return nil,'That Cryptid edition is unavailable.' end
     if not D.space(valid) then return nil,'Inventory is full.' end
     local area=area_for(valid.kind); local c

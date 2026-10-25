@@ -30,6 +30,10 @@ namespace TogetherSetup {
         static void Capture(StudioForm form,string folder,string name,List<string> tests) {
             form.ShowInTaskbar=false;form.StartPosition=FormStartPosition.Manual;form.Location=new Point(-32000,-32000);form.Show();Application.DoEvents();
             Bounds(form);tests.Add(name+": all controls fit their panels at 100% scale");
+            foreach(Control child in form.Controls)if(child is Label&&child.Text=="come on in and join the coop fest!") {
+                if(TextRenderer.MeasureText(child.Text,child.Font,new Size(child.Width,child.Height),TextFormatFlags.SingleLine|TextFormatFlags.NoPadding).Width>child.Width)throw new Exception("Welcome line is truncated");
+                tests.Add(name+": complete coop fest welcome line fits without truncation");
+            }
             if(form.AcceptButton==null)throw new Exception("Missing keyboard default action");tests.Add(name+": keyboard default action available");
             form.ReducedMotion=false;form.Progress.Busy=true;
             for(int i=0;i<50;i++) {

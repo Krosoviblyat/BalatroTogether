@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.8.2-dev'
+BT.version='0.8.6-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
@@ -55,6 +55,8 @@ BT.save.install()
 BT.ui.install()
 BT.harbinger=load('game/harbinger.lua')
 BT.harbinger.install()
+BT.government=load('game/government_man.lua')
+BT.government.install()
 -- Install invite callbacks before vanilla's first Steam callback pump.
 if not (BT.bots and BT.bots.config) then BT.steam.available() end
 local update=love.update

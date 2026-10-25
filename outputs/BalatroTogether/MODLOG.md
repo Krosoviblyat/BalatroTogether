@@ -91,3 +91,5 @@ new generation before pruning only this run to two physical copies. The hub
 shows its latest valid copy; distinct runs survive repeated saves of any other
 run. Selection is restricted to catalog entries and resume revalidates checksums,
 compatibility and original Steam host. No implicit autosaves are introduced.
+
+0.8.6 Government Man: native SMODS.Joker rarity=4, base cost20, X2 Mult. Native card_added queues validated owned Negative acquisitions, +X0.5 each and one seeded non-Negative conversion every second acquisition. Native scoring/editions/collection/Legendary pool. Blueprint copies scoring only; queued duplicates, rollback and debuff re-adds cannot farm progress. Custom card is explicitly allowlisted for donation and native save state. User artwork mechanically formatted through Universal Modder sprite tools, 71x95 and 142x190 frames, no creative changes. New installer copy: come on in and join the coop fest! Live game must stay untouched; isolated QA profiles only.

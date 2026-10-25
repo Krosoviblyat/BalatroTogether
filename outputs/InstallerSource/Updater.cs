@@ -289,7 +289,7 @@ namespace TogetherSetup {
         bool busy,handoff,offlineAvailable; readonly string game;
         public LauncherForm(UserPaths context,string selected) : base(PreviewMode) {
             user=context;settings=UpdateStorage.Load(user);game=selected;Text="Zero Crew | Play Balatro Together";
-            SetHeading("by Mind_the_assassin", "come join the retard fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
+            SetHeading("by Mind_the_assassin", "come on in and join the coop fest!", "this is a full installer thats packaged with cryptid! crazy ik lmao dont worry about manually installing steammodded or lovely i got you on that as well");
             var activity=new StudioPanel();activity.SetBounds(350,266,520,123);Controls.Add(activity);
             activity.Controls.Add(Studio.Label("SIGNED UPDATES",16,15,450,20,8,Studio.Red,true));
             status.Text="Ready to play. We'll check your version before launching.";status.SetBounds(16,45,484,53);status.BackColor=Studio.Panel;status.ForeColor=Studio.Cream;status.Font=new Font("Segoe UI",11,FontStyle.Bold);activity.Controls.Add(status);

@@ -1,5 +1,20 @@
 # Public signed updates
 
+Government Man and the coop fest
+
+Native Legendary Joker, base $20, starting X2 Mult. Each newly acquired
+Negative Joker adds X0.5. Every second acquisition turns one random owned
+non-Negative Joker Negative, including native slot bonuses and animation.
+Legendary pool/collection, Blueprint scoring, donations and native manual
+saves are supported. Blueprint/debuff/rejected donations cannot farm growth.
+Supplied art is preserved in the native 1x/2x atlas.
+
+The installer and launcher welcome now reads:
+come on in and join the coop fest!
+
+Everyone must update to gameplay 0.8.6-dev. The normal installer updates the
+main mod only when Balatro is closed. No live game was changed during QA.
+
 Missing game-file and wrong-folder protection
 
 Setup now checks the original game's required Windows x64 runtime DLLs,
@@ -21,7 +36,7 @@ Use Check & install latest with Balatro closed, then the desktop Play Together
 shortcut. Existing 0.7+ launchers can receive the signed update; very old setup
 EXEs still only install their original bundle, so download this setup once.
 
-Installer/launcher: 0.8.5-dev. Bundled gameplay: unchanged 0.8.2-dev.
+Installer/launcher and bundled gameplay: 0.8.6-dev. Update every player.
 Different Cryptid gamesets still cannot join the same party. Match the host's
 gameset and custom/experimental rules. Profile choices are intentionally preserved.
 

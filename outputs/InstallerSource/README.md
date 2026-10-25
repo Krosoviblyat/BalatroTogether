@@ -1,9 +1,9 @@
-# Public Zero Crew setup / launcher 0.8.5-dev
+# Public Zero Crew setup / launcher 0.8.6-dev
 
-BALATRO TOGETHER SETUP 0.8.5 / GAMEPLAY 0.8.2 BETA
+BALATRO TOGETHER SETUP 0.8.6 / GAMEPLAY 0.8.2 BETA
 
 1. Close Balatro.
-2. Open BalatroTogether-Setup-0.8.5-dev.exe.
+2. Open BalatroTogether-Setup-0.8.6-dev.exe.
 3. Click Check & install latest. The game is normally found automatically.
 4. Use Play Balatro Together on your desktop after installation.
 
@@ -15,7 +15,7 @@ RSA-SHA256 signatures, package hashes, downgrade protection, backups and the
 running-game guard remain enabled. If a download/check fails, setup offers an
 explicit OFFLINE install and does not claim the latest version was checked.
 
-This installer update keeps gameplay 0.8.2, so 0.8.2 in the lobby is expected.
+This setup installs gameplay 0.8.6 with the Government Man Legendary Joker.
 All party members must have the same gameplay version and Cryptid gameset/rules.
 Installing the same package does not reset each player's personal Cryptid profile.
 The public-repository change fixes download access, not different gameset rules.
@@ -37,6 +37,14 @@ including SDL2.dll, love.dll and lua51.dll, before installing or launching.
 Repair missing owned files through Steam > Properties > Installed Files >
 Verify integrity of game files. Use Browse to select that full game folder.
 The mod installer does not include or download Balatro's own runtime files.
+
+GOVERNMENT MAN: native Legendary Joker, base $20, starts at X2 Mult.
+Every acquired Negative Joker adds X0.5; every second acquisition turns an
+owned non-Negative Joker Negative. Existing cards changing edition do not
+count as acquisitions. Donation and manual saves preserve its full state.
+All players need gameplay 0.8.6-dev. Uses the supplied artwork.
+
+Installer welcome: come on in and join the coop fest!
 
 Build.cmd rebuilds using .NET Framework 4.8 and the exported Manual Install.zip.
 No player Python dependency. Use --public-update-self-test only with a fresh isolated
