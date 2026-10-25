@@ -46,11 +46,6 @@ All players need gameplay 0.8.7-dev. Uses the supplied artwork.
 
 Installer welcome: come on in and join the coop fest!
 
-THUNDRCK: curated fun seed. Beat Small and Big, open the second shop Buffoon,
-then reroll for The Soul. Use that Soul to summon Government Man.
-Native opening Royal Flushes where the deck permits; $1 Negative Abstract
-in shop 1 and Negative Blueprint in later shop openings. See THUNDRCK.md.
-This is scripted seed behavior, not a natural RNG discovery.
 
 Build.cmd rebuilds using .NET Framework 4.8 and the exported Manual Install.zip.
 No player Python dependency. Use --public-update-self-test only with a fresh isolated

@@ -1,14 +1,5 @@
 # Public signed updates
 
-THUNDRCK curated seed
-
-Enter THUNDRCK on a fresh run. Beat Small and Big without skips, buy/open
-the second shop Buffoon Pack, then reroll for The Soul. That Soul summons
-Government Man. First shop: $1 Negative Abstract. Later shop starts: Negative
-Blueprint. Opening shuffles arrange an existing straight flush where available;
-normal boss effects still apply. This is an explicit scripted seed mode, not
-a naturally discovered RNG seed. Ordinary seeds stay native. Save/restore
-preserves the once-per-run reward flags. All players need 0.8.7-dev.
 
 Government Man and the coop fest
 
