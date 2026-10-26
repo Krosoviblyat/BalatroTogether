@@ -5,11 +5,11 @@
   "author": [
     "Balatro Together contributors (AI-assisted development)"
   ],
-  "description": "Co-op with Cryptid, Government Man Legendary Joker, Harbinger bosses, donations, rewards and manual saves.",
+  "description": "Co-op with Cryptid, Shroombo and Government Man Legendary Jokers, Fungus Cards, Harbinger bosses, donations, rewards and manual saves.",
   "prefix": "btogether",
   "main_file": "main.lua",
   "priority": 1000,
-  "version": "0.8.10-dev",
+  "version": "0.8.11-dev",
   "badge_colour": "34D6B4",
   "dependencies": [
     "Steamodded (>=26.1002.0)",

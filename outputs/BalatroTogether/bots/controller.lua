@@ -72,6 +72,10 @@ local function card(c,composition)
         hand_type=a.consumeable and a.consumeable.hand_type or a.hand_type}
     if key=='m_lucky' then v.mult=v.mult*(G.GAME.probabilities.normal or 1)/5 end
     if hidden then v.mult=0; v.xmult=1; v.held_mult=0; v.held_xmult=1; v.stone=false; v.wild=false end
+    if not hidden and BT.shroombo then
+        if BT.shroombo.is_fungus(c) then v.rank=0;v.suit='';v.stone=true;v.rankless=true;v.mult=num(a.mult,2.5) end
+        if key==BT.shroombo.KEY then v.xmult=BT.shroombo.mult() end
+    end
     return v
 end
 local function context()

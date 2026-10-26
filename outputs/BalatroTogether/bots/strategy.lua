@@ -85,7 +85,7 @@ function A.score(cards,held,ctx)
                 for _,j in ipairs(ctx.jokers or {}) do if not j.debuff then
                     local key=j.key
                     if suit_joker[key] and (c.suit==suit_joker[key] or c.wild) then mult=mult+3
-                    elseif key=='j_even_steven' and c.rank<=10 and c.rank%2==0 then mult=mult+4
+                    elseif key=='j_even_steven' and not c.rankless and c.rank<=10 and c.rank%2==0 then mult=mult+4
                     elseif key=='j_odd_todd' and (c.rank==14 or c.rank<=10 and c.rank%2==1) then chips=chips+31
                     elseif key=='j_scary_face' and face then chips=chips+30
                     elseif key=='j_smiley' and face then mult=mult+5
@@ -102,7 +102,7 @@ function A.score(cards,held,ctx)
     end
     local lowest,black=99,true
     for _,c in ipairs(held) do
-        lowest=math.min(lowest,c.rank)
+        if not c.stone then lowest=math.min(lowest,c.rank) end
         if c.suit~='Spades' and c.suit~='Clubs' and not c.wild then black=false end
         if not c.debuff then
             local times=1+(c.red_seal and 1 or 0)+(has(ctx,'j_mime') and 1 or 0)

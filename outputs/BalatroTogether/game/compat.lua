@@ -135,6 +135,7 @@ function C.install()
 end
 function C.center(center)
     return center and (not center.mod or center.mod.id=='Cryptid'
-        or center.mod.id==BT.id and center.key=='j_btogether_government_man')
+        or center.mod.id==BT.id and (center.key=='j_btogether_government_man'
+            or center.key=='j_btogether_shroombo' or center.key=='m_btogether_fungus'))
 end
 return C

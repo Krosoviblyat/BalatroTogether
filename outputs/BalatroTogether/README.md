@@ -1,4 +1,4 @@
-# Balatro Together v0.8.10-dev - Government Man & Co-op Fest!
+# Balatro Together v0.8.11-dev - Government Man & Co-op Fest!
 
 ### Heyo! I'm Kross!
 
@@ -34,6 +34,16 @@ Well, here we are.
 - Antimatter lets you select which compatible decks to combine, with extra options for those decks too.
 - Everyone uses the host's choices. Teammates can inspect them through **Deck Settings** in the lobby.
 - Choices are remembered per deck and retained through fast restarts and manual party checkpoints.
+
+### Shroombo & Fungus Cards
+
+**Shroombo** is a $20 Legendary Joker, available from the normal Legendary pool and The Soul.
+
+- Starts at **X1 Mult**. Every scored playing card independently has a **25% chance** to add a permanent Fungus Card to your deck.
+- Gains **X0.5 Mult for each Fungus Card currently in your deck**, with the current total shown in its tooltip.
+- Copies, donations, destruction and other removals update the multiplier from your actual deck.
+
+**Fungus Cards** use the supplied red mushroom artwork. They have no rank or suit, always score when played, and give **+2.5 Mult**. Draw, hold, play, discard, copy or donate them like playing cards; they never take a Joker slot.
 
 ### Donation Box
 - Donate Jokers and consumables to your friends!

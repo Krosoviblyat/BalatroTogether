@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.8.10-dev'
+BT.version='0.8.11-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
@@ -58,6 +58,8 @@ BT.harbinger=load('game/harbinger.lua')
 BT.harbinger.install()
 BT.government=load('game/government_man.lua')
 BT.government.install()
+BT.shroombo=load('game/shroombo.lua')
+BT.shroombo.install()
 BT.curated_seed=load('game/thundrck.lua')
 BT.curated_seed.install()
 -- Install invite callbacks before vanilla's first Steam callback pump.

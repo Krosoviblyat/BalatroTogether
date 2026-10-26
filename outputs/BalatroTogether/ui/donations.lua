@@ -59,7 +59,7 @@ return function(U,h)
         h.col(c,0.4+state.hover.x*0.45); g.setLineWidth(1.5); g.rectangle('line',x,y,550,91,10,10)
         icon(card,x+12,y+9,48,66,state.hover.x*0.035)
         h.txt(card.name,x+75,y+7,24,h.ink,305)
-        h.txt(card.kind..(card.edition~='' and ' / '..card.edition:upper() or ''),x+75,y+32,17,c,300)
+        h.txt((card.kind=='Enhanced' and 'PLAYING CARD' or card.kind)..(card.edition~='' and ' / '..card.edition:upper() or ''),x+75,y+32,17,c,300)
         h.txt(detail or card.effect or '',x+75,y+53,16,h.muted,300)
         h.button(label,x+398,y+29,138,34,function()
             state.press.x=1; state.press.v=0; V.lastclick={x=x+38,y=y+44}; action()
@@ -78,6 +78,7 @@ return function(U,h)
         local items=state.donations and state.donations.items or {}
         local own={}
         for _,area in ipairs({G.jokers,G.consumeables}) do for _,card in ipairs(area and area.cards or {}) do own[#own+1]=card end end
+        for _,card in ipairs(G.playing_cards or {}) do if BT.shroombo and BT.shroombo.is_fungus(card) then own[#own+1]=card end end
         local targets={{id=0,name='EVERYONE'}}
         for i=1,4 do local p=state.players[tostring(i)]; if i~=BT.client.id and p and not p.withdrawn then targets[#targets+1]={id=i,name=p.name} end end
         local index=1; for i,t in ipairs(targets) do if t.id==V.target then index=i end end

@@ -1,3 +1,19 @@
+# 0.8.11-dev — Shroombo and Fungus Cards
+
+- Register Shroombo as a native $20 Legendary Joker with its own supplied art,
+  collection entry and normal Legendary/Soul generation.
+- Each scoring event rolls an independent fixed 1-in-4 chance to create a
+  permanent Fungus playing card. Blueprint and native scoring retriggers use
+  the same ability; held, discarded and unscored cards do not roll.
+- Shroombo gives X1 + X0.5 per currently owned Fungus Card. Tooltip and scoring
+  read actual deck contents, including creations earlier in the same hand.
+- Fungus Cards use the second supplied artwork, have no rank/suit, contribute
+  no base Chips, always score when played, and add +2.5 Mult natively.
+- Support real copying, destruction, native saves and Fungus donations, with
+  escrow ownership removal, seal/ability preservation and replay protection.
+- Bot planning and teammate inspection respect Fungus rank/suit properties.
+- Existing permanent installer/updater downloads this signed data patch.
+
 # 0.8.10-dev — Zero Crew credits
 
 - Credit SimmieChong, The Mythical Mask, DarthVader24985, Jager_1_2 and

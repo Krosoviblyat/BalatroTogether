@@ -1,6 +1,6 @@
 -- Pure host-side escrow ledger. Payloads are data, never executable Lua.
 local D={LIMIT=8,MAX_TRANSFERS=4096}
-local kinds={Joker=true,Tarot=true,Planet=true,Spectral=true,Code=true}
+local kinds={Joker=true,Tarot=true,Planet=true,Spectral=true,Code=true,Enhanced=true}
 local editions={['']=true,foil=true,holo=true,polychrome=true,negative=true}
 function D.empty() return {items={},seen={},history={},history_order={},counter=0} end
 local function clean(s,n) return tostring(s or ''):gsub('[%z\1-\31\127]',''):sub(1,n) end
@@ -26,17 +26,23 @@ function D.clone(value,extended)
 end
 function D.card(value)
     if type(value)~='table' or not kinds[value.kind] or type(value.center)~='string' or #value.center>64 then return nil,'Share jokers, Tarot, Planet, Spectral and Cryptid Code cards.' end
-    if not value.center:match(value.kind=='Joker' and '^j_[%w_ %-]+$' or '^c_[%w_ %-]+$') then return nil,'Invalid card identity.' end
+    local fungus=value.kind=='Enhanced' and value.center=='m_btogether_fungus'
+    if not fungus and (value.kind=='Enhanced' or not value.center:match(value.kind=='Joker' and '^j_[%w_ %-]+$' or '^c_[%w_ %-]+$')) then return nil,'Invalid card identity.' end
     local edition=value.edition or ''
     if not editions[edition] and not (type(edition)=='string' and #edition<=48 and edition:match('^cry_[%w_]+$') and edition~='cry_double_sided') then return nil,'Unsupported card edition.' end
     local extended=value.center:match('^[jc]_cry_')~=nil
     local ability,err=D.clone(value.ability,extended)
     if not ability or type(ability)~='table' or ability.set~=value.kind or type(ability.name)~='string' then return nil,err or 'Invalid native card ability.' end
     if ability.eternal then return nil,'Eternal cards cannot be donated.' end
+    local seal
+    if fungus and value.seal~=nil then
+        if type(value.seal)~='string' or #value.seal>48 or not value.seal:match('^[%w_]+$') then return nil,'Invalid playing-card seal.' end
+        seal=value.seal
+    end
     local edition_data
     if value.edition_data then edition_data,err=D.clone(value.edition_data); if not edition_data then return nil,err end end
     return {center=value.center,kind=value.kind,name=clean(value.name or ability.name,60),ability=ability,
-        edition=edition,edition_data=edition_data,pinned=value.pinned==true,effect=clean(value.effect,120)}
+        edition=edition,edition_data=edition_data,seal=seal,pinned=value.pinned==true,effect=clean(value.effect,120)}
 end
 local function receipt(p,request,status,item,error)
     p.donation_receipt={request=type(request)=='string' and request:sub(1,48) or '',status=status,item=item,error=error}

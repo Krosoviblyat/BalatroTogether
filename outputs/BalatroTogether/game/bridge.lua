@@ -63,7 +63,8 @@ local function cards(area,private)
             result[#result+1]={key='',name='Face-down card',edition='',enhancement='',seal='',rank='?',suit='Hidden',selected=private and c.highlighted or false}
         else result[#result+1]={key=center.key or '',name=c.ability and c.ability.name or center.key or '',
             edition=edition,enhancement=center.key or '',seal=c.seal or '',
-            rank=c.base and tostring(c.base.value) or '',suit=c.base and c.base.suit or '',
+            rank=SMODS.has_no_rank and SMODS.has_no_rank(c) and 'Rankless' or c.base and tostring(c.base.value) or '',
+            suit=SMODS.has_no_suit and SMODS.has_no_suit(c) and 'Suitless' or c.base and c.base.suit or '',
             selected=private and c.highlighted or false,debuff=c.debuff or false,effect=B.effect_summary(c.ability)}
         end
     end
@@ -83,7 +84,7 @@ local function status()
     elseif G.STATE==G.STATES.HAND_PLAYED then activity='waiting'
     elseif G.booster_pack then activity='pack' end
     local deck={Spades=0,Hearts=0,Clubs=0,Diamonds=0}
-    for _,c in ipairs(G.playing_cards or {}) do if c.base and deck[c.base.suit] then deck[c.base.suit]=deck[c.base.suit]+1 end end
+    for _,c in ipairs(G.playing_cards or {}) do if c.base and deck[c.base.suit] and not (SMODS.has_no_suit and SMODS.has_no_suit(c)) then deck[c.base.suit]=deck[c.base.suit]+1 end end
     local position=B.position()
     return {activity=activity,native_safe=G.STATE==G.STATES.BLIND_SELECT and G.blind_select~=nil and settled() and not G.shop and not G.booster_pack and not G.CONTROLLER.locks.skip_blind,
         native_ante=position.ante,native_index=position.index,hands=G.GAME.current_round.hands_left,discards=G.GAME.current_round.discards_left,

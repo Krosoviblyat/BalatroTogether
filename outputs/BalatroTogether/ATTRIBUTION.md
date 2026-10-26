@@ -27,3 +27,5 @@ Research references: [Co-op Anything](https://github.com/cranebeaker/coop-anythi
 Cryptid 0.5.17c (SpectralPack and contributors), GPLv3, and Amulet 3.6.1 (frostice482 and contributors), GPLv3, are separate bundled components in the full installer. Their exact source archives, notices and licenses are included. No upstream game art was copied into Together. New compatibility code/UI are AI-assisted original work.
 
 Government Man full-card art: supplied by the user for this mod. Native 1x/2x atlas formatting via Universal Modder sprite tools; the supplied design was preserved. No claim of MIT ownership is made over this supplied artwork. Government Man Lua integration is original MIT code, developed with Codex assistance.
+
+Shroombo and Fungus Card artwork: supplied by the user for this mod. Native 1x/2x atlas formatting uses Universal Modder sprite tools with nearest-neighbour fitting; both supplied designs are preserved. No ownership or MIT claim is made over supplied artwork. Shroombo, Fungus and donation integration code is original MIT code developed with Codex assistance.
