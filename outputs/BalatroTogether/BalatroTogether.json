@@ -9,7 +9,7 @@
   "prefix": "btogether",
   "main_file": "main.lua",
   "priority": 1000,
-  "version": "0.8.9-dev",
+  "version": "0.8.10-dev",
   "badge_colour": "34D6B4",
   "dependencies": [
     "Steamodded (>=26.1002.0)",

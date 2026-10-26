@@ -1,5 +1,15 @@
 # Attribution and dependency lock
 
+### Balatro Together crew
+
+These contributions are to the Balatro Together mod:
+
+- **SimmieChong** — Game testing and ideas.
+- **The Mythical Mask** — Game testing and ideas.
+- **DarthVader24985** — Game testing, debugging and ideas.
+- **Jager_1_2** — Game testing and ideas.
+- **.Draghail** — Art and developmental ideas.
+
 Original mod Lua, procedural UI drawing and together-mark.svg: Balatro Together contributors, MIT, 2026. Built with AI assistance (Codex). The icon is a source SVG; the in-game interface uses original LÖVE drawing routines, not redistributed game art.
 
 Bundled dependency: [rxi/json.lua](https://github.com/rxi/json.lua), MIT, copyright (c) 2020 rxi. Version 0.1.2, commit `dbf4b2dd2eb7c23be2773c89eb059dadd6436f94`. SHA256 of vendor/json.lua: `0eaccda57fabc0330736de25f45cf589821a42b5e0fe02e4e3125f7dc0bf2b7e`. Complete upstream license is preserved at the top of vendor/json.lua. `core/save_json.lua` is an MIT-attributed adaptation of that same version with a linear escaped-string decoder for large checkpoint archives; the original vendor file remains byte-identical.

@@ -1,4 +1,4 @@
-# Balatro Together v0.8.9-dev - Government Man & Co-op Fest!
+# Balatro Together v0.8.10-dev - Government Man & Co-op Fest!
 
 ### Heyo! I'm Kross!
 
@@ -157,6 +157,16 @@ For now, I'm mostly focused on getting everything working smoothly before adding
 If you find a bug, feel free to report it on GitHub!
 
 ## Credits
+
+### Balatro Together crew
+
+These contributions are to the Balatro Together mod:
+
+- **SimmieChong** — Game testing and ideas.
+- **The Mythical Mask** — Game testing and ideas.
+- **DarthVader24985** — Game testing, debugging and ideas.
+- **Jager_1_2** — Game testing and ideas.
+- **.Draghail** — Art and developmental ideas.
 
 Balatro Together is a personal project developed with AI assistance from **Codex and Universal Modder**, along with my own ideas, artwork, designs, and plenty of testing with my friends.
 

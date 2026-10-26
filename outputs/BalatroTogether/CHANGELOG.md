@@ -1,3 +1,12 @@
+# 0.8.10-dev — Zero Crew credits
+
+- Credit SimmieChong, The Mythical Mask, DarthVader24985, Jager_1_2 and
+  .Draghail for their contributions to Balatro Together.
+- Add Our Crew and Game & Libraries tabs to the in-game Together credits.
+  Preserve the existing Balatro, loader and dependency acknowledgements.
+- Include the same names and roles in the README and attribution notices.
+- Available through the existing permanent installer/updater.
+
 # 0.8.9-dev — Special deck setup
 
 - Add a Deck Options menu before opening a table for Cryptid Edition,

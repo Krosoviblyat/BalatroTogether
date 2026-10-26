@@ -479,20 +479,38 @@ local function credits(w,h)
     end)
     group(0.09,function()
         rect(636,197,584,424,panel)
-        txt('BUILT ON GREAT MODS',664,222,29,colors[3],528)
-        local rows={
-            {'Balatro','LocalThunk / Playstack'},
-            {'Lovely','ethangreen-dev and contributors'},
-            {'Steamodded','Steamodded contributors'},
-            {'Cryptid','MathIsFun_ / Cryptid contributors'},
-            {'Amulet','frostice482 and contributors'},
-            {'JSON','rxi / MIT licensed'},
-        }
-        for i,row in ipairs(rows) do local y=274+(i-1)*42
-            txt(row[1],664,y,24,ink,155)
-            txt(row[2],824,y+2,20,muted,368)
+        txt('BALATRO TOGETHER CREW',664,215,29,colors[3],528)
+        local crew=U.credits_tab~='foundations'
+        button('OUR CREW',664,257,252,34,function() U.credits_tab='crew' end,crew and colors[1] or muted)
+        button('GAME & LIBRARIES',928,257,264,34,function() U.credits_tab='foundations' end,not crew and colors[3] or muted)
+        if crew then
+            local rows={
+                {'SimmieChong','Game testing and ideas'},
+                {'The Mythical Mask','Game testing and ideas'},
+                {'DarthVader24985','Game testing, debugging and ideas'},
+                {'Jager_1_2','Game testing and ideas'},
+                {'.Draghail','Art and developmental ideas'},
+            }
+            for i,row in ipairs(rows) do local y=306+(i-1)*56
+                txt(row[1],664,y,26,ink,528)
+                txt(row[2],664,y+27,21,muted,528)
+            end
+            txt('Contributions to the Balatro Together mod.',664,591,18,colors[1],528)
+        else
+            local rows={
+                {'Balatro','LocalThunk / Playstack'},
+                {'Lovely','ethangreen-dev and contributors'},
+                {'Steamodded','Steamodded contributors'},
+                {'Cryptid','MathIsFun_ / Cryptid contributors'},
+                {'Amulet','frostice482 and contributors'},
+                {'JSON','rxi / MIT licensed'},
+            }
+            for i,row in ipairs(rows) do local y=306+(i-1)*42
+                txt(row[1],664,y,24,ink,155)
+                txt(row[2],824,y+2,20,muted,368)
+            end
+            txt('Dependency licenses and exact sources ship with setup.\nTogether code: MIT / see ATTRIBUTION.md.',664,566,20,muted,528)
         end
-        txt('Dependency licenses and exact sources ship with setup.\nTogether code: MIT / see ATTRIBUTION.md.',664,552,20,muted,528)
     end)
     button('OPEN CRASH REPORTS',60,650,360,46,function()
         love.filesystem.createDirectory('TogetherReports')
