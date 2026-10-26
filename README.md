@@ -1,4 +1,4 @@
-# Balatro Together v0.8.12-dev - Government Man & Co-op Fest!
+# Balatro Together v0.8.13-dev - Government Man & Co-op Fest!
 
 ### Heyo! I'm Kross!
 
@@ -44,7 +44,7 @@ Well, here we are.
 
 ### Shroombo & Fungus Cards
 
-**Shroombo** is a $20 Legendary Joker, available from the normal Legendary pool and The Soul.
+**Shroombo** is a $20 **Rare Joker**, available naturally from shops and Buffoon Packs through the normal Rare pool.
 
 - Starts at **X1 Mult**. Every scored playing card independently has a **25% chance** to add a permanent Fungus Card to your deck.
 - Gains **X0.5 Mult for each Fungus Card currently in your deck**, with the current total shown in its tooltip.

@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.8.12-dev'
+BT.version='0.8.13-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')

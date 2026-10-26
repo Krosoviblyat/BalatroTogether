@@ -93,3 +93,9 @@ run. Selection is restricted to catalog entries and resume revalidates checksums
 compatibility and original Steam host. No implicit autosaves are introduced.
 
 0.8.6 Government Man: native SMODS.Joker rarity=4, base cost20, X2 Mult. Native card_added queues validated owned Negative acquisitions, +X0.5 each and one seeded non-Negative conversion every second acquisition. Native scoring/editions/collection/Legendary pool. Blueprint copies scoring only; queued duplicates, rollback and debuff re-adds cannot farm progress. Custom card is explicitly allowlisted for donation and native save state. User artwork mechanically formatted through Universal Modder sprite tools, 71x95 and 142x190 frames, no creative changes. New installer copy: come on in and join the coop fest! Live game must stay untouched; isolated QA profiles only.
+
+0.8.13 Shroombo: user requested ordinary shop access with decent rarity.
+Use native SMODS.Joker rarity=3 (Rare), retaining cost20 and all abilities.
+No forced shop spawns, Legendary rarity weights, RNG hooks or progression hooks.
+Verify native Rare/Legendary pools and ordinary shop generation in a disposable
+profile/game copy. Government Man remains rarity4. Live files stay untouched.

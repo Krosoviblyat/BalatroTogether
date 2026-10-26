@@ -14,8 +14,8 @@ local function world()
     local m=dofile(ROOT..'/game/shroombo.lua');m.install();G.P_CENTERS[m.FUNGUS]=e
     return m,d,e,wins,function() return rolls,reactions end
 end
-test('Shroombo is a native $20 Legendary with X1 base and native Fungus tooltip entry',function()
-    local m,d=world();assert(d.rarity==4 and d.cost==20 and d.unlocked and d.blueprint_compat)
+test('Shroombo is a native $20 Rare shop Joker with X1 base and native Fungus tooltip entry',function()
+    local m,d=world();assert(d.rarity==3 and d.cost==20 and d.unlocked and d.blueprint_compat)
     assert(d.calculate(d,{}, {joker_main=true}).x_mult==1)
     local q={};assert(d.loc_vars(d,q,{}).vars[1]==1 and q[1]==G.P_CENTERS[m.FUNGUS])
 end)

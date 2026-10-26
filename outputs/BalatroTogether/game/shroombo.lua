@@ -34,7 +34,7 @@ function M.install()
     }
     SMODS.Joker{
         key='shroombo',name='Shroombo',atlas='shroombo',pos={x=0,y=0},
-        rarity=4,cost=20,unlocked=true,discovered=false,blueprint_compat=true,
+        rarity=3,cost=20,unlocked=true,discovered=false,blueprint_compat=true,
         eternal_compat=true,perishable_compat=false,config={extra={}},
         loc_txt={name='Shroombo',text={
             'Scored cards have a {C:green}1 in 4{}',

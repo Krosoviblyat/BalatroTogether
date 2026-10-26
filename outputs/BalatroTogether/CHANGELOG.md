@@ -1,3 +1,11 @@
+# 0.8.13-dev — Shroombo in normal shops
+
+- Change Shroombo from Legendary to native Rare rarity so he can appear in
+  ordinary shops and Buffoon Packs through the normal weighted Rare pool.
+- Keep his $20 base cost, 1-in-4 Fungus creation and dynamic XMult unchanged.
+- Government Man remains Legendary. Existing Shroombo cards retain their builds.
+- Available through the same permanent installer/updater.
+
 # 0.8.12-dev — Smarter bot teammates
 
 - Compile Joker effects once per planning pass; model Blueprint/Brainstorm copies,
