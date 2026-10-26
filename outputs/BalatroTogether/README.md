@@ -1,4 +1,4 @@
-# Balatro Together v0.8.11-dev - Government Man & Co-op Fest!
+# Balatro Together v0.8.12-dev - Government Man & Co-op Fest!
 
 ### Heyo! I'm Kross!
 
@@ -27,6 +27,13 @@ Well, here we are.
 - **Teammate inspection**, so you can keep track of what your friends are working with.
 - **AI companions!** You can fill empty seats with bots that actually play hands, shop, discard, and contribute to the run.
 - **Blind skip voting**, because sometimes nobody wants to deal with another Small Blind.
+
+### Smarter Bot Teammates
+- Bots evaluate playing-card enhancements, held-card effects and supported Joker synergies, including Blueprint, Brainstorm, Photograph and Hanging Chad.
+- Discard planning samples the remaining deck's composition without peeking at its draw order. A fixed work budget keeps large Cryptid hands manageable.
+- Shop choices favor the bot's existing build, useful Planets, affordable packs and scoring upgrades.
+- Bots can donate spare Jokers, matching consumables and surplus Fungus to teammates who benefit more. They keep their carry cards and Legendaries, and do not take gifts left for Everyone.
+- Donations use the build information you share through teammate inspection. These are heuristic companions, not a full simulator of every Cryptid effect.
 
 ### Special Deck Options
 - When hosting, choose a deck and click **Deck Options** for its extra setup.

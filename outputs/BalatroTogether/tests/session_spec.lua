@@ -70,6 +70,18 @@ test('private hand and reconnect secrets do not leak into snapshots',function()
     act(s,2,'status',{inspect=false,reveal=true,board={{rank='Ace'}},jokers={{key='j_joker'}}})
     eq(#s:snapshot().players['2'].board,0); eq(#s:snapshot().players['2'].jokers,0)
 end)
+test('public bot build summaries sanitize values and follow teammate inspection privacy',function()
+    local s=start(4)
+    act(s,2,'status',{bot_profile={preferred_hand='Flush',joker_limit=0,consumable_limit=3},
+        jokers={{key='j_joker',score_mult=24,score_chips=math.huge,score_xmult=0/0}}})
+    local p=s:snapshot().players['2']
+    eq(p.bot_profile.preferred_hand,'Flush');eq(p.bot_profile.joker_limit,0);eq(p.bot_profile.consumable_limit,3)
+    eq(p.jokers[1].score_mult,24);eq(p.jokers[1].score_chips,0);eq(p.jokers[1].score_xmult,1)
+    act(s,2,'status',{inspect=false,bot_profile={preferred_hand='Flush',joker_limit=10001,consumable_limit=-1}})
+    eq(s.players[2].bot_profile.joker_limit,5);eq(s.players[2].bot_profile.consumable_limit,2)
+    eq(s:snapshot().players['2'].bot_profile,nil)
+end)
+
 test('one exhausted player does not end the team blind',function()
     local s=start(4); act(s,2,'idle',{round=1,exhausted=true}); eq(s.phase,'blind')
     for _,i in ipairs({1,3,4}) do act(s,i,'idle',{round=1,exhausted=true}) end

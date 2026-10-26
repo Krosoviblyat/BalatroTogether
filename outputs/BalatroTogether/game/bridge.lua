@@ -61,8 +61,17 @@ local function cards(area,private)
         for _,e in ipairs({'negative','polychrome','holo','foil'}) do if c.edition and c.edition[e] then edition=e end end
         if c.base and c.facing=='back' then
             result[#result+1]={key='',name='Face-down card',edition='',enhancement='',seal='',rank='?',suit='Hidden',selected=private and c.highlighted or false}
-        else result[#result+1]={key=center.key or '',name=c.ability and c.ability.name or center.key or '',
+        else
+            local a=c.ability or {};local extra=type(a.extra)=='table' and a.extra or {}
+            local function stat(value,default)
+                if BT.numbers and BT.numbers.finite(value) then return BT.numbers.native(value,1e9) end
+                return type(value)=='number' and value==value and math.max(-1e9,math.min(1e9,value)) or default
+            end
+            local x=math.max(stat(a.x_mult,1),stat(extra.Xmult,1),stat(extra.x_mult,1))
+            if BT.shroombo and center.key==BT.shroombo.KEY then x=BT.shroombo.mult() end
+            result[#result+1]={key=center.key or '',name=c.ability and c.ability.name or center.key or '',
             edition=edition,enhancement=center.key or '',seal=c.seal or '',
+            score_mult=stat(a.mult,0),score_chips=stat(a.bonus or extra.chips,0),score_xmult=x,
             rank=SMODS.has_no_rank and SMODS.has_no_rank(c) and 'Rankless' or c.base and tostring(c.base.value) or '',
             suit=SMODS.has_no_suit and SMODS.has_no_suit(c) and 'Suitless' or c.base and c.base.suit or '',
             selected=private and c.highlighted or false,debuff=c.debuff or false,effect=B.effect_summary(c.ability)}
@@ -85,10 +94,15 @@ local function status()
     elseif G.booster_pack then activity='pack' end
     local deck={Spades=0,Hearts=0,Clubs=0,Diamonds=0}
     for _,c in ipairs(G.playing_cards or {}) do if c.base and deck[c.base.suit] and not (SMODS.has_no_suit and SMODS.has_no_suit(c)) then deck[c.base.suit]=deck[c.base.suit]+1 end end
-    local position=B.position()
+    local position=B.position();local preferred='';local most=-1
+    for name,data in pairs(G.GAME.hands or {}) do local played=data.played or 0
+        if played>most or played==most and name<preferred then preferred=name;most=played end
+    end
+    if most<1 then preferred='' end
     return {activity=activity,native_safe=G.STATE==G.STATES.BLIND_SELECT and G.blind_select~=nil and settled() and not G.shop and not G.booster_pack and not G.CONTROLLER.locks.skip_blind,
         native_ante=position.ante,native_index=position.index,hands=G.GAME.current_round.hands_left,discards=G.GAME.current_round.discards_left,
         money=G.GAME.dollars,jokers=cards(G.jokers),consumables=cards(G.consumeables),deck=deck,
+        bot_profile={joker_limit=G.jokers and G.jokers.config.card_limit or 5,consumable_limit=G.consumeables and G.consumeables.config.card_limit or 2,preferred_hand=preferred},
         reveal=BT.config.reveal_hand,inspect=BT.config.inspect,board=BT.config.reveal_hand and cards(G.hand,true) or {},
         played=cards(G.play),shop=cards(G.shop_jokers)}
 end

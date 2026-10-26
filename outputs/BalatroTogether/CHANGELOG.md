@@ -1,3 +1,20 @@
+# 0.8.12-dev — Smarter bot teammates
+
+- Compile Joker effects once per planning pass; model Blueprint/Brainstorm copies,
+  Photograph/Hanging Chad, repeated card triggers and held-card synergies.
+- Keep debuffed cards eligible for poker-hand identification without awarding
+  their Chips/Mult, and keep face-down unknowns from inventing pairs or flushes.
+- Bound discard search to 40,000 evaluations, cache repeated trial hands and
+  refine promising draws. Evaluate deck composition without peeking at draw order.
+- Improve build-aware shopping, matching Planets, native booster selection,
+  safe consumable use and earned dice/wheel rewards.
+- Donate useful spare Jokers, consumables and surplus Fungus to the teammate
+  who benefits more. Respect inspection privacy and receiver inventory limits;
+  keep carry cards, Legendaries, Eternal cards and received gifts.
+- Reduce controller/window polling and action delays while retaining native
+  event locks, shop-construction waits and donation/reward escrow checks.
+- Distribute through the same permanent installer/updater as a signed data patch.
+
 # 0.8.11-dev — Shroombo and Fungus Cards
 
 - Register Shroombo as a native $20 Legendary Joker with its own supplied art,

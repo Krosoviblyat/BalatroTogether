@@ -208,7 +208,11 @@ local function list(value, limit)
     for i=1,math.min(#value,limit) do
         local v=value[i]
         if type(v)=='table' then
+            local function stat(x,default)
+                if type(x)=='number' and x==x and math.abs(x)<=1e9 then return x end;return default
+            end
             out[#out+1]={key=clean(v.key,48),name=clean(v.name,50),edition=clean(v.edition,24),effect=clean(v.effect,120),
+                score_mult=stat(v.score_mult,0),score_chips=stat(v.score_chips,0),score_xmult=stat(v.score_xmult,1),
                 enhancement=clean(v.enhancement,30),seal=clean(v.seal,24),rank=clean(v.rank,8),
                 suit=clean(v.suit,12),selected=v.selected==true,debuff=v.debuff==true}
         end
@@ -291,6 +295,10 @@ function M:apply(id, action)
             elseif type(d[field])=='number' and d[field]==d[field] and math.abs(d[field])<1e9 then p[field]=d[field] end
         end
         p.jokers=list(d.jokers,30); p.consumables=list(d.consumables,30)
+        local profile=type(d.bot_profile)=='table' and d.bot_profile or {}
+        p.bot_profile={preferred_hand=clean(profile.preferred_hand or '',36),
+            joker_limit=integer(profile.joker_limit,0,10000) and profile.joker_limit or 5,
+            consumable_limit=integer(profile.consumable_limit,0,10000) and profile.consumable_limit or 2}
         p.deck={}; if type(d.deck)=='table' then for _,suit in ipairs({'Spades','Hearts','Clubs','Diamonds'}) do
             if integer(d.deck[suit],0,10000) then p.deck[suit]=d.deck[suit] end end end
         p.reveal=d.reveal==true; p.inspect=d.inspect~=false
@@ -315,7 +323,7 @@ function M:snapshot(viewer)
         if p then
             local q=copy(p); q.token=nil
             if i~=(viewer or 1) then q.personal_pot=nil end
-            if not q.inspect then q.jokers={}; q.consumables={}; q.deck={}; q.board={}; q.played={}; q.shop={} end
+            if not q.inspect then q.jokers={}; q.consumables={}; q.deck={}; q.board={}; q.played={}; q.shop={};q.bot_profile=nil end
             state.players[tostring(i)]=q
         end
     end
