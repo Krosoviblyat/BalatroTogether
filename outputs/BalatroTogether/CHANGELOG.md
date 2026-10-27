@@ -1,3 +1,8 @@
+# 0.8.14-dev
+
+- Gameplay refinements and regression checks.
+- Available through the existing permanent installer/updater.
+
 # 0.8.13-dev — Shroombo in normal shops
 
 - Change Shroombo from Legendary to native Rare rarity so he can appear in

@@ -1,5 +1,5 @@
 BT=SMODS.current_mod
-BT.version='0.8.13-dev'
+BT.version='0.8.14-dev'
 BT.root=BT.path
 local function load(path) return assert(SMODS.load_file(path,BT.id))() end
 BT.numbers=load('core/numbers.lua')
@@ -62,6 +62,8 @@ BT.shroombo=load('game/shroombo.lua')
 BT.shroombo.install()
 BT.curated_seed=load('game/thundrck.lua')
 BT.curated_seed.install()
+BT.crew_route=load('game/crew_route.lua')
+BT.crew_route.install()
 -- Install invite callbacks before vanilla's first Steam callback pump.
 if not (BT.bots and BT.bots.config) then BT.steam.available() end
 local update=love.update
